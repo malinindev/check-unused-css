@@ -1,0 +1,7 @@
+.DS_Store
+node_modules
+dist
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json 

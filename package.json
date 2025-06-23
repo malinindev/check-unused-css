@@ -1,0 +1,52 @@
+{
+  "name": "check-unused-css",
+  "version": "0.1.0",
+  "description": "Console utility for finding unused CSS classes in TypeScript projects",
+  "author": "Serge Malinin <s@malinin.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malinindev/check-unused-css.git"
+  },
+  "homepage": "https://github.com/malinindev/check-unused-css",
+  "bugs": {
+    "url": "https://github.com/malinindev/check-unused-css/issues"
+  },
+  "keywords": ["css", "unused", "typescript", "cli", "tool"],
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "check-unused-css": "dist/index.js"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "build": "rm -rf dist && tsc --project tsconfig.build.json",
+    "build:dev": "npm run build && chmod +x dist/index.js",
+    "build:pack": "npm run build && npm pack",
+    "release:prepare": "changeset",
+    "release:publish": "changeset publish",
+    "prepublishOnly": "npm run check:all",
+    "test": "echo \"No tests yet\" && exit 0",
+    "check:all": "npm run build && npm run check:format && npm run check:type",
+    "check:type": "tsc --noEmit",
+    "check:lint": "biome lint ./src",
+    "check:format": "biome format ./src",
+    "fix:format": "biome format --write ./src"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@changesets/cli": "^2.29.2",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
