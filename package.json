@@ -12,23 +12,13 @@
   "bugs": {
     "url": "https://github.com/malinindev/check-unused-css/issues"
   },
-  "keywords": [
-    "css",
-    "unused",
-    "typescript",
-    "cli",
-    "tool"
-  ],
+  "keywords": ["css", "unused", "typescript", "cli", "tool"],
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "check-unused-css": "dist/index.js"
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "dev": "tsc --project tsconfig.build.json --watch",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
@@ -37,7 +27,7 @@
     "release:prepare": "changeset",
     "release:publish": "changeset publish",
     "prepublishOnly": "npm run check:all",
-    "test": "npm run build && node --test",
+    "test": "npm run build && node --experimental-strip-types --test",
     "check:all": "npm run check:format && npm run check:type && npm run test",
     "check:type": "tsc --noEmit",
     "check:lint": "biome lint ./src",
@@ -56,8 +46,5 @@
     "@types/node": "^22.0.0",
     "@types/react": "^18.0.0",
     "typescript": "^5.8.3"
-  },
-  "engines": {
-    "node": ">=22.0.0"
   }
 }
