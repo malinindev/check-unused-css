@@ -1,6 +1,6 @@
 {
   "name": "check-unused-css",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Console utility for finding unused CSS classes in TypeScript projects",
   "author": "Serge Malinin <s@malinin.dev>",
   "license": "MIT",
@@ -12,13 +12,23 @@
   "bugs": {
     "url": "https://github.com/malinindev/check-unused-css/issues"
   },
-  "keywords": ["css", "unused", "typescript", "cli", "tool"],
+  "keywords": [
+    "css",
+    "unused",
+    "typescript",
+    "cli",
+    "tool"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "check-unused-css": "dist/index.js"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "tsc --project tsconfig.build.json --watch",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
