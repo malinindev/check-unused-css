@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.0.4
+
+### Patch Changes
+
+- dd09bf5: add composes support
+
 ## 0.0.3
 
 ### Patch Changes
