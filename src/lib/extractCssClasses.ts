@@ -2,7 +2,8 @@ export const extractCssClasses = (cssContent: string): string[] => {
   const cleanedContent = cssContent
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/@keyframes[^{]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '')
-    .replace(/:global[^{]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '');
+    .replace(/:global[^{]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '')
+    .replace(/url\([^)]*\)/g, '');
 
   const selectorMatches = cleanedContent.match(/[^{}]+(?=\s*\{)/g);
   if (!selectorMatches) return [];

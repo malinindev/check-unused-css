@@ -16,14 +16,6 @@ export const printResults = (results: UnusedClassResult[]): void => {
     (result) => result.hasDynamicUsage
   );
 
-  if (
-    resultsWithUnusedClasses.length === 0 &&
-    resultsWithDynamicUsage.length === 0
-  ) {
-    console.log(`${COLORS.green}No unused CSS classes found!${COLORS.reset}`);
-    return;
-  }
-
   if (resultsWithDynamicUsage.length > 0) {
     console.warn(
       `${COLORS.yellow}Warning: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
@@ -57,5 +49,7 @@ export const printResults = (results: UnusedClassResult[]): void => {
 
       console.log('');
     }
+  } else {
+    console.log(`${COLORS.green}✓ No unused CSS classes found!${COLORS.reset}`);
   }
 };
