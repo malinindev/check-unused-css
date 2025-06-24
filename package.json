@@ -1,6 +1,6 @@
 {
   "name": "check-unused-css",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Console utility for finding unused CSS classes in TypeScript projects",
   "author": "Serge Malinin <s@malinin.dev>",
   "license": "MIT",
