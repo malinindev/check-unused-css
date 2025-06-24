@@ -5,9 +5,9 @@ import { glob } from 'glob';
 export const findFilesImportingCssModule = async (
   cssFile: string,
   srcDir: string
-): Promise<string[]> => {
+): Promise<Array<{ file: string; importName: string }>> => {
   const tsFiles = await glob('**/*.{ts,tsx}', { cwd: srcDir });
-  const importingFiles: string[] = [];
+  const importingFiles: Array<{ file: string; importName: string }> = [];
 
   for (const tsFile of tsFiles) {
     const tsPath = path.join(srcDir, tsFile);
@@ -20,29 +20,22 @@ export const findFilesImportingCssModule = async (
     const normalizedPath = relativeCssPath.replace(/\\/g, '/');
 
     const importPatterns = [
-      `from\\s+['"]${normalizedPath}['"]`,
-      `from\\s+['"]\\./${normalizedPath}['"]`,
-      `from\\s+['"]\\.\\./${normalizedPath}['"]`,
+      `import\\s+(\\w+)\\s+from\\s+['"]${normalizedPath}['"]`,
+      `import\\s+(\\w+)\\s+from\\s+['"]\\./${normalizedPath}['"]`,
+      `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${normalizedPath}['"]`,
     ];
 
-    const hasImport = importPatterns.some((pattern) => {
+    for (const pattern of importPatterns) {
       const regex = new RegExp(pattern, 'g');
-      return regex.test(tsContent);
-    });
+      const match = regex.exec(tsContent);
 
-    if (hasImport) {
-      importingFiles.push(tsFile);
+      if (match?.[1]) {
+        const importName = match[1];
+        importingFiles.push({ file: tsFile, importName });
+        break;
+      }
     }
   }
 
   return importingFiles;
-};
-
-export const getContentOfFiles = (files: string[], srcDir: string): string => {
-  let content = '';
-  for (const file of files) {
-    const filePath = path.join(srcDir, file);
-    content += `${fs.readFileSync(filePath, 'utf-8')}\n`;
-  }
-  return content;
 };

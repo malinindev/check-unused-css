@@ -6,6 +6,7 @@
   "include": ["src/**/*"],
   "exclude": [
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "src/__tests__/fixtures/**/*"
   ]
 } 

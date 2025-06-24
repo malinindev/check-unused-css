@@ -8,6 +8,7 @@
     "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -17,9 +18,9 @@
     "outDir": "dist",
 
     "declaration": true,
-    "lib": ["es2022"],
+    "lib": ["es2022", "dom"],
     "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": []
-} 
+}
