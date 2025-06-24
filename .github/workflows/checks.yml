@@ -21,4 +21,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run all checks
-        run: npm run check:all 
+        run: npm run check:all

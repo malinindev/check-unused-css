@@ -1,0 +1,53 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js and dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run all checks
+        run: npm run check:all
+
+      - name: Check for changesets
+        run: |
+          if [ ! -d ".changeset" ] || [ -z "$(find .changeset -name '*.md' -not -name 'README.md' -not -name 'config.json')" ]; then
+            echo "⚠️  No changesets found!"
+            echo "Run 'npm run release:prepare' and commit the changeset first"
+            echo "Then run this workflow again"
+            exit 1
+          fi
+          echo "✅ Changesets found, proceeding with release PR creation"
+
+      - name: Get next version
+        id: version
+        run: |
+          # update package.json just to get a new version
+          npx changeset version
+
+          NEXT_VERSION=$(node -p "require('./package.json').version")
+
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Next version: v$NEXT_VERSION"
+          git reset --hard
+
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          title: "Release v${{ steps.version.outputs.next_version }}"
+          commit: "chore: release v${{ steps.version.outputs.next_version }}"
+          createGithubReleases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
