@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { glob } from 'glob';
 import type { UnusedClassResult } from './types.js';
-import { analyzeUnusedCssClasses } from './lib/analyzeUnusedCssClasses.js';
+import { analyzeUnusedCssClasses } from './lib/analyzeUnusedCssClasses/index.js';
 import { printResults } from './lib/printResults.js';
 import { getArgs } from './utils/getArgs.js';
 

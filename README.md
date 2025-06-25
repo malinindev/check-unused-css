@@ -2,10 +2,16 @@
 
 Utility for finding unused CSS classes in TypeScript projects.
 
+Supported file types:
+- `*.module.css`
+- `*.module.scss` 
+- `*.module.sass`
+
+
 ## Install
 
 ```bash
-npm install --save-dev check-unused-css
+npm i --D check-unused-css
 ```
 
 ## Usage
@@ -28,24 +34,38 @@ npm run check-unused-css
 
 ### Options
 
-#### Custom styles object name
-
-By default, the tool looks for CSS classes used as `styles.className`. You can specify a different object name:
+You can specify a custom folder path to check:
 
 ```bash
-npx check-unused-css --styles=myStyles
+npx check-unused-css src/components
 ```
 
-This will look for usage patterns like `myStyles.className` instead of `styles.className`.
+By default, it checks the `src` directory.
 
-## Supported file types
+## Limitations
 
-- `*.module.css`
-- `*.module.scss` 
-- `*.module.sass`
+The tool only works when CSS classes are used directly, for example:
 
-## Requirements
-* TypeScript project with CSS Modules
+```tsx
+import styles from './Component.module.css';
+
+// ...
+<div className={styles.yourClassName} />
+```
+
+Dynamic class access cannot be detected:
+
+```tsx
+import styles from './Component.module.css';
+
+const dynamicClass = Math.random() * 10 >= 5 ? 'classOne' : 'classTwo';
+
+// ...
+// cannot detect usage
+<div className={styles[dynamicClass]} />
+```
+
+In such cases, the tool will skip the check and mark it as passed. Avoid dynamic access and use explicit class names for clarity.
 
 ## License
 
