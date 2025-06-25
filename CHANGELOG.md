@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.0.5
+
+### Patch Changes
+
+- f5255c6: use css-selector-parser and postcss instead of regexp for css parsing
+
 ## 0.0.4
 
 ### Patch Changes
