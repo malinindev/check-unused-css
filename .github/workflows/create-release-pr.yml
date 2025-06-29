@@ -15,17 +15,17 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js and dependencies
+      - name: Setup Bun and dependencies
         uses: ./.github/actions/setup
 
       - name: Run all checks
-        run: npm run check:all
+        run: bun run check:all
 
       - name: Check for changesets
         run: |
           if [ ! -d ".changeset" ] || [ -z "$(find .changeset -name '*.md' -not -name 'README.md' -not -name 'config.json')" ]; then
             echo "⚠️  No changesets found!"
-            echo "Run 'npm run release:prepare' and commit the changeset first"
+            echo "Run 'bun run release:prepare' and commit the changeset first"
             echo "Then run this workflow again"
             exit 1
           fi

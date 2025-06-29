@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js and dependencies
+      - name: Setup Bun and dependencies
         uses: ./.github/actions/setup
 
       - name: Run all checks
-        run: npm run check:all
+        run: bun run check:all
