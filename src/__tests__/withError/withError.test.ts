@@ -58,6 +58,8 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/^\s+\.unusedClass3$/m);
     expect(result.stdout).toMatch(/^\s+\.unusedClass4$/m);
 
+    expect(result.stdout).toMatch(/^\s+\.unusedClassInternal$/m);
+
     expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
     expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
   });
