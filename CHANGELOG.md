@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.1.2
+
+### Patch Changes
+
+- 6064eac: clean up the dist foulder
+
 ## 0.1.1
 
 ### Patch Changes
