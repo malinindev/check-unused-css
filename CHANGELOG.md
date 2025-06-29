@@ -1,5 +1,15 @@
 # check-unused-css
 
+## 0.1.0
+
+### Minor Changes
+
+- e6012f1: fix :global issues, support nested complex selectors, add integration tests
+
+### Patch Changes
+
+- 12cf570: replace node with bun for a better testing experience
+
 ## 0.0.5
 
 ### Patch Changes
