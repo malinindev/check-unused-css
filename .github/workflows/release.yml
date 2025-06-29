@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Force publish even without release commit message'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -11,12 +18,15 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: "${{ contains(github.event.head_commit.message, 'chore: release v') }}"
+    if: "${{ contains(github.event.head_commit.message, 'chore: release v') || github.event.inputs.force_publish == 'true' }}"
 
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Setup Bun and dependencies
         uses: ./.github/actions/setup
