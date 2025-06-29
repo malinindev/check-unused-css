@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.1.3
+
+### Patch Changes
+
+- 92a0ac6: add ampersand support
+
 ## 0.1.2
 
 ### Patch Changes
