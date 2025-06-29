@@ -19,7 +19,7 @@
 
     "declaration": true,
     "lib": ["es2022", "dom"],
-    "types": ["node"]
+    "types": ["node", "@types/bun"]
   },
   "include": ["src/**/*"],
   "exclude": []
