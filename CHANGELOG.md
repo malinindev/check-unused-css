@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.1.1
+
+### Patch Changes
+
+- b4f7585: fix release script
+
 ## 0.1.0
 
 ### Minor Changes
