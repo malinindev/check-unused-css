@@ -1,0 +1,27 @@
+.buttonHover:hover {
+  color: #fff;
+}
+
+.inputFocus:focus {
+  color: #fff;
+}
+
+.listItemFirst:first-child {
+  color: #fff;
+}
+
+.linkVisited:visited {
+  color: #fff;
+}
+
+.paragraphAfter::after {
+  color: #fff;
+}
+
+.paragraphBefore::before {
+  color: #fff;
+}
+
+.inputPlaceholder::placeholder {
+  color: #fff;
+} 

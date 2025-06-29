@@ -1,0 +1,30 @@
+.usedClass {
+  color: #fff;
+}
+
+.usedClass2 {
+  color: #fff;
+}
+
+
+div.usedClass:before {
+  .usedClass {
+    color: #fff;
+  }
+}
+
+.usedClass > .unusedClass {
+  color: #fff;
+}
+
+.unusedClass2 + .unusedClass2 {
+  color: #fff;
+}
+
+.usedClass + .unusedClass3 {
+  color: #fff;
+}
+
+.usedClass[disabled].unusedClass4:before {
+  color: #fff;
+}

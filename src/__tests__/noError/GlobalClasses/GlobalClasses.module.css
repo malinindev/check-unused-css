@@ -1,0 +1,21 @@
+:global(.globalClass) .usedClass {
+  color: #fff;
+}
+
+.usedClass2:before {
+  .usedClass3 {
+    color: #fff;
+  }  
+}
+
+:global(.globalClass2) {
+  color: #fff;
+}
+
+:global(.globalClass3) {
+  color: #fff
+}
+
+:global(.globalClass4.globalClass5) {
+  color: #fff
+}

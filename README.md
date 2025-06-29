@@ -1,12 +1,14 @@
 # check-unused-css
 
-Utility for finding unused CSS classes in TypeScript projects.
+A simple tool to find unused CSS classes in your TypeScript project. Works with .module.css, .module.scss, and .module.sass.
 
-Supported file types:
-- `*.module.css`
-- `*.module.scss` 
-- `*.module.sass`
+No more dead styles in your codebase!
 
+Fully tested - check the [tests folder](./src/__tests__/) for real-world scenarios.
+
+## Example output
+
+![Example output](./exampleOutput.png)
 
 ## Install
 

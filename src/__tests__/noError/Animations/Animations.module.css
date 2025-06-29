@@ -1,0 +1,39 @@
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.fadeInAnimation {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slideInAnimation {
+  animation: slideIn 0.5s ease-out;
+}
+
+.transformScale:hover {
+  transform: scale(1.05);
+}
+
+.transformRotate:hover {
+  transform: rotate(45deg);
+}
+
+.transformTranslate:hover {
+  transform: translateY(-5px);
+}
+
+.withVariables {
+  --primary-color: #fff;
+  --secondary-color: #000;
+  color: var(--primary-color);
+}
+
+.usingVariables {
+  background-color: var(--secondary-color);
+} 

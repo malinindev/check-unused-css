@@ -1,15 +1,15 @@
-.header {
+.usedClass {
   color: #fff;
 }
 
-.content {
+.usedClass2 {
   color: #fff;
 }
 
-.footer {
+.unusedClass {
   color: #fff;
 }
 
-.completely-unused {
+.unusedClass2 {
   color: #fff;
 } 

@@ -7,14 +7,20 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
 
   const classNames: string[] = [];
 
-  for (const rule of selector.rules) {
+  const extractClassNamesFromRule = (rule: any): void => {
     for (const item of rule.items) {
-      if (item.type !== 'ClassName') {
-        continue;
+      if (item.type === 'ClassName') {
+        classNames.push(item.name);
       }
-
-      classNames.push(item.name);
     }
+
+    if (rule.nestedRule) {
+      extractClassNamesFromRule(rule.nestedRule);
+    }
+  };
+
+  for (const rule of selector.rules) {
+    extractClassNamesFromRule(rule);
   }
 
   return classNames;
