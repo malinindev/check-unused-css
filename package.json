@@ -38,7 +38,7 @@
     "build:pack": "bun run build && bun pack",
     "release:prepare": "changeset",
     "release:publish": "changeset publish",
-    "prepublishOnly": "bun run check:all",
+    "prepublishOnly": "bun run build && bun run check:all",
     "test": "bun test src/__tests__/**/*.test.ts",
     "check:all": "bun run check:format && bun run check:type && bun run test",
     "check:type": "tsc --noEmit",
