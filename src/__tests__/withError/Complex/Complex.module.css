@@ -28,3 +28,9 @@ div.usedClass:before {
 .usedClass[disabled].unusedClass4:before {
   color: #fff;
 }
+
+.usedClass {
+  &.unusedClassInternal {
+    color: #fff;
+  }
+}
