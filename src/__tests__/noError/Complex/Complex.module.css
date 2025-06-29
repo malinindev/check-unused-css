@@ -1,0 +1,39 @@
+.cardContainer .cardTitle {
+  color: #fff;
+}
+
+.formGroup > .inputField {
+  color: #fff;
+}
+
+.navList li.activeItem {
+  color: #fff;
+}
+
+.buttonDisabled[disabled] {
+  color: #fff;
+}
+
+.inputRequired[required] {
+  color: #fff;
+}
+
+.alert.alertSuccess {
+  color: #fff;
+}
+
+.modal.modalLarge {
+  color: #fff;
+}
+
+.multi-word-class {
+  color: #fff;
+}
+
+.another_underscore_class {
+  color: #fff;
+}
+
+.mixedCase_and-dashes {
+  color: #fff;
+} 

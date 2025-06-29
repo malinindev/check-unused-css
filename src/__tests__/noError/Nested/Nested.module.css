@@ -1,0 +1,29 @@
+.complexNested {
+  .level1 {
+    .level2 {
+      .level3 {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.deepContainer {
+  .section {
+    .article {
+      .paragraph {
+        .text {
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+.parentClass {
+  .childClass:hover {
+    .grandchildClass::before {
+      color: #fff;
+    }
+  }
+} 

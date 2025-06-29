@@ -1,0 +1,17 @@
+.composedClass {
+  color: #fff
+}
+
+.composedClass2 {
+  color: #fff
+}
+
+.usedClass {
+  composes: composedClass;
+}
+
+.usedClass2:before {
+  composes: composedClass2;
+}
+
+

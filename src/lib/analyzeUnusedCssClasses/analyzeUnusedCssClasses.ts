@@ -21,6 +21,7 @@ export const analyzeUnusedCssClasses = async (
     return {
       file: cssFile,
       unusedClasses: cssClasses,
+      isNotImported: true,
     };
   }
 

@@ -1,3 +1,0 @@
-- [ ] Add more tests
-- [x] Add class support like styles['class']
-- [ ] Handle non‑existing directory gracefully

@@ -1,0 +1,29 @@
+@media (min-width: 768px) {
+  .desktopOnly {
+    color: #fff;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobileOnly {
+    color: #fff;
+  }
+}
+
+@media (min-width: 1200px) {
+  .largeScreen {
+    color: #fff;
+  }
+}
+
+@media print {
+  .printOnly {
+    color: #fff;
+  }
+}
+
+@media (orientation: landscape) {
+  .landscapeOnly {
+    color: #fff;
+  }
+} 

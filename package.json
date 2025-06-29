@@ -1,7 +1,7 @@
 {
   "name": "check-unused-css",
   "version": "0.0.5",
-  "description": "Console utility for finding unused CSS classes in TypeScript projects",
+  "description": "Detect and remove unused CSS module classes",
   "author": "Serge Malinin <s@malinin.dev>",
   "license": "MIT",
   "repository": {
@@ -12,7 +12,15 @@
   "bugs": {
     "url": "https://github.com/malinindev/check-unused-css/issues"
   },
-  "keywords": ["css", "unused", "typescript", "cli", "tool"],
+  "keywords": [
+    "unused css",
+    "unused css-modules",
+    "css-modules analyzer",
+    "css-modules cleaner",
+    "find unused css-modules",
+    "remove unused css-modules",
+    "css-modules audit"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -27,7 +35,7 @@
     "release:prepare": "changeset",
     "release:publish": "changeset publish",
     "prepublishOnly": "bun run check:all",
-    "test": "bun run build && bun test src/__tests__/**/*.test.ts",
+    "test": "bun test src/__tests__/**/*.test.ts",
     "check:all": "bun run check:format && bun run check:type && bun run test",
     "check:type": "tsc --noEmit",
     "check:lint": "biome lint ./src",

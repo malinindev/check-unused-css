@@ -16,7 +16,7 @@ const runCssChecker = async (): Promise<void> => {
     console.log('Checking for unused CSS classes...\n');
 
     const srcDir = path.join(process.cwd(), targetPath || DEFAULT_TARGET_PATH);
-    const cssFiles = await glob('**/*.{module.css,module.scss,module.sass}', {
+    const cssFiles = await glob('**/*.module.{css,scss,sass}', {
       cwd: srcDir,
     });
 
@@ -33,10 +33,14 @@ const runCssChecker = async (): Promise<void> => {
     printResults(results);
 
     const hasUnusedClasses = results.some(
-      (result) => result.unusedClasses.length > 0
+      (result) => result.unusedClasses.length > 0 && !result.isNotImported
     );
 
-    if (hasUnusedClasses) {
+    const hasNotImportedModules = results.some(
+      (result) => result.isNotImported
+    );
+
+    if (hasUnusedClasses || hasNotImportedModules) {
       process.exit(1);
     }
   } catch (error) {

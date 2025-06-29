@@ -1,0 +1,15 @@
+:global(.globalClass) .usedClass {
+  color: #fff;
+}
+
+:global(.globalClass).usedClass2 {
+  color: #fff;
+}
+
+:global(.globalClass) .unusedClass {
+  color: #fff;
+}
+
+:global(.globalClass).unusedClass2 {
+  color: #fff;
+}

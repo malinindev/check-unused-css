@@ -10,11 +10,12 @@ const COLORS = {
 
 export const printResults = (results: UnusedClassResult[]): void => {
   const resultsWithUnusedClasses = results.filter(
-    (result) => result.unusedClasses.length > 0
+    (result) => result.unusedClasses.length > 0 && !result.isNotImported
   );
   const resultsWithDynamicUsage = results.filter(
     (result) => result.hasDynamicUsage
   );
+  const notImportedResults = results.filter((result) => result.isNotImported);
 
   if (resultsWithDynamicUsage.length > 0) {
     console.warn(
@@ -28,6 +29,17 @@ export const printResults = (results: UnusedClassResult[]): void => {
       console.log(`  ${COLORS.yellow}${result.file}${COLORS.reset}`);
     }
     console.log('');
+  }
+
+  if (notImportedResults.length > 0) {
+    console.log(
+      `${COLORS.red}Found ${notImportedResults.length} not imported CSS modules:${COLORS.reset}\n`
+    );
+
+    for (const result of notImportedResults) {
+      console.log(`${COLORS.cyan}${result.file}${COLORS.reset}`);
+      console.log('');
+    }
   }
 
   if (resultsWithUnusedClasses.length > 0) {
@@ -49,7 +61,7 @@ export const printResults = (results: UnusedClassResult[]): void => {
 
       console.log('');
     }
-  } else {
+  } else if (notImportedResults.length === 0) {
     console.log(`${COLORS.green}✓ No unused CSS classes found!${COLORS.reset}`);
   }
 };
