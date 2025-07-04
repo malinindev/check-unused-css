@@ -100,4 +100,24 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/^\s+\.varNameAsClass$/m);
     expect(result.stdout).toMatch(/^\s+\.letNameAsClass$/m);
   });
+
+  test('shows error if not existed path', () => {
+    const result = runCheckUnusedCss('src/NOT_EXISTED_PATH');
+
+    expect(result.exitCode).toBe(1);
+
+    expect(result.stdout).toMatch(
+      /^Error: Directory "src\/NOT_EXISTED_PATH" does not exist\.$/m
+    );
+  });
+
+  test('shows error if passed path to file, not folder', () => {
+    const result = runCheckUnusedCss('src/__tests__/withError/Plain/Plain.tsx');
+
+    expect(result.exitCode).toBe(1);
+
+    expect(result.stdout).toMatch(
+      /^Error: "src\/__tests__\/withError\/Plain\/Plain\.tsx" is a file. Please provide a directory path\.$/m
+    );
+  });
 });
