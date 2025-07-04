@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { glob } from 'glob';
 import type { UnusedClassResult } from './types.js';
-import { analyzeUnusedCssClasses } from './lib/analyzeUnusedCssClasses/index.js';
+import { getUnusedClassesFromCss } from './lib/getUnusedClassesFromCss/index.js';
 import { printResults } from './lib/printResults.js';
 import { getArgs } from './utils/getArgs.js';
 
@@ -23,7 +23,7 @@ const runCssChecker = async (): Promise<void> => {
     const results: UnusedClassResult[] = [];
 
     for (const cssFile of cssFiles) {
-      const result = await analyzeUnusedCssClasses(cssFile, srcDir);
+      const result = await getUnusedClassesFromCss({ cssFile, srcDir });
 
       if (result) {
         results.push(result);
@@ -33,11 +33,11 @@ const runCssChecker = async (): Promise<void> => {
     printResults(results);
 
     const hasUnusedClasses = results.some(
-      (result) => result.unusedClasses.length > 0 && !result.isNotImported
+      (result) => result.status === 'correct' && result.unusedClasses.length > 0
     );
 
     const hasNotImportedModules = results.some(
-      (result) => result.isNotImported
+      (result) => result.status === 'notImported'
     );
 
     if (hasUnusedClasses || hasNotImportedModules) {

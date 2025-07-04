@@ -1,6 +1,14 @@
-export type UnusedClassResult = {
+export type UnusedClassResultWithClasses = {
   file: string;
   unusedClasses: string[];
-  hasDynamicUsage?: boolean;
-  isNotImported?: boolean;
+  status: 'correct';
 };
+
+export type UnusedClassResultNoClasses = {
+  file: string;
+  status: 'notImported' | 'withDynamicImports';
+};
+
+export type UnusedClassResult =
+  | UnusedClassResultWithClasses
+  | UnusedClassResultNoClasses;
