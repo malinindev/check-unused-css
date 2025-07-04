@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.1.4
+
+### Patch Changes
+
+- 8fdda32: fix dynamic styles usage
+- 35582a1: add handling for non-existent path
+
 ## 0.1.3
 
 ### Patch Changes
