@@ -4,7 +4,7 @@ const removeColorsFromOutput = (output: string): string =>
 
 export const runCheckUnusedCss = (
   targetPath?: string
-): { stdout: string; exitCode: number } => {
+): { stdout: string; stderr: string; exitCode: number } => {
   const args = targetPath ? ['src/index.ts', targetPath] : ['src/index.ts'];
 
   const result = Bun.spawnSync(['bun', ...args], {
@@ -13,9 +13,11 @@ export const runCheckUnusedCss = (
   });
 
   const stdout = removeColorsFromOutput(result.stdout.toString());
+  const stderr = removeColorsFromOutput(result.stderr.toString());
 
   return {
     stdout,
+    stderr,
     exitCode: result.exitCode,
   };
 };

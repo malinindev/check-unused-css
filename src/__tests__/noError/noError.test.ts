@@ -19,7 +19,6 @@ describe('Components without errors', () => {
     'Nested',
     'Pseudo',
     'ComposedClasses',
-    'Dynamic',
     'Svg',
     'WithApostropheInComment',
   ])(
@@ -29,6 +28,47 @@ describe('Components without errors', () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatch(/Checking for unused CSS classes/);
+    }
+  );
+
+  test.each([
+    'DynamicWithAnd',
+    'DynamicWithCondition',
+    'DynamicWithMath',
+    'DynamicWithNullish',
+    'DynamicWithOr',
+    'DynamicWithTemplates',
+  ])(
+    'exits with code 0 when no unused classes found for component dynamic/%s.tsx',
+    (folderName) => {
+      const result = runCheckUnusedCss(
+        `src/__tests__/noError/dynamic/${folderName}`
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toMatch(/Checking for unused CSS classes/);
+    }
+  );
+
+  test.each([
+    'DynamicWithAnd',
+    'DynamicWithCondition',
+    'DynamicWithMath',
+    'DynamicWithNullish',
+    'DynamicWithOr',
+    'DynamicWithTemplates',
+  ])(
+    'shows warning for dynamic used styles component dynamic/%s.tsx',
+    (folderName) => {
+      const result = runCheckUnusedCss(
+        `src/__tests__/noError/dynamic/${folderName}`
+      );
+
+      expect(result.stderr).toMatch(/Warning: Dynamic class usage detected/);
+      expect(result.stderr).toMatch(
+        /Cannot determine usability when using dynamic class access/
+      );
+      expect(result.stdout).toMatch(new RegExp(`${folderName}\\.module\\.css`));
     }
   );
 });
