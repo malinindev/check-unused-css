@@ -1,4 +1,8 @@
-import type { UnusedClassResult } from '../types.js';
+import type {
+  UnusedClassResult,
+  UnusedClassResultNoClasses,
+  UnusedClassResultWithClasses,
+} from '../types.js';
 
 const COLORS = {
   green: '\x1b[32m',
@@ -10,12 +14,19 @@ const COLORS = {
 
 export const printResults = (results: UnusedClassResult[]): void => {
   const resultsWithUnusedClasses = results.filter(
-    (result) => result.unusedClasses.length > 0 && !result.isNotImported
+    (result): result is UnusedClassResultWithClasses =>
+      result.status === 'correct' && result.unusedClasses.length > 0
   );
+
   const resultsWithDynamicUsage = results.filter(
-    (result) => result.hasDynamicUsage
+    (result): result is UnusedClassResultNoClasses =>
+      result.status === 'withDynamicImports'
   );
-  const notImportedResults = results.filter((result) => result.isNotImported);
+
+  const notImportedResults = results.filter(
+    (result): result is UnusedClassResultNoClasses =>
+      result.status === 'notImported'
+  );
 
   if (resultsWithDynamicUsage.length > 0) {
     console.warn(

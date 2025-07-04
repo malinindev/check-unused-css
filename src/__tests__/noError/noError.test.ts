@@ -19,6 +19,9 @@ describe('Components without errors', () => {
     'Nested',
     'Pseudo',
     'ComposedClasses',
+    'Dynamic',
+    'Svg',
+    'WithApostropheInComment',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {
