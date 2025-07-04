@@ -1,16 +1,9 @@
+import { COLORS } from '../consts.js';
 import type {
   UnusedClassResult,
   UnusedClassResultNoClasses,
   UnusedClassResultWithClasses,
 } from '../types.js';
-
-const COLORS = {
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  cyan: '\x1b[36m',
-  yellow: '\x1b[33m',
-  reset: '\x1b[0m',
-} as const;
 
 export const printResults = (results: UnusedClassResult[]): void => {
   const resultsWithUnusedClasses = results.filter(
