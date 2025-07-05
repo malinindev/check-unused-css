@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.1.5
+
+### Patch Changes
+
+- 5ad23c3: fix conditional usage in dynamic styles
+- 71d6642: add unit tests
+
 ## 0.1.4
 
 ### Patch Changes
