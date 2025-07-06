@@ -1,5 +1,5 @@
+import decomment from 'decomment';
 import { checkIsInsideStringLiteral } from '../../../../utils/checkIsInsideStringLiteral.js';
-import { removeCommentsFromTs } from '../../../../utils/removeCommentsFromTs.js';
 import { checkHasDynamicUsage } from './utils/checkHasDynamicUsage.js';
 
 type FindUnusedClassesParams = {
@@ -28,8 +28,7 @@ export const findUnusedClasses: FindUnusedClasses = ({
     return { hasDynamicUsage: true, unusedClasses: null };
   }
 
-  // Clean content from comments for accurate detection
-  const cleanContent = removeCommentsFromTs(tsContent);
+  const cleanContent = decomment(tsContent, { tolerant: true });
 
   for (const className of cssClasses) {
     const isUsed = importNames.some((importName) => {

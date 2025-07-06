@@ -114,4 +114,168 @@ describe('checkIsInsideStringLiteral', () => {
 
     expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
   });
+
+  test('handles apostrophe inside double quotes', () => {
+    const content =
+      'throw new Error("test error with apostrophe - \'"); return <div className={styles.usedClass} />;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles double quotes inside single quotes', () => {
+    const content =
+      "throw new Error('test error with double quote - \"'); return <div className={styles.usedClass} />;";
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles multiple nested quotes in sequence', () => {
+    const content =
+      'const x = "first \\"nested\\" string"; const y = \'second "nested" string\'; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles complex mixed quotes with template strings', () => {
+    const content =
+      'const msg = `Hello ${name} with "quotes" and \'apostrophes\'`; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles quotes inside template string interpolation', () => {
+    const content =
+      "const html = `<div title=\"${title.replace('\"', '&quot;')}\">${content}</div>`; return styles.usedClass;";
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles escaped quotes in various combinations', () => {
+    const content =
+      'const str = "He said: \\"I can\'t believe it!\\""; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles multiple template strings with nested quotes', () => {
+    const content =
+      'const a = `First ${var1} "quote"`; const b = `Second ${var2} \'quote\'`; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('correctly identifies code inside nested quotes', () => {
+    const content =
+      'const outer = "This is \\"inner string with styles.usedClass\\" content";';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(true);
+  });
+
+  test('handles JSON-like strings with mixed quotes', () => {
+    const content =
+      'const json = \'{"name": "John", "message": "He said \\"Hello\\""}\';\nreturn styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles regex patterns with quotes', () => {
+    const content = 'const regex = /["\'].*?["\']/ ; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles simple regex patterns', () => {
+    const content = 'const regex = /test/g; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles regex patterns in conditionals', () => {
+    const content =
+      'if (text.match(/["\']/) !== null) return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('distinguishes between regex and division', () => {
+    const content = 'const result = a / b / c; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles regex inside strings correctly', () => {
+    const content =
+      'const str = "regex: /["\'].*?["\']/ here"; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(true);
+  });
+
+  test('handles SQL-like strings with quotes', () => {
+    const content =
+      'const query = "SELECT * FROM users WHERE name = \'John\' AND status = \\"active\\""; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles HTML attributes with mixed quotes', () => {
+    const content =
+      'const html = \'<div class="container" data-value="{\\"key\\": \\"value\\"}">\'; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles complex React JSX with quotes', () => {
+    const content =
+      'const jsx = `<Component prop="${value}" title=\'${title.replace("\\"", "&quot;")}\' />`; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles multiple escaped backslashes with quotes', () => {
+    const content =
+      'const path = "C:\\\\Users\\\\John\\\\"Documents\\\\""; return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles quotes in comments that are not removed', () => {
+    const content =
+      'const x = 5; /* comment with "quotes" and \'apostrophes\' */ return styles.usedClass;';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles edge case with only quotes', () => {
+    const content = '""\'\'``styles.usedClass';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(false);
+  });
+
+  test('handles unmatched quotes at the end', () => {
+    const content =
+      'const complete = "finished"; const incomplete = "unfinished styles.usedClass';
+    const matchIndex = content.indexOf('styles.usedClass');
+
+    expect(checkIsInsideStringLiteral(content, matchIndex)).toBe(true);
+  });
 });

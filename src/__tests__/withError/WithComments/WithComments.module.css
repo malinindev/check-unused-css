@@ -1,0 +1,17 @@
+.usedClass {
+  color: #fff;
+}
+
+.usedClass2:before {
+  .usedClass3 {
+    color: #fff;
+  }  
+}
+
+.unusedClass {
+  color: #fff;
+}
+
+.unusedClass2 {
+  color: #fff;
+}

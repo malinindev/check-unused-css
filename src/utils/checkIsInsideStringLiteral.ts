@@ -5,10 +5,11 @@ export const checkIsInsideStringLiteral = (
 ): boolean => {
   const beforeMatch = content.substring(0, matchIndex);
 
-  // Simple approach: count unescaped quotes
-  let singleQuotes = 0;
-  let doubleQuotes = 0;
-  let backticks = 0;
+  // Track the current quote state and regex state
+  let insideDoubleQuotes = false;
+  let insideSingleQuotes = false;
+  let insideBackticks = false;
+  let insideRegex = false;
 
   for (let i = 0; i < beforeMatch.length; i++) {
     const char = beforeMatch[i];
@@ -17,18 +18,46 @@ export const checkIsInsideStringLiteral = (
     // Skip escaped quotes
     if (prevChar === '\\') continue;
 
-    if (char === "'") singleQuotes++;
-    if (char === '"') doubleQuotes++;
-    if (char === '`') backticks++;
+    // Handle regex patterns
+    if (
+      char === '/' &&
+      !insideDoubleQuotes &&
+      !insideSingleQuotes &&
+      !insideBackticks
+    ) {
+      if (insideRegex) {
+        // End of regex
+        insideRegex = false;
+      } else {
+        // Check if this is the start of a regex
+        // Look back to see if this could be a regex start
+        const beforeSlash = beforeMatch.substring(0, i).trim();
+        const regexStartPattern = /(?:^|[=,({\[\s;!&|?:])$/;
+        if (regexStartPattern.test(beforeSlash)) {
+          insideRegex = true;
+        }
+      }
+    }
+
+    // Handle quotes only if not inside regex
+    if (!insideRegex) {
+      if (char === '"' && !insideSingleQuotes && !insideBackticks) {
+        insideDoubleQuotes = !insideDoubleQuotes;
+      } else if (char === "'" && !insideDoubleQuotes && !insideBackticks) {
+        insideSingleQuotes = !insideSingleQuotes;
+      } else if (char === '`' && !insideDoubleQuotes && !insideSingleQuotes) {
+        insideBackticks = !insideBackticks;
+      }
+    }
   }
 
   // If we're inside single or double quotes, it's a string literal
-  if (singleQuotes % 2 === 1 || doubleQuotes % 2 === 1) {
+  if (insideSingleQuotes || insideDoubleQuotes) {
     return true;
   }
 
   // If we're inside template string, check for interpolation
-  if (backticks % 2 === 1) {
+  if (insideBackticks) {
     // Look for ${...} interpolation around our match
     const afterBacktick = beforeMatch.substring(beforeMatch.lastIndexOf('`'));
     const openBrace = afterBacktick.lastIndexOf('${');

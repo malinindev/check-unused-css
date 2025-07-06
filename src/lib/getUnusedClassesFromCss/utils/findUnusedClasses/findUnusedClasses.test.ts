@@ -9,16 +9,11 @@ import {
 } from 'bun:test';
 import { findUnusedClasses } from './findUnusedClasses.js';
 import * as checkIsInsideStringLiteralModule from '../../../../utils/checkIsInsideStringLiteral.js';
-import * as removeCommentsFromTsModule from '../../../../utils/removeCommentsFromTs.js';
 import * as checkHasDynamicUsageModule from './utils/checkHasDynamicUsage.js';
 
 describe('findUnusedClasses', () => {
   let checkIsInsideStringLiteralSpy: Mock<
     (typeof checkIsInsideStringLiteralModule)['checkIsInsideStringLiteral']
-  >;
-
-  let removeCommentsFromTsSpy: Mock<
-    (typeof removeCommentsFromTsModule)['removeCommentsFromTs']
   >;
 
   let checkHasDynamicUsageSpy: Mock<
@@ -31,11 +26,6 @@ describe('findUnusedClasses', () => {
       'checkIsInsideStringLiteral'
     ).mockReturnValue(false);
 
-    removeCommentsFromTsSpy = spyOn(
-      removeCommentsFromTsModule,
-      'removeCommentsFromTs'
-    ).mockImplementation((content) => content);
-
     checkHasDynamicUsageSpy = spyOn(
       checkHasDynamicUsageModule,
       'checkHasDynamicUsage'
@@ -44,7 +34,6 @@ describe('findUnusedClasses', () => {
 
   afterEach(() => {
     checkIsInsideStringLiteralSpy.mockRestore();
-    removeCommentsFromTsSpy.mockRestore();
     checkHasDynamicUsageSpy.mockRestore();
   });
 
@@ -66,14 +55,10 @@ describe('findUnusedClasses', () => {
         'const className = styles[dynamicKey];',
         ['styles']
       );
-      expect(removeCommentsFromTsSpy).not.toHaveBeenCalled();
     });
 
     test('continues with static analysis when no dynamic usage', () => {
       checkHasDynamicUsageSpy.mockReturnValue(false);
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button;'
-      );
 
       const result = findUnusedClasses({
         cssClasses: ['button'],
@@ -89,18 +74,11 @@ describe('findUnusedClasses', () => {
         'const className = styles.button;',
         ['styles']
       );
-      expect(removeCommentsFromTsSpy).toHaveBeenCalledWith(
-        'const className = styles.button;'
-      );
     });
   });
 
   describe('should detect direct usage patterns', () => {
     test('finds used classes with direct notation', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles.button;',
@@ -114,10 +92,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('finds used classes with multiple import names', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button; const other = css.text;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text', 'header'],
         tsContent: 'const className = styles.button; const other = css.text;',
@@ -131,10 +105,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles word boundaries correctly', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const mystyles = {}; const className = styles.button;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const mystyles = {}; const className = styles.button;',
@@ -148,10 +118,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('detects multiple usages of same class', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const a = styles.button; const b = styles.button;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const a = styles.button; const b = styles.button;',
@@ -167,10 +133,6 @@ describe('findUnusedClasses', () => {
 
   describe('should detect bracket notation usage', () => {
     test('finds used classes with single quotes', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        "const className = styles['button'];"
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: "const className = styles['button'];",
@@ -184,10 +146,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('finds used classes with double quotes', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles["button"];'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles["button"];',
@@ -201,10 +159,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('finds used classes with template literals', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles[`button`];'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles[`button`];',
@@ -218,10 +172,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles bracket notation with whitespace', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles  [  "button"  ];'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const className = styles  [  "button"  ];',
@@ -237,9 +187,6 @@ describe('findUnusedClasses', () => {
 
   describe('should handle string literal detection', () => {
     test('ignores usage inside string literals', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const text = "styles.button"; const className = styles.text;'
-      );
       checkIsInsideStringLiteralSpy.mockImplementation(
         (content: string, index: number) => {
           // Mock that "styles.button" is inside string literal
@@ -261,9 +208,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('correctly identifies usage outside string literals', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'console.log("styles.button"); const className = styles.button;'
-      );
       checkIsInsideStringLiteralSpy.mockImplementation(
         (_content: string, index: number) => {
           // Only the first occurrence is inside string literal
@@ -287,10 +231,6 @@ describe('findUnusedClasses', () => {
 
   describe('should handle edge cases', () => {
     test('returns all classes as unused when none are used', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const someCode = "hello world";'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text', 'header'],
         tsContent: 'const someCode = "hello world";',
@@ -304,10 +244,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles empty CSS classes array', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: [],
         tsContent: 'const className = styles.button;',
@@ -321,10 +257,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles empty import names array', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const className = styles.button;',
@@ -338,8 +270,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles empty TypeScript content', () => {
-      removeCommentsFromTsSpy.mockReturnValue('');
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: '',
@@ -353,10 +283,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles classes with special characters', () => {
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles["button-primary"]; const other = styles.text_large;'
-      );
-
       const result = findUnusedClasses({
         cssClasses: ['button-primary', 'text_large', 'header'],
         tsContent:
@@ -373,13 +299,6 @@ describe('findUnusedClasses', () => {
 
   describe('should handle complex real-world scenarios', () => {
     test('handles mixed usage patterns', () => {
-      removeCommentsFromTsSpy.mockReturnValue(`
-        const button = styles.primaryButton;
-        const text = styles["secondary-text"];
-        const header = css.mainHeader;
-        const footer = css['footer-content'];
-      `);
-
       const result = findUnusedClasses({
         cssClasses: [
           'primaryButton',
@@ -404,11 +323,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles conditional usage patterns', () => {
-      removeCommentsFromTsSpy.mockReturnValue(`
-        const className = isActive ? styles.active : styles.inactive;
-        const buttonClass = styles["button"];
-      `);
-
       const result = findUnusedClasses({
         cssClasses: ['active', 'inactive', 'button', 'unused'],
         tsContent: `
@@ -425,13 +339,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles usage in JSX-like patterns', () => {
-      removeCommentsFromTsSpy.mockReturnValue(`
-        <div className={styles.container}>
-          <button className={styles.button}>Click</button>
-          <span className={styles['text-small']}>Text</span>
-        </div>
-      `);
-
       const result = findUnusedClasses({
         cssClasses: ['container', 'button', 'text-small', 'unused'],
         tsContent: `
@@ -450,12 +357,6 @@ describe('findUnusedClasses', () => {
     });
 
     test('handles function calls and method chaining', () => {
-      removeCommentsFromTsSpy.mockReturnValue(`
-        const classes = clsx(styles.base, styles.primary);
-        const element = document.querySelector('.' + styles.target);
-        const computed = getClassName(styles["computed"]);
-      `);
-
       const result = findUnusedClasses({
         cssClasses: ['base', 'primary', 'target', 'computed', 'unused'],
         tsContent: `
@@ -474,24 +375,8 @@ describe('findUnusedClasses', () => {
   });
 
   describe('should properly call dependencies', () => {
-    test('calls removeCommentsFromTs with correct content', () => {
-      const tsContent = '/* comment */ const className = styles.button;';
-      removeCommentsFromTsSpy.mockReturnValue(
-        'const className = styles.button;'
-      );
-
-      findUnusedClasses({
-        cssClasses: ['button'],
-        tsContent,
-        importNames: ['styles'],
-      });
-
-      expect(removeCommentsFromTsSpy).toHaveBeenCalledWith(tsContent);
-    });
-
     test('calls checkIsInsideStringLiteral for each match', () => {
       const cleanContent = 'const className = styles.button;';
-      removeCommentsFromTsSpy.mockReturnValue(cleanContent);
 
       findUnusedClasses({
         cssClasses: ['button'],
