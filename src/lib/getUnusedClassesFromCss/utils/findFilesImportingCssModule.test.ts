@@ -24,6 +24,10 @@ describe('findFilesImportingCssModule', () => {
     const dir = path.dirname(fullPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(fullPath, content, 'utf-8');
+    // Принудительно записываем на диск для избежания race condition
+    const fd = fs.openSync(fullPath, 'r+');
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
   };
 
   describe('should find files importing CSS modules', () => {

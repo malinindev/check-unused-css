@@ -5,7 +5,9 @@ describe('Component with errors', () => {
   test.each([
     ['Plain', 'css'],
     ['PlainScss', 'scss'],
-    ['PlainSass', 'sass'],
+    ['WithNotClosedQuote', 'css'],
+    ['WithRegex', 'css'],
+    ['WithComments', 'css'],
   ])('finds unused CSS classes in %s component', (componentName, extension) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
