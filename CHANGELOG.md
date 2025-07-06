@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.1.6
+
+### Patch Changes
+
+- 0b1b18a: fix bug with unclosed quotes
+
 ## 0.1.5
 
 ### Patch Changes
