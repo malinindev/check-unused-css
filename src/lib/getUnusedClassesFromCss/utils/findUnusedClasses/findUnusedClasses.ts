@@ -1,5 +1,6 @@
 import decomment from 'decomment';
 import { checkIsInsideStringLiteral } from '../../../../utils/checkIsInsideStringLiteral.js';
+import { cleanJSXText } from '../../../../utils/cleanJSXText.js';
 import { checkHasDynamicUsage } from './utils/checkHasDynamicUsage.js';
 
 type FindUnusedClassesParams = {
@@ -28,7 +29,8 @@ export const findUnusedClasses: FindUnusedClasses = ({
     return { hasDynamicUsage: true, unusedClasses: null };
   }
 
-  const cleanContent = decomment(tsContent, { tolerant: true });
+  const withoutJSXText = cleanJSXText(tsContent);
+  const cleanContent = decomment(withoutJSXText, { tolerant: true });
 
   for (const className of cssClasses) {
     const isUsed = importNames.some((importName) => {

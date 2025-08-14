@@ -21,6 +21,8 @@ describe('Components without errors', () => {
     'ComposedClasses',
     'Svg',
     'WithApostropheInComment',
+    'WithApostropheInText',
+    'WithApostropheInText2',
     'WithNotClosedQuote',
     'WithRegex',
     'WithComments',
