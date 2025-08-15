@@ -1,6 +1,6 @@
 {
   "name": "check-unused-css",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Detect and remove unused CSS module classes",
   "author": "Serge Malinin <s@malinin.dev>",
   "license": "MIT",
@@ -26,7 +26,11 @@
   "bin": {
     "check-unused-css": "dist/index.js"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "tsc --project tsconfig.build.json --watch",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",

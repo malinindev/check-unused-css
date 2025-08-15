@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.1.7
+
+### Patch Changes
+
+- 0576a95: replace regex parser with AST parser
+- 78195e1: update deps
+
 ## 0.1.6
 
 ### Patch Changes
