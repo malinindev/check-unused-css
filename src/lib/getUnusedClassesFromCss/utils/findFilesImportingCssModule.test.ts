@@ -24,7 +24,7 @@ describe('findFilesImportingCssModule', () => {
     const dir = path.dirname(fullPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(fullPath, content, 'utf-8');
-    // Принудительно записываем на диск для избежания race condition
+    // Force write to disk to avoid race conditions
     const fd = fs.openSync(fullPath, 'r+');
     fs.fsyncSync(fd);
     fs.closeSync(fd);
@@ -408,13 +408,16 @@ describe('findFilesImportingCssModule', () => {
         testDir
       );
 
-      expect(result).toEqual([
-        {
-          file: 'components/ui/buttons/PrimaryButton.tsx',
-          importName: 'styles',
-        },
-        { file: 'components/ui/forms/Input.tsx', importName: 'inputStyles' },
-      ]);
+      expect(result).toHaveLength(2);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          {
+            file: 'components/ui/buttons/PrimaryButton.tsx',
+            importName: 'styles',
+          },
+          { file: 'components/ui/forms/Input.tsx', importName: 'inputStyles' },
+        ])
+      );
     });
 
     test('handles case where CSS file does not exist', async () => {

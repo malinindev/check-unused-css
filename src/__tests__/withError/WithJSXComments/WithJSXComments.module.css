@@ -1,0 +1,11 @@
+.usedClass {
+  display: block;
+}
+
+.unusedClass {
+  display: none;
+}
+
+.unusedClass2 {
+  color: red;
+}
