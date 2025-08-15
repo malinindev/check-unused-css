@@ -1,6 +1,9 @@
-import decomment from 'decomment';
-import { checkIsInsideStringLiteral } from '../../../../utils/checkIsInsideStringLiteral.js';
+import { parse } from '@typescript-eslint/typescript-estree';
+import type { TSESTree } from '@typescript-eslint/typescript-estree';
+import { walk } from 'estree-walker';
+import type { Node } from 'estree';
 import { checkHasDynamicUsage } from './utils/checkHasDynamicUsage.js';
+import { contentToAst } from './utils/contentToAst.js';
 
 type FindUnusedClassesParams = {
   cssClasses: string[];
@@ -23,54 +26,45 @@ export const findUnusedClasses: FindUnusedClasses = ({
 }) => {
   const unusedClasses: string[] = [];
 
-  // Check for dynamic usage patterns
+  // Check for dynamic usage patterns first
   if (checkHasDynamicUsage(tsContent, importNames)) {
     return { hasDynamicUsage: true, unusedClasses: null };
   }
 
-  const cleanContent = decomment(tsContent, { tolerant: true });
+  const ast: TSESTree.Program = contentToAst(tsContent);
 
+  const usedClasses = new Set<string>();
+
+  walk(ast as Node, {
+    enter(node: Node): void {
+      // Handle: importName.className (dot notation)
+      if (
+        node.type === 'MemberExpression' &&
+        !node.computed &&
+        node.object.type === 'Identifier' &&
+        importNames.includes(node.object.name) &&
+        node.property.type === 'Identifier'
+      ) {
+        usedClasses.add(node.property.name);
+      }
+
+      // Handle: importName['className'] (bracket notation)
+      if (
+        node.type === 'MemberExpression' &&
+        node.computed &&
+        node.object.type === 'Identifier' &&
+        importNames.includes(node.object.name) &&
+        node.property.type === 'Literal' &&
+        typeof node.property.value === 'string'
+      ) {
+        usedClasses.add(node.property.value);
+      }
+    },
+  });
+
+  // Check which classes are unused
   for (const className of cssClasses) {
-    const isUsed = importNames.some((importName) => {
-      // Direct usage: importName.className
-      const directUsageRegex = new RegExp(
-        `\\b${importName}\\.${className}\\b`,
-        'g'
-      );
-
-      // Bracket notation: importName['className'] or importName["className"]
-      const bracketUsageRegex = new RegExp(
-        `\\b${importName}\\s*\\[\\s*['"\`]${className}['"\`]\\s*\\]`,
-        'g'
-      );
-
-      // Check direct usage
-      let match: RegExpExecArray | null = null;
-      directUsageRegex.lastIndex = 0;
-
-      while (true) {
-        match = directUsageRegex.exec(cleanContent);
-        if (match === null) break;
-        if (!checkIsInsideStringLiteral(cleanContent, match.index)) {
-          return true;
-        }
-      }
-
-      // Check bracket usage
-      bracketUsageRegex.lastIndex = 0;
-
-      while (true) {
-        match = bracketUsageRegex.exec(cleanContent);
-        if (match === null) break;
-        if (!checkIsInsideStringLiteral(cleanContent, match.index)) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-
-    if (!isUsed) {
+    if (!usedClasses.has(className)) {
       unusedClasses.push(className);
     }
   }
