@@ -8,6 +8,7 @@ describe('Component with errors', () => {
     ['WithNotClosedQuote', 'css'],
     ['WithRegex', 'css'],
     ['WithComments', 'css'],
+    ['WithJSXComments', 'css'],
   ])('finds unused CSS classes in %s component', (componentName, extension) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`

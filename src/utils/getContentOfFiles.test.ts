@@ -105,7 +105,7 @@ describe('getContentOfFiles', () => {
 
   test('handles Unicode content', () => {
     const fileName = 'unicode.txt';
-    const fileContent = 'Unicode: 🚀 こんにちは мир';
+    const fileContent = 'Unicode: 🚀 こんにちは world';
 
     fs.writeFileSync(path.join(testDir, fileName), fileContent);
 
