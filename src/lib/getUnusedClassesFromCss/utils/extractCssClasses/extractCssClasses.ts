@@ -1,11 +1,11 @@
-import postcss from 'postcss';
-import { extractComposedClasses } from './utils/extractComposedClasses.js';
+import postcssScss from 'postcss-scss';
 import { extractClassNamesFromRule } from './utils/extractClassNamesFromRule.js';
+import { extractComposedClasses } from './utils/extractComposedClasses.js';
 
 export const extractCssClasses = (cssContent: string): string[] => {
   const classNames = new Set<string>();
 
-  const root = postcss.parse(cssContent);
+  const root = postcssScss.parse(cssContent);
 
   root.walkRules((rule) => {
     const ruleClassNames = extractClassNamesFromRule(rule);
