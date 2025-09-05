@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.1.8
+
+### Patch Changes
+
+- 4f62e6e: change postcss with postcss-scss to fix problems with comments in scss files
+- de2ae86: fix lint problems
+
 ## 0.1.7
 
 ### Patch Changes
