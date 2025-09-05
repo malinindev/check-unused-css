@@ -1,6 +1,6 @@
-import { describe, test, expect } from 'bun:test';
-import { contentToAst } from './contentToAst.js';
+import { describe, expect, test } from 'bun:test';
 import { AST_NODE_TYPES } from '@typescript-eslint/typescript-estree';
+import { contentToAst } from './contentToAst.js';
 
 describe('contentToAst', () => {
   describe('should parse valid TypeScript/JSX content', () => {

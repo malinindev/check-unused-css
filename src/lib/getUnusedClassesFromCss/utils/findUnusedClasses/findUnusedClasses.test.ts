@@ -1,11 +1,11 @@
 import {
-  test,
+  afterEach,
+  beforeEach,
   describe,
   expect,
-  spyOn,
-  beforeEach,
-  afterEach,
   type Mock,
+  spyOn,
+  test,
 } from 'bun:test';
 import { findUnusedClasses } from './findUnusedClasses.js';
 import * as checkHasDynamicUsageModule from './utils/checkHasDynamicUsage.js';

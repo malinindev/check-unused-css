@@ -1,7 +1,6 @@
-import { parse } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
-import { walk } from 'estree-walker';
 import type { Node } from 'estree';
+import { walk } from 'estree-walker';
 import { checkHasDynamicUsage } from './utils/checkHasDynamicUsage.js';
 import { contentToAst } from './utils/contentToAst.js';
 
@@ -15,15 +14,11 @@ type FindUnusedClassesResult =
   | { unusedClasses: null; hasDynamicUsage: true }
   | { unusedClasses: string[]; hasDynamicUsage: false };
 
-type FindUnusedClasses = (
-  params: FindUnusedClassesParams
-) => FindUnusedClassesResult;
-
-export const findUnusedClasses: FindUnusedClasses = ({
+export const findUnusedClasses = ({
   cssClasses,
   tsContent,
   importNames,
-}) => {
+}: FindUnusedClassesParams): FindUnusedClassesResult => {
   const unusedClasses: string[] = [];
 
   // Check for dynamic usage patterns first

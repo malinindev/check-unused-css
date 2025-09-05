@@ -1,11 +1,11 @@
 import {
-  test,
+  afterEach,
+  beforeEach,
   describe,
   expect,
-  spyOn,
-  beforeEach,
-  afterEach,
   type Mock,
+  spyOn,
+  test,
 } from 'bun:test';
 import { extractCssClasses } from './extractCssClasses.js';
 import * as extractClassNamesFromRuleModule from './utils/extractClassNamesFromRule.js';

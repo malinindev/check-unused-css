@@ -1,9 +1,9 @@
-import { createParser } from 'css-selector-parser';
+import { createParser, type Parser } from 'css-selector-parser';
 import type { Rule } from 'postcss';
-import { findClassNamesInSelector } from './findClassNamesInSelector.js';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
+import { findClassNamesInSelector } from './findClassNamesInSelector.js';
 
-const parseSelector = createParser();
+const parseSelector: Parser = createParser();
 
 export const extractClassNamesFromRule = (rule: Rule): string[] => {
   try {

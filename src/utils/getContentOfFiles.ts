@@ -1,12 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-type GetContentOfFiles = (params: {
+type GetContentOfFilesParams = {
   files: string[];
   srcDir: string;
-}) => string;
+};
 
-export const getContentOfFiles: GetContentOfFiles = ({ files, srcDir }) => {
+export const getContentOfFiles = ({
+  files,
+  srcDir,
+}: GetContentOfFilesParams): string => {
   let content = '';
 
   for (const file of files) {

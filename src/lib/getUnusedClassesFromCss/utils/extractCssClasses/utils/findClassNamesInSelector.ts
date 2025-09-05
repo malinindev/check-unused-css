@@ -1,4 +1,4 @@
-import type { AstSelector } from 'css-selector-parser';
+import type { AstRule, AstSelector } from 'css-selector-parser';
 
 export const findClassNamesInSelector = (selector: AstSelector): string[] => {
   if (!selector.rules.length) {
@@ -7,7 +7,7 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
 
   const classNames: string[] = [];
 
-  const extractClassNamesFromRule = (rule: any): void => {
+  const extractClassNamesFromRule = (rule: AstRule): void => {
     for (const item of rule.items) {
       if (item.type === 'ClassName') {
         classNames.push(item.name);

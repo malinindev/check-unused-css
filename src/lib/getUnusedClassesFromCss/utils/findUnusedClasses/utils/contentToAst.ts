@@ -1,5 +1,5 @@
-import { parse } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
+import { parse } from '@typescript-eslint/typescript-estree';
 
 export const contentToAst = (content: string): TSESTree.Program => {
   try {

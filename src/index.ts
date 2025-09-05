@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 import { glob } from 'glob';
-import type { UnusedClassResult } from './types.js';
+import { COLORS } from './consts.js';
 import { getUnusedClassesFromCss } from './lib/getUnusedClassesFromCss/index.js';
 import { printResults } from './lib/printResults.js';
+import type { UnusedClassResult } from './types.js';
 import { getArgs } from './utils/getArgs.js';
-import { COLORS } from './consts.js';
 
 const DEFAULT_TARGET_PATH = 'src';
 

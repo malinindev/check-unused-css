@@ -39,11 +39,12 @@
     "release:publish": "changeset publish",
     "prepublishOnly": "bun run build && bun run check:all",
     "test": "bun test",
-    "check:all": "bun run check:format && bun run check:type && bun run test",
+    "check:all": "bun run check:format && bun run check:lint && bun run check:type && bun run test",
     "check:type": "tsc --noEmit",
     "check:lint": "biome lint ./src",
     "check:format": "biome format ./src",
-    "fix:format": "biome format --write ./src"
+    "fix:lint": "biome format --write ./src",
+    "fix:format": "biome lint --apply ./src"
   },
   "engines": {
     "bun": ">=1.0.0"
@@ -56,6 +57,7 @@
     "css-selector-parser": "^3.1.3",
     "estree-walker": "^3.0.3",
     "glob": "^11.0.3",
+    "postcss": "^8.5.6",
     "postcss-scss": "^4.0.9"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { test, describe, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import type { Rule } from 'postcss';
 import { extractClassNamesFromRule } from './extractClassNamesFromRule.js';
 

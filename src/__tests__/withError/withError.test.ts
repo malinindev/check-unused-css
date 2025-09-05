@@ -1,4 +1,4 @@
-import { test, describe, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { runCheckUnusedCss } from '../runCheckUnusedCss.js';
 
 describe('Component with errors', () => {
@@ -16,7 +16,7 @@ describe('Component with errors', () => {
     expect(result.exitCode).toBe(1);
 
     const fileRegexp = new RegExp(
-      `^${componentName}\.module\.${extension}$`,
+      `^${componentName}.module.${extension}$`,
       'm'
     );
     expect(result.stdout).toMatch(fileRegexp);

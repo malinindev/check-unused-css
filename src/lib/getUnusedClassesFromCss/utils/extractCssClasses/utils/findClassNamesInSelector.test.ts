@@ -1,9 +1,9 @@
-import { test, describe, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
+import type { AstSelector, Parser } from 'css-selector-parser';
 import { createParser } from 'css-selector-parser';
-import type { AstSelector } from 'css-selector-parser';
 import { findClassNamesInSelector } from './findClassNamesInSelector.js';
 
-const parseSelector = createParser();
+const parseSelector: Parser = createParser();
 
 const createAstSelector = (selector: string): AstSelector =>
   parseSelector(selector);

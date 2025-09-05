@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { checkIsInsideStringLiteral } from './checkIsInsideStringLiteral.js';
 
 describe('checkIsInsideStringLiteral', () => {
@@ -59,6 +59,7 @@ describe('checkIsInsideStringLiteral', () => {
   });
 
   test('returns false when inside template string interpolation', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
     const content = 'const x = `hello ${name} world`;';
     const matchIndex = 19; // position at "name"
 
@@ -66,6 +67,7 @@ describe('checkIsInsideStringLiteral', () => {
   });
 
   test('returns true when in template string but outside interpolation', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
     const content = 'const x = `hello ${name} world`;';
     const matchIndex = 13; // position at "hello"
 
@@ -73,6 +75,7 @@ describe('checkIsInsideStringLiteral', () => {
   });
 
   test('returns true when in template string after interpolation', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
     const content = 'const x = `hello ${name} world`;';
     const matchIndex = 24; // position at "world"
 
@@ -80,6 +83,7 @@ describe('checkIsInsideStringLiteral', () => {
   });
 
   test('handles multiple template string interpolations', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
     const content = 'const x = `hello ${first} and ${second} world`;';
     const matchIndex = 35; // position at "second"
 
@@ -109,6 +113,7 @@ describe('checkIsInsideStringLiteral', () => {
 
   test('handles complex template string with multiple parts', () => {
     const content =
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       'const message = `Start ${variable1} middle ${variable2} end`;';
     const matchIndex = 48; // position at "variable2"
 
@@ -141,6 +146,7 @@ describe('checkIsInsideStringLiteral', () => {
 
   test('handles complex mixed quotes with template strings', () => {
     const content =
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       'const msg = `Hello ${name} with "quotes" and \'apostrophes\'`; return styles.usedClass;';
     const matchIndex = content.indexOf('styles.usedClass');
 
@@ -149,6 +155,7 @@ describe('checkIsInsideStringLiteral', () => {
 
   test('handles quotes inside template string interpolation', () => {
     const content =
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       "const html = `<div title=\"${title.replace('\"', '&quot;')}\">${content}</div>`; return styles.usedClass;";
     const matchIndex = content.indexOf('styles.usedClass');
 
@@ -165,6 +172,7 @@ describe('checkIsInsideStringLiteral', () => {
 
   test('handles multiple template strings with nested quotes', () => {
     const content =
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       'const a = `First ${var1} "quote"`; const b = `Second ${var2} \'quote\'`; return styles.usedClass;';
     const matchIndex = content.indexOf('styles.usedClass');
 
@@ -242,6 +250,7 @@ describe('checkIsInsideStringLiteral', () => {
 
   test('handles complex React JSX with quotes', () => {
     const content =
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       'const jsx = `<Component prop="${value}" title=\'${title.replace("\\"", "&quot;")}\' />`; return styles.usedClass;';
     const matchIndex = content.indexOf('styles.usedClass');
 
