@@ -1,4 +1,4 @@
-import { test, describe, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { checkHasDynamicUsage } from './checkHasDynamicUsage.js';
 
 describe('checkHasDynamicUsage', () => {
@@ -6,6 +6,7 @@ describe('checkHasDynamicUsage', () => {
 
   describe('should return true for dynamic usage patterns', () => {
     test('detects template strings with variables', () => {
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       const tsContent = 'const className = styles[`prefix${variable}suffix`];';
       expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
     });
@@ -167,6 +168,7 @@ describe('checkHasDynamicUsage', () => {
         // React component with conditional classes
         'className={styles[isActive ? "active" : "inactive"]}',
         // CSS Modules with computed names
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
         'const cls = styles[`${prefix}${variant}${size}`];',
         // Fallback patterns
         'const className = styles[props.className || defaultClassName || "fallback"];',

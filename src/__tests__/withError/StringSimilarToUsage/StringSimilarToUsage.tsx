@@ -39,8 +39,8 @@ export const StringSimilarToUsage: React.FC = () => {
 
   // biome-ignore lint/correctness/noUnusedVariables: for test
   const constNameAsClass = null;
-  // biome-ignore lint/style/noVar: for test
   // biome-ignore lint/correctness/noUnusedVariables: for test
+  // biome-ignore lint/suspicious/noVar: for test
   var varNameAsClass = null;
   // biome-ignore lint/style/useConst: for test
   // biome-ignore lint/correctness/noUnusedVariables: for test

@@ -1,8 +1,8 @@
-import { test, describe, expect, beforeEach, afterEach } from 'bun:test';
-import { findFilesImportingCssModule } from './findFilesImportingCssModule.js';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
-import path from 'node:path';
 import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { findFilesImportingCssModule } from './findFilesImportingCssModule.js';
 
 describe('findFilesImportingCssModule', () => {
   let testDir: string;

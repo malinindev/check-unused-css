@@ -32,7 +32,7 @@ export const checkIsInsideStringLiteral = (
         // Check if this is the start of a regex
         // Look back to see if this could be a regex start
         const beforeSlash = beforeMatch.substring(0, i).trim();
-        const regexStartPattern = /(?:^|[=,({\[\s;!&|?:])$/;
+        const regexStartPattern = /(?:^|[=,({[\s;!&|?:])$/;
         if (regexStartPattern.test(beforeSlash)) {
           insideRegex = true;
         }

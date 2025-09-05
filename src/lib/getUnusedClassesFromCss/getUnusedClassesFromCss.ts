@@ -1,18 +1,18 @@
 import type { UnusedClassResult } from '../../types.js';
+import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
 import { extractCssClasses } from './utils/extractCssClasses/index.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule.js';
 import { findUnusedClasses } from './utils/findUnusedClasses/index.js';
-import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
 
-type GetUnusedClassesFromCss = (params: {
+type GetUnusedClassesFromCssParams = {
   cssFile: string;
   srcDir: string;
-}) => Promise<UnusedClassResult | null>;
+};
 
-export const getUnusedClassesFromCss: GetUnusedClassesFromCss = async ({
+export const getUnusedClassesFromCss = async ({
   cssFile,
   srcDir,
-}) => {
+}: GetUnusedClassesFromCssParams): Promise<UnusedClassResult | null> => {
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClasses = extractCssClasses(cssContent);
 

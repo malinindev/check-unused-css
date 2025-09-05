@@ -4,9 +4,5 @@
     "declaration": false
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "src/__tests__/**/*"
-  ]
-} 
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "src/__tests__/**/*"]
+}

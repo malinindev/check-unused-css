@@ -1,17 +1,17 @@
 import {
-  test,
+  afterEach,
+  beforeEach,
   describe,
   expect,
-  spyOn,
-  beforeEach,
-  afterEach,
   type Mock,
+  spyOn,
+  test,
 } from 'bun:test';
+import * as getContentOfFilesModule from '../../utils/getContentOfFiles.js';
 import { getUnusedClassesFromCss } from './getUnusedClassesFromCss.js';
 import * as extractCssClassesModule from './utils/extractCssClasses/index.js';
 import * as findFilesImportingCssModuleModule from './utils/findFilesImportingCssModule.js';
 import * as findUnusedClassesModule from './utils/findUnusedClasses/index.js';
-import * as getContentOfFilesModule from '../../utils/getContentOfFiles.js';
 
 describe('getUnusedClassesFromCss', () => {
   let extractCssClassesSpy: Mock<

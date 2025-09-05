@@ -1,15 +1,15 @@
 import {
-  describe,
-  test,
-  expect,
-  beforeEach,
   afterEach,
-  spyOn,
+  beforeEach,
+  describe,
+  expect,
   type Mock,
+  spyOn,
+  test,
 } from 'bun:test';
-import { printResults } from './printResults.js';
 import { COLORS } from '../consts.js';
 import type { UnusedClassResult } from '../types.js';
+import { printResults } from './printResults.js';
 
 describe('printResults', () => {
   let consoleLogSpy: Mock<typeof console.log>;

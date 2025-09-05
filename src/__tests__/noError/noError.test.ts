@@ -1,4 +1,4 @@
-import { test, describe, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { runCheckUnusedCss } from '../runCheckUnusedCss.js';
 
 describe('Components without errors', () => {
