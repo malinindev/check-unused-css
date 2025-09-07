@@ -44,6 +44,45 @@ npx check-unused-css src/components
 
 By default, it checks the `src` directory.
 
+#### Exclude patterns
+
+You can exclude certain files or directories from being checked using the `--exclude` or `-e` flag. Patterns are relative to your project root:
+
+```bash
+# Exclude specific directories
+npx check-unused-css --exclude "src/components/SidePanel/**"
+npx check-unused-css --exclude "./src/stories/**"
+
+# Exclude test files using glob patterns
+npx check-unused-css --exclude "**/test/**"
+npx check-unused-css --exclude "**/__tests__/**"
+
+# Exclude multiple patterns
+npx check-unused-css --exclude "src/components/SidePanel/**" -e "**/stories/**"
+
+# Combine with custom path
+npx check-unused-css src/components --exclude "src/components/tests/**"
+
+# Alternative syntax with equals
+npx check-unused-css --exclude="src/components/SidePanel/**"
+npx check-unused-css -e="./src/stories/**"
+```
+
+Exclude patterns support both specific paths and glob syntax:
+
+**Specific paths (from project root):**
+- `src/components/SidePanel/**` - exclude specific component folder
+- `./src/stories/**` - exclude stories directory
+- `src/legacy/**` - exclude legacy code
+
+**Glob patterns (universal matching):**
+- `**/test/**`, `**/__tests__/**` - test directories anywhere
+- `**/stories/**` - story files anywhere
+- `**/*.test.{css,scss}`, `**/*.spec.*` - test files by pattern
+- `**/node_modules/**` - node modules (usually not needed)
+
+*Note: Remember to wrap patterns in quotes to prevent shell expansion*
+
 
 ## Limitations
 

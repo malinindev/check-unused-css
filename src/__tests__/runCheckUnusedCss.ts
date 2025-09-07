@@ -3,9 +3,20 @@ const removeColorsFromOutput = (output: string): string =>
   output.replace(/\u001B\[[0-9;]*m/g, '');
 
 export const runCheckUnusedCss = (
-  targetPath?: string
+  targetPath?: string,
+  excludePatterns?: string[]
 ): { stdout: string; stderr: string; exitCode: number } => {
-  const args = targetPath ? ['src/index.ts', targetPath] : ['src/index.ts'];
+  const args = ['src/index.ts'];
+
+  if (targetPath) {
+    args.push(targetPath);
+  }
+
+  if (excludePatterns && excludePatterns.length > 0) {
+    for (const pattern of excludePatterns) {
+      args.push('--exclude', pattern);
+    }
+  }
 
   const result = Bun.spawnSync(['bun', ...args], {
     stdout: 'pipe',

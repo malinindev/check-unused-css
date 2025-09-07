@@ -12,3 +12,8 @@ export type UnusedClassResultNoClasses = {
 export type UnusedClassResult =
   | UnusedClassResultWithClasses
   | UnusedClassResultNoClasses;
+
+export type Args = {
+  targetPath?: string;
+  excludePatterns?: string[];
+};
