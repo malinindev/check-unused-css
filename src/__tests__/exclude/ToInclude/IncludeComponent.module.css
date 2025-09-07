@@ -1,0 +1,11 @@
+.usedClass {
+  color: green;
+}
+
+.unusedClassInInclude {
+  color: purple;
+}
+
+.anotherUnusedClassInInclude {
+  background: orange;
+}

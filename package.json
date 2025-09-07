@@ -43,8 +43,8 @@
     "check:type": "tsc --noEmit",
     "check:lint": "biome lint ./src",
     "check:format": "biome format ./src",
-    "fix:lint": "biome format --write ./src",
-    "fix:format": "biome lint --apply ./src"
+    "fix:lint": "biome lint --apply ./src",
+    "fix:format": "biome format --write ./src"
   },
   "engines": {
     "bun": ">=1.0.0"
