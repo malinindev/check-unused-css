@@ -1,0 +1,46 @@
+.usedClass {
+  display: block;
+}
+
+.usedClass2 {
+  color: blue;
+}
+
+.usedClass3 {
+  background: red;
+}
+
+/* These classes are defined but unused - should be reported */
+.unusedClass {
+  color: green;
+}
+
+.unusedClass2 {
+  margin: 10px;
+}
+
+/* Classes used in :not() selectors - should NOT be reported as unused */
+.specialState {
+  opacity: 0.5;
+}
+
+.disabled {
+  pointer-events: none;
+}
+
+.active {
+  font-weight: bold;
+}
+
+/* Complex selectors using :not() - the classes inside :not() should be considered as used */
+.button:not(.disabled) {
+  cursor: pointer;
+}
+
+.container:not(.specialState, .active) {
+  padding: 20px;
+}
+
+.item:not(.disabled):hover {
+  background: yellow;
+}

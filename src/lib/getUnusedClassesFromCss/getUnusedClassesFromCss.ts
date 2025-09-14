@@ -1,6 +1,6 @@
-import type { UnusedClassResult } from '../../types.js';
+import type { UnusedClassResult, UnusedClassUsage } from '../../types.js';
 import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
-import { extractCssClasses } from './utils/extractCssClasses/index.js';
+import { extractCssClassesWithLocations } from './utils/extractCssClasses/index.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule.js';
 import { findUnusedClasses } from './utils/findUnusedClasses/index.js';
 
@@ -14,7 +14,8 @@ export const getUnusedClassesFromCss = async ({
   srcDir,
 }: GetUnusedClassesFromCssParams): Promise<UnusedClassResult | null> => {
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
-  const cssClasses = extractCssClasses(cssContent);
+  const cssClassesWithLocations = extractCssClassesWithLocations(cssContent);
+  const cssClasses = cssClassesWithLocations.map((info) => info.className);
 
   if (cssClasses.length === 0) {
     return null;
@@ -56,9 +57,23 @@ export const getUnusedClassesFromCss = async ({
     return null;
   }
 
+  // Map unused class names to their location information
+  const unusedClassesWithLocations: UnusedClassUsage[] = unusedClasses.map(
+    (className) => {
+      const locationInfo = cssClassesWithLocations.find(
+        (info) => info.className === className
+      );
+      return {
+        className,
+        line: locationInfo?.line || 1,
+        column: locationInfo?.column || 1,
+      };
+    }
+  );
+
   return {
     file: cssFile,
-    unusedClasses,
+    unusedClasses: unusedClassesWithLocations,
     status: 'correct',
   };
 };
