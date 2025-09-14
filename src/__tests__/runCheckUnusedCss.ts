@@ -4,7 +4,8 @@ const removeColorsFromOutput = (output: string): string =>
 
 export const runCheckUnusedCss = (
   targetPath?: string,
-  excludePatterns?: string[]
+  excludePatterns?: string[],
+  noDynamic?: boolean
 ): { stdout: string; stderr: string; exitCode: number } => {
   const args = ['src/index.ts'];
 
@@ -16,6 +17,10 @@ export const runCheckUnusedCss = (
     for (const pattern of excludePatterns) {
       args.push('--exclude', pattern);
     }
+  }
+
+  if (noDynamic) {
+    args.push('--no-dynamic');
   }
 
   const result = Bun.spawnSync(['bun', ...args], {

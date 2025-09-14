@@ -13,7 +13,7 @@ const DEFAULT_TARGET_PATH = 'src';
 
 const runCssChecker = async (): Promise<void> => {
   try {
-    const { targetPath, excludePatterns } = getArgs();
+    const { targetPath, excludePatterns, noDynamic } = getArgs();
 
     console.log('Checking for unused CSS classes...\n');
 
@@ -68,7 +68,7 @@ const runCssChecker = async (): Promise<void> => {
       }
     }
 
-    printResults(results);
+    printResults(results, noDynamic);
 
     const hasUnusedClasses = results.some(
       (result) => result.status === 'correct' && result.unusedClasses.length > 0
@@ -78,7 +78,15 @@ const runCssChecker = async (): Promise<void> => {
       (result) => result.status === 'notImported'
     );
 
-    if (hasUnusedClasses || hasNotImportedModules) {
+    const hasDynamicUsage = results.some(
+      (result) => result.status === 'withDynamicImports'
+    );
+
+    if (
+      hasUnusedClasses ||
+      hasNotImportedModules ||
+      (noDynamic && hasDynamicUsage)
+    ) {
       process.exit(1);
     }
   } catch (error) {

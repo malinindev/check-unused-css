@@ -5,7 +5,10 @@ import type {
   UnusedClassResultWithClasses,
 } from '../types.js';
 
-export const printResults = (results: UnusedClassResult[]): void => {
+export const printResults = (
+  results: UnusedClassResult[],
+  noDynamic = false
+): void => {
   const resultsWithUnusedClasses = results.filter(
     (result): result is UnusedClassResultWithClasses =>
       result.status === 'correct' && result.unusedClasses.length > 0
@@ -22,17 +25,31 @@ export const printResults = (results: UnusedClassResult[]): void => {
   );
 
   if (resultsWithDynamicUsage.length > 0) {
-    console.warn(
-      `${COLORS.yellow}Warning: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
-    );
-    console.warn(
-      `${COLORS.yellow}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
-    );
+    if (noDynamic) {
+      console.error(
+        `${COLORS.red}Error: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
+      );
+      console.error(
+        `${COLORS.red}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+      );
 
-    for (const result of resultsWithDynamicUsage) {
-      console.log(`  ${COLORS.yellow}${result.file}${COLORS.reset}`);
+      for (const result of resultsWithDynamicUsage) {
+        console.log(`  ${COLORS.red}${result.file}${COLORS.reset}`);
+      }
+      console.log('');
+    } else {
+      console.warn(
+        `${COLORS.yellow}Warning: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
+      );
+      console.warn(
+        `${COLORS.yellow}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+      );
+
+      for (const result of resultsWithDynamicUsage) {
+        console.log(`  ${COLORS.yellow}${result.file}${COLORS.reset}`);
+      }
+      console.log('');
     }
-    console.log('');
   }
 
   if (notImportedResults.length > 0) {
