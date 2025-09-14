@@ -11,6 +11,13 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
     for (const item of rule.items) {
       if (item.type === 'ClassName') {
         classNames.push(item.name);
+      } else if (
+        item.type === 'PseudoClass' &&
+        item.argument &&
+        item.argument.type === 'Selector'
+      ) {
+        // Extract class names from pseudo-class arguments like :not(.class)
+        classNames.push(...findClassNamesInSelector(item.argument));
       }
     }
 

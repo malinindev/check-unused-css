@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { type GlobOptionsWithFileTypesFalse, glob } from 'glob';
 import { COLORS } from './consts.js';
+import { getNonExistentClassesFromCss } from './lib/getNonExistentClassesFromCss.js';
 import { getUnusedClassesFromCss } from './lib/getUnusedClassesFromCss/index.js';
 import { printResults } from './lib/printResults.js';
-import type { UnusedClassResult } from './types.js';
+import type { CssAnalysisResult } from './types.js';
 import { getArgs } from './utils/getArgs.js';
 
 const DEFAULT_TARGET_PATH = 'src';
@@ -49,7 +50,7 @@ const runCssChecker = async (): Promise<void> => {
       .replace(/\\/g, '/');
     const cssFiles = await glob(searchPattern, globOptions);
 
-    const results: UnusedClassResult[] = [];
+    const results: CssAnalysisResult[] = [];
 
     for (const cssFile of cssFiles) {
       // cssFile is now relative to project root, need to make it relative to srcDir
@@ -58,13 +59,22 @@ const runCssChecker = async (): Promise<void> => {
         path.join(process.cwd(), cssFile)
       );
 
-      const result = await getUnusedClassesFromCss({
+      const unusedResult = await getUnusedClassesFromCss({
         cssFile: relativeCssFile,
         srcDir,
       });
 
-      if (result) {
-        results.push(result);
+      const nonExistentResult = await getNonExistentClassesFromCss({
+        cssFile: relativeCssFile,
+        srcDir,
+      });
+
+      if (unusedResult) {
+        results.push(unusedResult);
+      }
+
+      if (nonExistentResult) {
+        results.push(nonExistentResult);
       }
     }
 
@@ -82,9 +92,16 @@ const runCssChecker = async (): Promise<void> => {
       (result) => result.status === 'withDynamicImports'
     );
 
+    const hasNonExistentClasses = results.some(
+      (result) =>
+        result.status === 'nonExistentClasses' &&
+        result.nonExistentClasses.length > 0
+    );
+
     if (
       hasUnusedClasses ||
       hasNotImportedModules ||
+      hasNonExistentClasses ||
       (noDynamic && hasDynamicUsage)
     ) {
       process.exit(1);

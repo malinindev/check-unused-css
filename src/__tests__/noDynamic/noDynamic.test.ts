@@ -49,7 +49,9 @@ describe('--no-dynamic flag', () => {
     );
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toMatch(/Found .* unused CSS classes/);
+    expect(result.stderr).toMatch(
+      /Found .* classes defined in CSS but unused in TypeScript/
+    );
     expect(result.stdout).toMatch(/unusedClass/);
     expect(result.stdout).toMatch(/anotherUnusedClass/);
   });
@@ -88,7 +90,9 @@ describe('--no-dynamic flag', () => {
     // Should fail because WithUnusedClasses has unused classes
     expect(result.exitCode).toBe(1); // Still fails due to WithUnusedClasses
     expect(result.stderr).not.toMatch(/Dynamic class usage detected/);
-    expect(result.stderr).toMatch(/Found .* unused CSS classes/);
+    expect(result.stderr).toMatch(
+      /Found .* classes defined in CSS but unused in TypeScript/
+    );
   });
 
   test('excludes unused classes but still fails on dynamic usage with --no-dynamic', () => {

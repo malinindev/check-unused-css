@@ -1,0 +1,11 @@
+.validClass {
+  color: blue;
+  
+  &:hover {
+    color: red;
+  }
+}
+
+.anotherValidClass {
+  padding: 10px;
+}
