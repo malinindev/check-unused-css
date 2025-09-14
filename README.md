@@ -102,6 +102,8 @@ When `--no-dynamic` is used:
 
 This is useful in CI/CD pipelines where you want to enforce explicit class usage.
 
+**[Read more about why dynamic class access should be avoided](./avoid-dynamic-classes.md)**
+
 ## Limitations
 
 The tool only works when CSS classes are used directly, for example:
@@ -125,7 +127,7 @@ const dynamicClass = Math.random() * 10 >= 5 ? 'classOne' : 'classTwo';
 <div className={styles[dynamicClass]} />
 ```
 
-In such cases, the tool will skip the check and mark it as passed. Avoid dynamic access and use explicit class names for clarity.
+In such cases, the tool will skip the check and mark it as passed. [Avoid dynamic access](./avoid-dynamic-classes.md) and use explicit class names for clarity.
 
 ## NOTE
 This tool finds CSS classes that are declared in stylesheets but unused in components - not the other way around. It won't detect TypeScript references to CSS classes that don't exist in stylesheets.
