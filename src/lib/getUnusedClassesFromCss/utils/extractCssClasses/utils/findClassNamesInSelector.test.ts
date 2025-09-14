@@ -83,6 +83,30 @@ describe('findClassNamesInSelector', () => {
       const result = findClassNamesInSelector(selector);
       expect(result).toEqual(['item']);
     });
+
+    test('extracts class names from :not() pseudo-class selectors', () => {
+      const selector = createAstSelector('.folder:not(.empty)');
+      const result = findClassNamesInSelector(selector);
+      expect(result).toEqual(['folder', 'empty']);
+    });
+
+    test('extracts class names from :not() with multiple classes', () => {
+      const selector = createAstSelector('.folder:not(.root, .empty)');
+      const result = findClassNamesInSelector(selector);
+      expect(result).toEqual(['folder', 'root', 'empty']);
+    });
+
+    test('extracts class names from :is() pseudo-class selectors', () => {
+      const selector = createAstSelector('.container:is(.active, .focused)');
+      const result = findClassNamesInSelector(selector);
+      expect(result).toEqual(['container', 'active', 'focused']);
+    });
+
+    test('extracts class names from :where() pseudo-class selectors', () => {
+      const selector = createAstSelector('.item:where(.visible, .interactive)');
+      const result = findClassNamesInSelector(selector);
+      expect(result).toEqual(['item', 'visible', 'interactive']);
+    });
   });
 
   describe('should handle mixed selectors', () => {
