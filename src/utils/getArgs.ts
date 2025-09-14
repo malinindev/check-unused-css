@@ -4,6 +4,7 @@ export const getArgs = (): Args => {
   const args = process.argv.slice(2);
   let targetPath: string | undefined;
   const excludePatterns: string[] = [];
+  let noDynamic = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -29,6 +30,8 @@ export const getArgs = (): Args => {
         throw new Error('-e flag requires a pattern argument.');
       }
       excludePatterns.push(pattern);
+    } else if (arg === '--no-dynamic') {
+      noDynamic = true;
     } else if (arg.startsWith('-')) {
       throw new Error(`Unknown flag: ${arg}`);
     } else {
@@ -44,5 +47,6 @@ export const getArgs = (): Args => {
   return {
     targetPath,
     excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+    noDynamic,
   };
 };

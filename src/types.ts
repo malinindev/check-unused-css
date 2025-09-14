@@ -16,4 +16,5 @@ export type UnusedClassResult =
 export type Args = {
   targetPath?: string;
   excludePatterns?: string[];
+  noDynamic?: boolean;
 };

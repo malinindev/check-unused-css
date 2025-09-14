@@ -41,9 +41,6 @@
         "useArrowFunction": "error",
         "noAdjacentSpacesInRegex": "error"
       },
-      "nursery": {
-        "useExplicitType": "error"
-      },
       "correctness": {
         "noConstAssign": "error",
         "noConstantCondition": "error",

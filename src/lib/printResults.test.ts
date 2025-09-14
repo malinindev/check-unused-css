@@ -522,4 +522,74 @@ describe('printResults', () => {
       );
     });
   });
+
+  describe('when noDynamic flag is enabled', () => {
+    test('prints error for dynamic usage instead of warning', () => {
+      const results: UnusedClassResult[] = [
+        {
+          file: 'components/Button.tsx',
+          status: 'withDynamicImports',
+        },
+      ];
+
+      printResults(results, true);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        `${COLORS.red}Error: Dynamic class usage detected in 1 files.${COLORS.reset}`
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        `${COLORS.red}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `  ${COLORS.red}components/Button.tsx${COLORS.reset}`
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('');
+    });
+
+    test('prints error for multiple files with dynamic usage', () => {
+      const results: UnusedClassResult[] = [
+        {
+          file: 'components/Button.tsx',
+          status: 'withDynamicImports',
+        },
+        {
+          file: 'components/Card.tsx',
+          status: 'withDynamicImports',
+        },
+      ];
+
+      printResults(results, true);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        `${COLORS.red}Error: Dynamic class usage detected in 2 files.${COLORS.reset}`
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `  ${COLORS.red}components/Button.tsx${COLORS.reset}`
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `  ${COLORS.red}components/Card.tsx${COLORS.reset}`
+      );
+    });
+
+    test('still prints warnings when noDynamic is false', () => {
+      const results: UnusedClassResult[] = [
+        {
+          file: 'components/Button.tsx',
+          status: 'withDynamicImports',
+        },
+      ];
+
+      printResults(results, false);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        `${COLORS.yellow}Warning: Dynamic class usage detected in 1 files.${COLORS.reset}`
+      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        `${COLORS.yellow}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `  ${COLORS.yellow}components/Button.tsx${COLORS.reset}`
+      );
+    });
+  });
 });

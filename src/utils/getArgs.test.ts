@@ -22,6 +22,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -34,6 +35,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: testPath,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -46,6 +48,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: relativePath,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -58,6 +61,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: absolutePath,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -70,6 +74,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: pathWithSpaces,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -82,6 +87,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: windowsPath,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -94,6 +100,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: specialPath,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -102,7 +109,11 @@ describe('getArgs', () => {
 
     const result = getArgs();
 
-    expect(result).toEqual({ targetPath: '', excludePatterns: undefined });
+    expect(result).toEqual({
+      targetPath: '',
+      excludePatterns: undefined,
+      noDynamic: false,
+    });
   });
 
   test('throws error when multiple path arguments provided', () => {
@@ -137,6 +148,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: numericArg,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -146,7 +158,11 @@ describe('getArgs', () => {
 
     const result = getArgs();
 
-    expect(result).toEqual({ targetPath: dotPath, excludePatterns: undefined });
+    expect(result).toEqual({
+      targetPath: dotPath,
+      excludePatterns: undefined,
+      noDynamic: false,
+    });
   });
 
   test('handles current directory notation', () => {
@@ -158,6 +174,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: currentDir,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -170,6 +187,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: parentDir,
       excludePatterns: undefined,
+      noDynamic: false,
     });
   });
 
@@ -182,6 +200,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -193,6 +212,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -204,6 +224,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -215,6 +236,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -233,6 +255,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/test/**', '**/stories/**'],
+      noDynamic: false,
     });
   });
 
@@ -250,6 +273,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: 'src/components',
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -267,6 +291,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: 'src/components',
       excludePatterns: ['**/test/**'],
+      noDynamic: false,
     });
   });
 
@@ -323,6 +348,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['**/*.test.{css,scss}', '**/node_modules/**'],
+      noDynamic: false,
     });
   });
 
@@ -334,6 +360,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['pattern=with=equals'],
+      noDynamic: false,
     });
   });
 
@@ -345,6 +372,7 @@ describe('getArgs', () => {
     expect(result).toEqual({
       targetPath: undefined,
       excludePatterns: ['another=pattern=with=equals'],
+      noDynamic: false,
     });
   });
 
@@ -364,6 +392,90 @@ describe('getArgs', () => {
         'first=pattern=with=equals',
         'second=pattern=with=equals',
       ],
+      noDynamic: false,
+    });
+  });
+
+  // Tests for --no-dynamic flag
+  test('handles --no-dynamic flag', () => {
+    process.argv = ['node', 'script.js', '--no-dynamic'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: true,
+    });
+  });
+
+  test('handles --no-dynamic flag with path', () => {
+    process.argv = ['node', 'script.js', 'src/components', '--no-dynamic'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: 'src/components',
+      excludePatterns: undefined,
+      noDynamic: true,
+    });
+  });
+
+  test('handles --no-dynamic flag with exclude patterns', () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--no-dynamic',
+      '--exclude',
+      '**/test/**',
+    ];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: ['**/test/**'],
+      noDynamic: true,
+    });
+  });
+
+  test('handles --no-dynamic flag with path and exclude patterns', () => {
+    process.argv = [
+      'node',
+      'script.js',
+      'src/components',
+      '--no-dynamic',
+      '--exclude',
+      '**/test/**',
+      '-e',
+      '**/stories/**',
+    ];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: 'src/components',
+      excludePatterns: ['**/test/**', '**/stories/**'],
+      noDynamic: true,
+    });
+  });
+
+  test('handles flags in different order', () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--exclude',
+      '**/test/**',
+      '--no-dynamic',
+      'src/components',
+    ];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: 'src/components',
+      excludePatterns: ['**/test/**'],
+      noDynamic: true,
     });
   });
 });

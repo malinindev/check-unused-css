@@ -83,6 +83,24 @@ Exclude patterns support both specific paths and glob syntax:
 
 *Note: Remember to wrap patterns in quotes to prevent shell expansion*
 
+#### Strict mode for dynamic class access
+
+By default, the tool shows warnings for dynamic class access but doesn't fail the process. Use the `--no-dynamic` flag to treat dynamic class usage as errors:
+
+```bash
+# Fail on dynamic class access
+npx check-unused-css --no-dynamic
+
+# Combine with other options
+npx check-unused-css src/components --no-dynamic --exclude "**/test/**"
+```
+
+When `--no-dynamic` is used:
+- Dynamic class access (e.g., `styles[variable]`) will be treated as errors instead of warnings
+- The process will exit with code 1 if any dynamic usage is detected
+- Error messages will be displayed in red instead of yellow warnings
+
+This is useful in CI/CD pipelines where you want to enforce explicit class usage.
 
 ## Limitations
 
