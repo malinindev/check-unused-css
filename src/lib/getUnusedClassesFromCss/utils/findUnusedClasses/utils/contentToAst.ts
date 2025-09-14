@@ -4,7 +4,7 @@ import { parse } from '@typescript-eslint/typescript-estree';
 export const contentToAst = (content: string): TSESTree.Program => {
   try {
     return parse(content, {
-      loc: false,
+      loc: true,
       range: false,
       jsx: true,
       errorOnUnknownASTType: false,
