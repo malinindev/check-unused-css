@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.1.9
+
+### Patch Changes
+
+- 0b6ff12: add exclude option
+- 965bdf3: add no-dynamic option
+
 ## 0.1.8
 
 ### Patch Changes
