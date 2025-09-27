@@ -72,7 +72,7 @@ export const extractUsedClassesWithLocations = ({
         usedClasses.push({
           className: node.property.name,
           line: node.property.loc.start.line,
-          column: node.property.loc.start.column + 1,
+          column: node.property.loc.start.column + 1, // AST columns are 0-based, but editors show 1-based
         });
       }
 
@@ -89,7 +89,7 @@ export const extractUsedClassesWithLocations = ({
         usedClasses.push({
           className: node.property.value,
           line: node.property.loc.start.line,
-          column: node.property.loc.start.column + 1,
+          column: node.property.loc.start.column + 1, // AST columns are 0-based, but editors show 1-based
         });
       }
     },
