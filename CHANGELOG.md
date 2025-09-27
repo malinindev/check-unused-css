@@ -1,5 +1,15 @@
 # check-unused-css
 
+## 0.2.0
+
+### Minor Changes
+
+- ea23810: add checking classes used in TypeScript but non-existent in CSS
+
+### Patch Changes
+
+- f742265: update print format
+
 ## 0.1.9
 
 ### Patch Changes
