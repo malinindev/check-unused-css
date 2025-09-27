@@ -58,19 +58,31 @@ export const getUnusedClassesFromCss = async ({
   }
 
   // Map unused class names to their location information
-  const unusedClassesWithLocations: UnusedClassUsage[] = unusedClasses
-    .map((className) => {
-      const locationInfo = cssClassesWithLocations.find(
-        (info) => info.className === className
-      );
-      if (!locationInfo) return null;
+  const locationMap = new Map(
+    cssClassesWithLocations.map((info) => [info.className, info])
+  );
+
+  const unusedClassesWithLocations: UnusedClassUsage[] = unusedClasses.map(
+    (className) => {
+      const locationInfo = locationMap.get(className);
+      if (!locationInfo) {
+        console.warn(
+          `Warning: Location information not found for unused class "${className}" in ${cssFile}. Using default location.`
+        );
+        return {
+          className,
+          line: -1,
+          column: -1,
+        };
+      }
+
       return {
         className,
         line: locationInfo.line,
         column: locationInfo.column,
       };
-    })
-    .filter((value): value is UnusedClassUsage => value !== null);
+    }
+  );
 
   return {
     file: cssFile,
