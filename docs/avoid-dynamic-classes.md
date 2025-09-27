@@ -90,7 +90,13 @@ type Props = {
 const Component = ({ size }: Props) => {
   return <div className={mapSizeToClassname[size]} />;
 }
+
 ```
+
+### Alternative: use [`class-variance-authority`](https://www.npmjs.com/package/class-variance-authority)
+
+If you prefer a more declarative and scalable approach, use [`class-variance-authority`](https://www.npmjs.com/package/class-variance-authority)
+. It combines conditional class logic with type safety and works fine with `check-unused-css`
 
 ### Benefits
 
