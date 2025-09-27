@@ -1,6 +1,6 @@
 # check-unused-css
 
-A **zero-config** tool to find unused CSS classes in your TypeScript project. Works with .module.css, .module.scss, and .module.sass.
+A **zero-config** tool to find unused CSS classes and non-existent class references in your TypeScript project. Works with .module.css, .module.scss, and .module.sass.
 
 No more dead styles in your codebase!
 
@@ -134,8 +134,33 @@ const dynamicClass = Math.random() * 10 >= 5 ? 'classOne' : 'classTwo';
 
 In such cases, the tool will skip the check and mark it as passed. [Avoid dynamic access](./docs/avoid-dynamic-classes.md) and use explicit class names for clarity.
 
-## NOTE
-This tool finds CSS classes that are declared in stylesheets but unused in components - not the other way around. It won't detect TypeScript references to CSS classes that don't exist in stylesheets.
+## FAQ
+
+### Why not use [`typescript-plugin-css-modules`](https://www.npmjs.com/package/typescript-plugin-css-modules)?
+First, it doesn't work in CI without generating `.d.ts` files.  
+Second, even in IDEs it **often doesn't work reliably** due to caching, misconfigured TypeScript, or not using the workspace version.
+
+---
+
+### I use dynamic class access like `styles[size]` and don’t want to change that
+In that case, this library is probably not a good fit for your project.  
+I **[recommend](./docs/avoid-dynamic-classes.md)** not mixing concerns. Instead, you can:
+- write explicit map functions to convert values to class names
+- use [`class-variance-authority`](https://www.npmjs.com/package/class-variance-authority)
+
+---
+
+### This is too complex. Why not just use Tailwind?
+If you like Tailwind - go for it!
+
+---
+
+### [`typed-scss-modules`](https://www.npmjs.com/package/typed-scss-modules) or [`typed-css-modules`](https://www.npmjs.com/package/typed-css-modules) solves this. Why do I need your lib?
+These libs require:
+- generating and committing `.d.ts` files to your repo
+- developing in watch mode to keep them up to date  
+
+`check-unused-css` works out of the box, supports `.css`, `.scss`, `.sass`, and requires zero config.
 
 ## License
 
