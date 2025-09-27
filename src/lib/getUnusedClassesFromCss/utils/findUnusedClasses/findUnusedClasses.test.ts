@@ -8,69 +8,56 @@ import {
   test,
 } from 'bun:test';
 import { findUnusedClasses } from './findUnusedClasses.js';
-import * as checkHasDynamicUsageModule from './utils/checkHasDynamicUsage.js';
 import * as contentToAstModule from './utils/contentToAst.js';
 
 describe('findUnusedClasses', () => {
-  let checkHasDynamicUsageSpy: Mock<
-    (typeof checkHasDynamicUsageModule)['checkHasDynamicUsage']
-  >;
-
   let contentToAstSpy: Mock<(typeof contentToAstModule)['contentToAst']>;
 
   beforeEach(() => {
-    checkHasDynamicUsageSpy = spyOn(
-      checkHasDynamicUsageModule,
-      'checkHasDynamicUsage'
-    ).mockReturnValue(false);
-
     // We spy on contentToAst but let it call through to the real implementation by default
     contentToAstSpy = spyOn(contentToAstModule, 'contentToAst');
   });
 
   afterEach(() => {
-    checkHasDynamicUsageSpy.mockRestore();
     contentToAstSpy.mockRestore();
   });
 
   describe('should handle dynamic usage detection', () => {
     test('returns early when dynamic usage is detected', () => {
-      checkHasDynamicUsageSpy.mockReturnValue(true);
-
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles[dynamicKey];',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: true,
         unusedClasses: null,
+        dynamicUsages: [
+          {
+            className: 'styles[dynamicKey]',
+            file: 'test.tsx',
+            line: 1,
+            column: 19,
+          },
+        ],
       });
-      expect(checkHasDynamicUsageSpy).toHaveBeenCalledWith(
-        'const className = styles[dynamicKey];',
-        ['styles']
-      );
-      expect(contentToAstSpy).not.toHaveBeenCalled();
     });
 
     test('continues with AST analysis when no dynamic usage', () => {
-      checkHasDynamicUsageSpy.mockReturnValue(false);
-
       const result = findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const className = styles.button;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: [],
+        dynamicUsages: null,
       });
-      expect(checkHasDynamicUsageSpy).toHaveBeenCalledWith(
-        'const className = styles.button;',
-        ['styles']
-      );
       expect(contentToAstSpy).toHaveBeenCalledWith(
         'const className = styles.button;'
       );
@@ -83,11 +70,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles.button;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['text'],
+        dynamicUsages: null,
       });
     });
 
@@ -96,11 +85,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text', 'header'],
         tsContent: 'const className = styles.button; const other = css.text;',
         importNames: ['styles', 'css'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['header'],
+        dynamicUsages: null,
       });
     });
 
@@ -109,11 +100,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button'],
         tsContent: 'const a = styles.button; const b = styles.button;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: [],
+        dynamicUsages: null,
       });
     });
 
@@ -122,11 +115,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button'],
         tsContent: 'const mystyles = {}; const className = styles.button;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: [],
+        dynamicUsages: null,
       });
     });
   });
@@ -137,11 +132,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text'],
         tsContent: "const className = styles['button'];",
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['text'],
+        dynamicUsages: null,
       });
     });
 
@@ -150,11 +147,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text'],
         tsContent: 'const className = styles["button"];',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['text'],
+        dynamicUsages: null,
       });
     });
 
@@ -164,11 +163,13 @@ describe('findUnusedClasses', () => {
         tsContent:
           'const className = styles["button-primary"]; const other = styles.text_large;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['header'],
+        dynamicUsages: null,
       });
     });
   });
@@ -184,11 +185,13 @@ describe('findUnusedClasses', () => {
           </div>
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
 
@@ -200,11 +203,13 @@ describe('findUnusedClasses', () => {
           const buttonClass = styles["button"];
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
 
@@ -218,11 +223,13 @@ describe('findUnusedClasses', () => {
           </div>
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
   });
@@ -233,11 +240,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text', 'header'],
         tsContent: 'const someCode = "hello world";',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['button', 'text', 'header'],
+        dynamicUsages: null,
       });
     });
 
@@ -246,11 +255,13 @@ describe('findUnusedClasses', () => {
         cssClasses: [],
         tsContent: 'const className = styles.button;',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: [],
+        dynamicUsages: null,
       });
     });
 
@@ -259,11 +270,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button'],
         tsContent: 'const className = styles.button;',
         importNames: [],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['button'],
+        dynamicUsages: null,
       });
     });
 
@@ -272,11 +285,13 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button', 'text'],
         tsContent: '',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['button', 'text'],
+        dynamicUsages: null,
       });
     });
 
@@ -288,11 +303,13 @@ describe('findUnusedClasses', () => {
           const className = styles.used;
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['button'], // button is in string literal, not actual usage
+        dynamicUsages: null,
       });
     });
   });
@@ -320,11 +337,13 @@ describe('findUnusedClasses', () => {
           };
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
 
@@ -344,11 +363,13 @@ describe('findUnusedClasses', () => {
           const footer = css['footer-content'];
         `,
         importNames: ['styles', 'css'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
 
@@ -364,17 +385,19 @@ describe('findUnusedClasses', () => {
           );
         `,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(result).toEqual({
         hasDynamicUsage: false,
         unusedClasses: ['unused'],
+        dynamicUsages: null,
       });
     });
   });
 
   describe('should properly call dependencies', () => {
-    test('calls checkHasDynamicUsage with correct parameters', () => {
+    test('calls extractDynamicClassUsages with correct parameters', () => {
       const tsContent = 'const className = styles[key];';
       const importNames = ['styles'];
 
@@ -382,12 +405,8 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button'],
         tsContent,
         importNames,
+        filePath: 'test.tsx',
       });
-
-      expect(checkHasDynamicUsageSpy).toHaveBeenCalledWith(
-        tsContent,
-        importNames
-      );
     });
 
     test('calls contentToAst with TypeScript content', () => {
@@ -397,18 +416,18 @@ describe('findUnusedClasses', () => {
         cssClasses: ['button'],
         tsContent,
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(contentToAstSpy).toHaveBeenCalledWith(tsContent);
     });
 
     test('does not call contentToAst when dynamic usage is detected', () => {
-      checkHasDynamicUsageSpy.mockReturnValue(true);
-
       findUnusedClasses({
         cssClasses: ['button'],
         tsContent: 'const className = styles[key];',
         importNames: ['styles'],
+        filePath: 'test.tsx',
       });
 
       expect(contentToAstSpy).not.toHaveBeenCalled();
@@ -427,6 +446,7 @@ describe('findUnusedClasses', () => {
           cssClasses: ['button'],
           tsContent: 'invalid syntax {[}',
           importNames: ['styles'],
+          filePath: 'test.tsx',
         });
       }).toThrow(errorMessage);
     });

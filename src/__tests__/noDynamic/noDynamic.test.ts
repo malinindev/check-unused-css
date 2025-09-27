@@ -14,7 +14,9 @@ describe('--no-dynamic flag', () => {
     expect(result.stderr).toMatch(
       /Cannot determine usability when using dynamic class access/
     );
-    expect(result.stdout).toMatch(/WithDynamic\.module\.css/);
+    expect(result.stdout).toMatch(
+      /WithDynamic\.tsx:\d+:\d+ - \.styles\[type\]/
+    );
   });
 
   test('exits with code 0 when dynamic usage detected but --no-dynamic flag is not used', () => {
@@ -26,7 +28,9 @@ describe('--no-dynamic flag', () => {
 
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toMatch(/Warning: Dynamic class usage detected/);
-    expect(result.stdout).toMatch(/WithDynamic\.module\.css/);
+    expect(result.stdout).toMatch(
+      /WithDynamic\.tsx:\d+:\d+ - \.styles\[type\]/
+    );
   });
 
   test('exits with code 0 when no dynamic usage and --no-dynamic flag is used', () => {

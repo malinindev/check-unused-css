@@ -1,47 +1,84 @@
 import { describe, expect, test } from 'bun:test';
-import { checkHasDynamicUsage } from './checkHasDynamicUsage.js';
+import { extractDynamicClassUsages } from './extractDynamicClassUsages.js';
 
-describe('checkHasDynamicUsage', () => {
+describe('extractDynamicClassUsages', () => {
   const importNames = ['styles', 'classes'];
 
-  describe('should return true for dynamic usage patterns', () => {
+  describe('should return dynamic usages for dynamic patterns', () => {
     test('detects template strings with variables', () => {
       // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
       const tsContent = 'const className = styles[`prefix${variable}suffix`];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
+      expect(result[0]?.className).toBe('styles[`prefix${variable}suffix`]');
     });
 
     test('detects simple variables without quotes', () => {
       const tsContent = 'const className = styles[variable];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects function calls', () => {
       const tsContent = 'const className = styles[getClassName()];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects logical OR expressions', () => {
       const tsContent =
         'const className = styles[test || fallback || "default"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects nullish coalescing operator', () => {
       const tsContent = 'const className = styles[test ?? "fallback"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects ternary operator', () => {
       const tsContent =
         'const className = styles[condition ? "active" : "inactive"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects logical AND expressions', () => {
       const tsContent =
         'const className = styles[condition && "conditionalClass"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects mathematical operations', () => {
@@ -53,34 +90,64 @@ describe('checkHasDynamicUsage', () => {
       ];
 
       for (const tsContent of operations) {
-        expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+        const result = extractDynamicClassUsages(
+          tsContent,
+          importNames,
+          'test.tsx'
+        );
+        expect(result.length).toBeGreaterThan(0);
       }
     });
 
     test('detects object property access', () => {
       const tsContent = 'const className = styles[config.theme];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects array access', () => {
       const tsContent = 'const className = styles[classNames[0]];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects method calls in brackets', () => {
       const tsContent = 'const className = styles[obj.getClassName()];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects complex nested expressions', () => {
       const tsContent =
         'const className = styles[obj.method() || fallback ?? "default"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('works with different import names', () => {
       const tsContent = 'const className = classes[variable];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('detects multiple dynamic usages in same content', () => {
@@ -88,43 +155,79 @@ describe('checkHasDynamicUsage', () => {
         const className1 = styles[variable1];
         const className2 = styles[variable2 || "fallback"];
       `;
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
   });
 
-  describe('should return false for static usage patterns', () => {
+  describe('should return empty array for static usage patterns', () => {
     test('static string literals', () => {
       const tsContent = 'const className = styles["staticClass"];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
 
     test('static property access', () => {
       const tsContent = 'const className = styles.staticClass;';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
 
     test('template strings without variables', () => {
       const tsContent = 'const className = styles[`staticString`];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
 
     test('no styles usage at all', () => {
       const tsContent = 'const className = "regular-class";';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
 
     test('styles usage outside of brackets', () => {
       const tsContent = 'const obj = { styles: "something" };';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
 
     test('empty content', () => {
-      expect(checkHasDynamicUsage('', importNames)).toBe(false);
+      const result = extractDynamicClassUsages('', importNames, 'test.tsx');
+      expect(result.length).toBe(0);
     });
 
     test('import name not in provided list', () => {
       const tsContent = 'const className = otherStyles[variable];';
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(false);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBe(0);
     });
   });
 
@@ -138,7 +241,12 @@ describe('checkHasDynamicUsage', () => {
       ];
 
       for (const tsContent of variations) {
-        expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+        const result = extractDynamicClassUsages(
+          tsContent,
+          importNames,
+          'test.tsx'
+        );
+        expect(result.length).toBeGreaterThan(0);
       }
     });
 
@@ -150,17 +258,32 @@ describe('checkHasDynamicUsage', () => {
             : "inactive"
         ];
       `;
-      expect(checkHasDynamicUsage(tsContent, importNames)).toBe(true);
+      const result = extractDynamicClassUsages(
+        tsContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(result.length).toBeGreaterThan(0);
     });
 
     test('distinguishes between similar patterns', () => {
       // This should be static
       const staticContent = 'const className = styles["test||fallback"];';
-      expect(checkHasDynamicUsage(staticContent, importNames)).toBe(false);
+      const staticResult = extractDynamicClassUsages(
+        staticContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(staticResult.length).toBe(0);
 
       // This should be dynamic
       const dynamicContent = 'const className = styles[test||fallback];';
-      expect(checkHasDynamicUsage(dynamicContent, importNames)).toBe(true);
+      const dynamicResult = extractDynamicClassUsages(
+        dynamicContent,
+        importNames,
+        'test.tsx'
+      );
+      expect(dynamicResult.length).toBeGreaterThan(0);
     });
 
     test('handles complex real-world examples', () => {
@@ -179,7 +302,12 @@ describe('checkHasDynamicUsage', () => {
       ];
 
       for (const example of realWorldExamples) {
-        expect(checkHasDynamicUsage(example, importNames)).toBe(true);
+        const result = extractDynamicClassUsages(
+          example,
+          importNames,
+          'test.tsx'
+        );
+        expect(result.length).toBeGreaterThan(0);
       }
     });
   });

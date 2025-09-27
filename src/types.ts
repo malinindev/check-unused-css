@@ -10,9 +10,22 @@ export type UnusedClassResultWithClasses = {
   status: 'correct';
 };
 
+export type DynamicClassUsage = {
+  className: string;
+  file: string;
+  line: number;
+  column: number;
+};
+
 export type UnusedClassResultNoClasses = {
   file: string;
-  status: 'notImported' | 'withDynamicImports';
+  status: 'notImported';
+};
+
+export type DynamicClassResult = {
+  file: string;
+  dynamicUsages: DynamicClassUsage[];
+  status: 'withDynamicImports';
 };
 
 export type NonExistentClassUsage = {
@@ -30,7 +43,8 @@ export type NonExistentClassResult = {
 
 export type UnusedClassResult =
   | UnusedClassResultWithClasses
-  | UnusedClassResultNoClasses;
+  | UnusedClassResultNoClasses
+  | DynamicClassResult;
 
 export type CssAnalysisResult = UnusedClassResult | NonExistentClassResult;
 

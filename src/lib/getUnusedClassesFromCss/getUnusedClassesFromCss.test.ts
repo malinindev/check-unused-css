@@ -86,6 +86,14 @@ describe('getUnusedClassesFromCss', () => {
       spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
         unusedClasses: null,
         hasDynamicUsage: true,
+        dynamicUsages: [
+          {
+            className: 'styles[variable]',
+            file: 'component.tsx',
+            line: 1,
+            column: 1,
+          },
+        ],
       })
     );
 
@@ -122,6 +130,7 @@ describe('getUnusedClassesFromCss', () => {
       spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
         unusedClasses: [],
         hasDynamicUsage: false,
+        dynamicUsages: null,
       })
     );
 
@@ -160,6 +169,7 @@ describe('getUnusedClassesFromCss', () => {
       spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
         unusedClasses: ['unused'],
         hasDynamicUsage: false,
+        dynamicUsages: null,
       })
     );
 
@@ -206,6 +216,7 @@ describe('getUnusedClassesFromCss', () => {
       spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
         unusedClasses: ['unused'],
         hasDynamicUsage: false,
+        dynamicUsages: null,
       })
     );
 
