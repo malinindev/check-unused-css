@@ -1,29 +1,42 @@
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
 import type { Node } from 'estree';
 import { walk } from 'estree-walker';
-import { checkHasDynamicUsage } from './utils/checkHasDynamicUsage.js';
+import type { DynamicClassUsage } from '../../../../types.js';
 import { contentToAst } from './utils/contentToAst.js';
+import { extractDynamicClassUsages } from './utils/extractDynamicClassUsages.js';
 
 type FindUnusedClassesParams = {
   cssClasses: string[];
   tsContent: string;
   importNames: string[];
+  filePath: string;
 };
 
 type FindUnusedClassesResult =
-  | { unusedClasses: null; hasDynamicUsage: true }
-  | { unusedClasses: string[]; hasDynamicUsage: false };
+  | {
+      unusedClasses: null;
+      hasDynamicUsage: true;
+      dynamicUsages: DynamicClassUsage[];
+    }
+  | { unusedClasses: string[]; hasDynamicUsage: false; dynamicUsages: null };
 
 export const findUnusedClasses = ({
   cssClasses,
   tsContent,
   importNames,
+  filePath,
 }: FindUnusedClassesParams): FindUnusedClassesResult => {
   const unusedClasses: string[] = [];
 
   // Check for dynamic usage patterns first
-  if (checkHasDynamicUsage(tsContent, importNames)) {
-    return { hasDynamicUsage: true, unusedClasses: null };
+  const dynamicUsages = extractDynamicClassUsages(
+    tsContent,
+    importNames,
+    filePath
+  );
+
+  if (dynamicUsages.length > 0) {
+    return { hasDynamicUsage: true, unusedClasses: null, dynamicUsages };
   }
 
   const ast: TSESTree.Program = contentToAst(tsContent);
@@ -64,5 +77,5 @@ export const findUnusedClasses = ({
     }
   }
 
-  return { unusedClasses, hasDynamicUsage: false };
+  return { unusedClasses, hasDynamicUsage: false, dynamicUsages: null };
 };

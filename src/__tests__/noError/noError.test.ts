@@ -76,7 +76,9 @@ describe('Components without errors', () => {
       expect(result.stderr).toMatch(
         /Cannot determine usability when using dynamic class access/
       );
-      expect(result.stdout).toMatch(new RegExp(`${folderName}\\.module\\.css`));
+      expect(result.stdout).toMatch(
+        new RegExp(`${folderName}\\.tsx:\\d+:\\d+ - \\.styles\\[`)
+      );
     }
   );
 });

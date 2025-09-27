@@ -109,6 +109,14 @@ describe('printResults', () => {
         {
           file: 'components/Button.module.css',
           status: 'withDynamicImports',
+          dynamicUsages: [
+            {
+              className: 'styles[type]',
+              file: 'components/Button.tsx',
+              line: 5,
+              column: 10,
+            },
+          ],
         },
       ];
 

@@ -1,6 +1,7 @@
 import { COLORS } from '../consts.js';
 import type {
   CssAnalysisResult,
+  DynamicClassResult,
   NonExistentClassResult,
   UnusedClassResultNoClasses,
   UnusedClassResultWithClasses,
@@ -17,7 +18,7 @@ export const printResults = (
   );
 
   const resultsWithDynamicUsage = results.filter(
-    (result): result is UnusedClassResultNoClasses =>
+    (result): result is DynamicClassResult =>
       result.status === 'withDynamicImports'
   );
 
@@ -37,11 +38,23 @@ export const printResults = (
         `${COLORS.red}Error: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
       );
       console.error(
-        `${COLORS.red}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+        `${COLORS.red}Cannot determine usability when using dynamic class access.${COLORS.reset}\n`
       );
 
       for (const result of resultsWithDynamicUsage) {
-        console.log(`  ${COLORS.red}${result.file}${COLORS.reset}`);
+        for (const usage of result.dynamicUsages) {
+          console.log(
+            formatLocationLine(
+              usage.file,
+              usage.line,
+              usage.column,
+              usage.className,
+              COLORS.red
+            )
+          );
+        }
+
+        console.log('');
       }
       console.log('');
     } else {
@@ -49,13 +62,24 @@ export const printResults = (
         `${COLORS.yellow}Warning: Dynamic class usage detected in ${resultsWithDynamicUsage.length} files.${COLORS.reset}`
       );
       console.warn(
-        `${COLORS.yellow}Cannot determine usability when using dynamic class access (e.g., styles[variable]).${COLORS.reset}\n`
+        `${COLORS.yellow}Cannot determine usability when using dynamic class access.${COLORS.reset}\n`
       );
 
       for (const result of resultsWithDynamicUsage) {
-        console.log(`  ${COLORS.yellow}${result.file}${COLORS.reset}`);
+        for (const usage of result.dynamicUsages) {
+          console.log(
+            formatLocationLine(
+              usage.file,
+              usage.line,
+              usage.column,
+              usage.className,
+              COLORS.yellow
+            )
+          );
+        }
+
+        console.log('');
       }
-      console.log('');
     }
   }
 
@@ -92,7 +116,7 @@ export const printResults = (
     );
 
     for (const result of notImportedResults) {
-      console.log(`${COLORS.cyan}${result.file}${COLORS.reset}`);
+      console.log(`  ${COLORS.cyan}${result.file}${COLORS.reset}`);
       console.log('');
     }
   }

@@ -1,20 +1,23 @@
-export const checkHasDynamicUsage = (
+import type { DynamicClassUsage } from '../../../../../types.js';
+
+export const extractDynamicClassUsages = (
   tsContent: string,
-  importNames: string[]
-): boolean => {
-  return importNames.some((importName) => {
-    // Find all bracket expressions for this import
-    // Use a more sophisticated regex to handle nested brackets
+  importNames: string[],
+  filePath: string
+): DynamicClassUsage[] => {
+  const dynamicUsages: DynamicClassUsage[] = [];
+
+  for (const importName of importNames) {
     const importRegex = new RegExp(`\\b${importName}\\s*\\[`, 'g');
-    let startMatch: RegExpExecArray | null;
+    let match: RegExpExecArray | null;
 
     // biome-ignore lint/suspicious/noAssignInExpressions: regex exec pattern requires assignment in loop
-    while ((startMatch = importRegex.exec(tsContent)) !== null) {
-      const startIndex = startMatch.index + startMatch[0].length - 1; // Position of opening bracket
+    while ((match = importRegex.exec(tsContent)) !== null) {
+      const startIndex = match.index + match[0].length - 1;
       let bracketCount = 1;
       let endIndex = startIndex + 1;
 
-      // Find matching closing bracket, accounting for nested brackets
+      // Find matching closing bracket
       while (endIndex < tsContent.length && bracketCount > 0) {
         if (tsContent[endIndex] === '[') {
           bracketCount++;
@@ -32,7 +35,6 @@ export const checkHasDynamicUsage = (
         }
 
         // Skip simple string literals without variables: "className", 'className'
-        // But allow template strings with variables: `class${var}`
         if (/^['"][^'"]*['"]$/.test(expression)) {
           continue;
         }
@@ -55,13 +57,23 @@ export const checkHasDynamicUsage = (
           /[+\-*/]/,
         ];
 
-        // If any dynamic pattern matches, this is dynamic usage
         if (dynamicPatterns.some((pattern) => pattern.test(expression))) {
-          return true;
+          // Calculate line and column
+          const beforeMatch = tsContent.slice(0, match.index);
+          const lineNumber = beforeMatch.split('\n').length;
+          const lastLineStart = beforeMatch.lastIndexOf('\n') + 1;
+          const columnNumber = match.index - lastLineStart + 1;
+
+          dynamicUsages.push({
+            className: `${importName}[${expression}]`,
+            file: filePath,
+            line: lineNumber,
+            column: columnNumber,
+          });
         }
       }
     }
+  }
 
-    return false;
-  });
+  return dynamicUsages;
 };

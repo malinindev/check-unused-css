@@ -6,7 +6,7 @@ import { getContentOfFiles } from '../utils/getContentOfFiles.js';
 import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule.js';
-import { checkHasDynamicUsage } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/checkHasDynamicUsage.js';
+import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -37,7 +37,10 @@ export const getNonExistentClassesFromCss = async ({
     });
 
     // Skip analysis if dynamic usage is detected
-    if (checkHasDynamicUsage(tsContent, [importingFileData.importName])) {
+    if (
+      extractDynamicClassUsages(tsContent, [importingFileData.importName], '')
+        .length > 0
+    ) {
       continue;
     }
 

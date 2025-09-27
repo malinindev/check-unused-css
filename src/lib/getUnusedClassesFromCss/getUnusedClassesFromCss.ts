@@ -40,16 +40,18 @@ export const getUnusedClassesFromCss = async ({
     ...new Set(importingFilesData.map((data) => data.importName)),
   ];
 
-  const { unusedClasses, hasDynamicUsage } = findUnusedClasses({
+  const { unusedClasses, hasDynamicUsage, dynamicUsages } = findUnusedClasses({
     cssClasses,
     importNames,
     tsContent: relevantTsContent,
+    filePath: importingFiles[0] || '', // Use first importing file as primary
   });
 
   if (hasDynamicUsage) {
     return {
       file: cssFile,
       status: 'withDynamicImports',
+      dynamicUsages: dynamicUsages || [],
     };
   }
 

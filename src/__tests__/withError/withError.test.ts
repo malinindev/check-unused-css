@@ -55,7 +55,7 @@ describe('Component with errors', () => {
     expect(result.exitCode).toBe(1);
 
     expect(result.stdout).toMatch(/^Found 1 not imported CSS modules:$/m);
-    expect(result.stdout).toMatch(/^NotImported.module.css$/m);
+    expect(result.stdout).toMatch(/^\s\sNotImported.module.css$/m);
   });
 
   test('shows error for unused class with global parents', () => {
