@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.1
+
+### Patch Changes
+
+- 2f8572c: add directory handling
+
 ## 0.2.0
 
 ### Minor Changes
