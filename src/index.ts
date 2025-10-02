@@ -54,10 +54,33 @@ const runCssChecker = async (): Promise<void> => {
 
     for (const cssFile of cssFiles) {
       // cssFile is now relative to project root, need to make it relative to srcDir
-      const relativeCssFile = path.relative(
-        srcDir,
-        path.join(process.cwd(), cssFile)
-      );
+      const fullCssPath = path.join(process.cwd(), cssFile);
+
+      // Check if the CSS file actually exists and is a file
+      try {
+        const cssStats = fs.statSync(fullCssPath);
+        if (!cssStats.isFile()) {
+          console.warn(`Warning: Skipping "${cssFile}" - not a file`);
+          continue;
+        }
+      } catch (error) {
+        console.warn(
+          `Warning: Could not access "${cssFile}": ${error instanceof Error ? error.message : String(error)}`
+        );
+        continue;
+      }
+
+      const relativeCssFile = path.relative(srcDir, fullCssPath);
+
+      // Ensure the file is inside srcDir using robust absolute path check
+      const resolvedSrcDir = path.resolve(srcDir) + path.sep;
+      const resolvedCssFile = path.resolve(fullCssPath);
+      if (!resolvedCssFile.startsWith(resolvedSrcDir)) {
+        console.warn(
+          `Warning: Skipping "${cssFile}" - outside of source directory`
+        );
+        continue;
+      }
 
       const unusedResult = await getUnusedClassesFromCss({
         cssFile: relativeCssFile,

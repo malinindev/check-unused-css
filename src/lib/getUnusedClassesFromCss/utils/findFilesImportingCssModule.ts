@@ -11,28 +11,48 @@ export const findFilesImportingCssModule = async (
 
   for (const tsFile of tsFiles) {
     const tsPath = path.join(srcDir, tsFile);
-    const tsContent = fs.readFileSync(tsPath, 'utf-8');
 
-    const tsDir = path.dirname(tsPath);
-    const cssPath = path.join(srcDir, cssFile);
-    const relativeCssPath = path.relative(tsDir, cssPath);
+    try {
+      const stats = fs.statSync(tsPath);
+      if (!stats.isFile()) {
+        continue; // Skip directories
+      }
 
-    const normalizedPath = relativeCssPath.replace(/\\/g, '/');
+      const tsContent = fs.readFileSync(tsPath, 'utf-8');
 
-    const importPatterns = [
-      `import\\s+(\\w+)\\s+from\\s+['"]${normalizedPath}['"]`,
-      `import\\s+(\\w+)\\s+from\\s+['"]\\./${normalizedPath}['"]`,
-      `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${normalizedPath}['"]`,
-    ];
+      const tsDir = path.dirname(tsPath);
+      const cssPath = path.join(srcDir, cssFile);
+      const relativeCssPath = path.relative(tsDir, cssPath);
 
-    for (const pattern of importPatterns) {
-      const regex = new RegExp(pattern, 'g');
-      const match = regex.exec(tsContent);
+      const normalizedPath = relativeCssPath.replace(/\\/g, '/');
 
-      if (match?.[1]) {
-        const importName = match[1];
-        importingFiles.push({ file: tsFile, importName });
-        break;
+      const importPatterns = [
+        `import\\s+(\\w+)\\s+from\\s+['"]${normalizedPath}['"]`,
+        `import\\s+(\\w+)\\s+from\\s+['"]\\./${normalizedPath}['"]`,
+        `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${normalizedPath}['"]`,
+      ];
+
+      for (const pattern of importPatterns) {
+        const regex = new RegExp(pattern, 'g');
+        const match = regex.exec(tsContent);
+
+        if (match?.[1]) {
+          const importName = match[1];
+          importingFiles.push({ file: tsFile, importName });
+          break;
+        }
+      }
+    } catch (error) {
+      const errorCode =
+        error instanceof Error && 'code' in error ? error.code : '';
+      console.warn(
+        `Warning: Could not read "${tsPath}": ${error instanceof Error ? error.message : String(error)}`
+      );
+      if (errorCode === 'EISDIR') {
+        console.warn(
+          `  This TypeScript file path points to a directory instead of a file`
+        );
+        console.warn(`  Original glob result: "${tsFile}"`);
       }
     }
   }
