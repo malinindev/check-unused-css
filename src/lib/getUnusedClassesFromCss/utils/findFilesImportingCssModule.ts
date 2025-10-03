@@ -26,10 +26,13 @@ export const findFilesImportingCssModule = async (
 
       const normalizedPath = relativeCssPath.replace(/\\/g, '/');
 
+      // Escape special regex characters in the path
+      const escapedPath = normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
       const importPatterns = [
-        `import\\s+(\\w+)\\s+from\\s+['"]${normalizedPath}['"]`,
-        `import\\s+(\\w+)\\s+from\\s+['"]\\./${normalizedPath}['"]`,
-        `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${normalizedPath}['"]`,
+        `import\\s+(\\w+)\\s+from\\s+['"]${escapedPath}['"]`,
+        `import\\s+(\\w+)\\s+from\\s+['"]\\./${escapedPath}['"]`,
+        `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${escapedPath}['"]`,
       ];
 
       for (const pattern of importPatterns) {

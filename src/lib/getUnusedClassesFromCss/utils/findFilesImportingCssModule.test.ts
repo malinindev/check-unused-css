@@ -435,5 +435,43 @@ describe('findFilesImportingCssModule', () => {
         { file: 'components/Button.tsx', importName: 'styles' },
       ]);
     });
+
+    test('handles CSS files with special characters in filename', async () => {
+      createFile(
+        'components/(Documentation)SpecialChars.tsx',
+        'import styles from "./(Documentation)SpecialChars.module.css";'
+      );
+      createFile(
+        'components/[Brackets]And.Dots.tsx',
+        'import css from "./[Brackets]And.Dots.module.css";'
+      );
+      createFile(
+        'components/(Documentation)SpecialChars.module.css',
+        '.class1 { color: #fff; }'
+      );
+      createFile(
+        'components/[Brackets]And.Dots.module.css',
+        '.class1 { color: #fff; }'
+      );
+
+      const docResult = await findFilesImportingCssModule(
+        'components/(Documentation)SpecialChars.module.css',
+        testDir
+      );
+      const bracketsResult = await findFilesImportingCssModule(
+        'components/[Brackets]And.Dots.module.css',
+        testDir
+      );
+
+      expect(docResult).toEqual([
+        {
+          file: 'components/(Documentation)SpecialChars.tsx',
+          importName: 'styles',
+        },
+      ]);
+      expect(bracketsResult).toEqual([
+        { file: 'components/[Brackets]And.Dots.tsx', importName: 'css' },
+      ]);
+    });
   });
 });

@@ -29,6 +29,8 @@ describe('Components without errors', () => {
     'WithScssComments',
     'WithRegexAndComment',
     'AllClassesExist',
+    '(Documentation)SpecialChars',
+    '[Brackets]And.Dots',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {
