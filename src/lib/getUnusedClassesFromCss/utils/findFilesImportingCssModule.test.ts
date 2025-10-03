@@ -474,4 +474,134 @@ describe('findFilesImportingCssModule', () => {
       ]);
     });
   });
+
+  describe('should handle path resolution edge cases', () => {
+    test('correctly resolves relative imports when multiple CSS files have same name', async () => {
+      // This test reproduces the bug we fixed where the tool incorrectly matched
+      // '../styles.module.css' import with wrong CSS file due to similar names
+
+      // Create directory structure:
+      // components/
+      //   styles.module.css (correct file)
+      //   SubscriptionSection/
+      //     SubscriptionSection.tsx (imports '../styles.module.css')
+      //     styles.module.css (wrong file with same name)
+
+      createFile('components/styles.module.css', '.header { color: red; }');
+      createFile(
+        'components/SubscriptionSection/styles.module.css',
+        '.container { padding: 10px; }'
+      );
+      createFile(
+        'components/SubscriptionSection/SubscriptionSection.tsx',
+        'import styles from "../styles.module.css";'
+      );
+
+      // Test 1: When analyzing the CORRECT CSS file, it should find the importing file
+      const correctResult = await findFilesImportingCssModule(
+        'components/styles.module.css',
+        testDir
+      );
+
+      expect(correctResult).toEqual([
+        {
+          file: 'components/SubscriptionSection/SubscriptionSection.tsx',
+          importName: 'styles',
+        },
+      ]);
+
+      // Test 2: When analyzing the WRONG CSS file with same name, it should NOT find the importing file
+      const wrongResult = await findFilesImportingCssModule(
+        'components/SubscriptionSection/styles.module.css',
+        testDir
+      );
+
+      expect(wrongResult).toEqual([]);
+    });
+
+    test('correctly handles complex nested relative imports', async () => {
+      // Create a more complex structure to test path resolution
+      createFile('shared/styles.module.css', '.shared { color: blue; }');
+      createFile(
+        'components/deep/nested/Component.tsx',
+        'import styles from "../../../shared/styles.module.css";'
+      );
+      createFile('components/deep/styles.module.css', '.deep { margin: 5px; }');
+
+      // Should find the correct file despite multiple levels of nesting
+      const result = await findFilesImportingCssModule(
+        'shared/styles.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/deep/nested/Component.tsx', importName: 'styles' },
+      ]);
+
+      // Should not match the wrong file
+      const wrongResult = await findFilesImportingCssModule(
+        'components/deep/styles.module.css',
+        testDir
+      );
+
+      expect(wrongResult).toEqual([]);
+    });
+
+    test('handles absolute imports from srcDir correctly', async () => {
+      createFile('utils/styles.module.css', '.utils { font-size: 12px; }');
+      createFile(
+        'components/Button.tsx',
+        'import styles from "utils/styles.module.css";'
+      );
+
+      const result = await findFilesImportingCssModule(
+        'utils/styles.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('handles mixed relative and absolute imports correctly', async () => {
+      createFile('theme/base.module.css', '.base { margin: 0; }');
+      createFile(
+        'components/Header.tsx',
+        'import styles from "../theme/base.module.css";'
+      );
+      createFile(
+        'pages/Home.tsx',
+        'import styles from "theme/base.module.css";'
+      );
+
+      const result = await findFilesImportingCssModule(
+        'theme/base.module.css',
+        testDir
+      );
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          { file: 'components/Header.tsx', importName: 'styles' },
+          { file: 'pages/Home.tsx', importName: 'styles' },
+        ])
+      );
+      expect(result).toHaveLength(2);
+    });
+
+    test('correctly resolves paths with different separators and normalization', async () => {
+      createFile('assets/global.module.css', '.global { padding: 0; }');
+      createFile(
+        'src/App.tsx',
+        'import styles from "../assets/global.module.css";'
+      );
+
+      const result = await findFilesImportingCssModule(
+        'assets/global.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([{ file: 'src/App.tsx', importName: 'styles' }]);
+    });
+  });
 });
