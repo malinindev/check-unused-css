@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.2
+
+### Patch Changes
+
+- 638d592: Add round brackets handling for file names
+
 ## 0.2.1
 
 ### Patch Changes
