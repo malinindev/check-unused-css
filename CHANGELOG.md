@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.3
+
+### Patch Changes
+
+- e5e2afe: Change relative import resolution
+
 ## 0.2.2
 
 ### Patch Changes
