@@ -20,30 +20,47 @@ export const findFilesImportingCssModule = async (
 
       const tsContent = fs.readFileSync(tsPath, 'utf-8');
 
-      const tsDir = path.dirname(tsPath);
-      const cssPath = path.join(srcDir, cssFile);
-      const relativeCssPath = path.relative(tsDir, cssPath);
+      // Find all CSS imports in the TypeScript file
+      const importRegex: RegExp =
+        /import\s+(\w+)\s+from\s+['"]([^'"]+\.(?:css|scss|sass))['"];?/g;
 
-      const normalizedPath = relativeCssPath.replace(/\\/g, '/');
+      let match: RegExpExecArray | null = importRegex.exec(tsContent);
 
-      // Escape special regex characters in the path
-      const escapedPath = normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      while (match !== null) {
+        const importName = match[1];
+        const importPath = match[2];
 
-      const importPatterns = [
-        `import\\s+(\\w+)\\s+from\\s+['"]${escapedPath}['"]`,
-        `import\\s+(\\w+)\\s+from\\s+['"]\\./${escapedPath}['"]`,
-        `import\\s+(\\w+)\\s+from\\s+['"]\\.\\./${escapedPath}['"]`,
-      ];
-
-      for (const pattern of importPatterns) {
-        const regex = new RegExp(pattern, 'g');
-        const match = regex.exec(tsContent);
-
-        if (match?.[1]) {
-          const importName = match[1];
-          importingFiles.push({ file: tsFile, importName });
-          break;
+        // Skip if import name or path is undefined
+        if (!importName || !importPath) {
+          match = importRegex.exec(tsContent);
+          continue;
         }
+
+        // Resolve the import path relative to the TypeScript file
+        const tsDir = path.dirname(tsPath);
+        let resolvedImportPath: string;
+
+        if (importPath.startsWith('./') || importPath.startsWith('../')) {
+          // Relative path
+          resolvedImportPath = path.resolve(tsDir, importPath);
+        } else {
+          // Absolute path from srcDir
+          resolvedImportPath = path.resolve(srcDir, importPath);
+        }
+
+        // Normalize paths for comparison (handle different path separators, resolve .. and . segments)
+        // This ensures cross-platform compatibility and resolves relative path segments
+        const normalizedResolvedPath = path.normalize(resolvedImportPath);
+        const normalizedCssPath = path.normalize(path.join(srcDir, cssFile));
+
+        // Check if the resolved import path matches the CSS file we're analyzing
+        if (normalizedResolvedPath === normalizedCssPath) {
+          importingFiles.push({ file: tsFile, importName });
+          break; // Found a match, no need to check other imports in this file
+        }
+
+        // Get next match
+        match = importRegex.exec(tsContent);
       }
     } catch (error) {
       const errorCode =
