@@ -1,0 +1,9 @@
+/* check-unused-css-disable */
+.unusedClass {
+  color: #fff;
+}
+
+.anotherUnusedClass {
+  color: #000;
+}
+

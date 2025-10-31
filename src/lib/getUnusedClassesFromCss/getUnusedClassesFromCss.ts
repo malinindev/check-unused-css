@@ -1,8 +1,14 @@
-import type { UnusedClassResult, UnusedClassUsage } from '../../types.js';
+import type {
+  DynamicClassUsage,
+  UnusedClassResult,
+  UnusedClassUsage,
+} from '../../types.js';
 import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
+import { parseIgnoreCommentsFromTs } from '../../utils/parseIgnoreComments.js';
 import { extractCssClassesWithLocations } from './utils/extractCssClasses/index.js';
+import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule.js';
-import { findUnusedClasses } from './utils/findUnusedClasses/index.js';
+import { extractDynamicClassUsages } from './utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
@@ -30,36 +36,67 @@ export const getUnusedClassesFromCss = async ({
     };
   }
 
-  const importingFiles = importingFilesData.map((data) => data.file);
-  const relevantTsContent = getContentOfFiles({
-    files: importingFiles,
-    srcDir,
-  });
+  const usedClasses = new Set<string>();
+  let hasDynamicUsage = false;
+  const dynamicUsages: DynamicClassUsage[] = [];
 
-  const importNames = [
-    ...new Set(importingFilesData.map((data) => data.importName)),
-  ];
+  for (const importingFileData of importingFilesData) {
+    const tsContent = getContentOfFiles({
+      files: [importingFileData.file],
+      srcDir,
+    });
 
-  const { unusedClasses, hasDynamicUsage, dynamicUsages } = findUnusedClasses({
-    cssClasses,
-    importNames,
-    tsContent: relevantTsContent,
-    filePath: importingFiles[0] || '', // Use first importing file as primary
-  });
+    const { isFileIgnored } = parseIgnoreCommentsFromTs(tsContent);
+    if (isFileIgnored) {
+      // If file is ignored, treat all CSS classes as used from this file
+      // This way ignored files don't cause false positives for unused classes
+      for (const className of cssClasses) {
+        usedClasses.add(className);
+      }
+      continue;
+    }
+
+    const fileDynamicUsages = extractDynamicClassUsages(
+      tsContent,
+      [importingFileData.importName],
+      importingFileData.file
+    );
+
+    if (fileDynamicUsages.length > 0) {
+      hasDynamicUsage = true;
+      dynamicUsages.push(...fileDynamicUsages);
+      continue;
+    }
+
+    const fileUsedClasses = extractUsedClasses({
+      tsContent,
+      importNames: [importingFileData.importName],
+    });
+
+    for (const className of fileUsedClasses) {
+      usedClasses.add(className);
+    }
+  }
 
   if (hasDynamicUsage) {
     return {
       file: cssFile,
       status: 'withDynamicImports',
-      dynamicUsages: dynamicUsages || [],
+      dynamicUsages,
     };
+  }
+
+  const unusedClasses: string[] = [];
+  for (const className of cssClasses) {
+    if (!usedClasses.has(className)) {
+      unusedClasses.push(className);
+    }
   }
 
   if (unusedClasses.length === 0) {
     return null;
   }
 
-  // Map unused class names to their location information
   const locationMap = new Map(
     cssClassesWithLocations.map((info) => [info.className, info])
   );

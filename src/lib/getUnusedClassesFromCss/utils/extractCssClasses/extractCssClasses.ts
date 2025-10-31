@@ -1,4 +1,5 @@
 import postcssScss from 'postcss-scss';
+import { parseIgnoreCommentsFromCss } from '../../../../utils/parseIgnoreComments.js';
 import { extractClassNamesFromRule } from './utils/extractClassNamesFromRule.js';
 import { extractComposedClasses } from './utils/extractComposedClasses.js';
 
@@ -9,11 +10,22 @@ export type CssClassInfo = {
 };
 
 export const extractCssClasses = (cssContent: string): string[] => {
+  const { isFileIgnored, ignoredLines } =
+    parseIgnoreCommentsFromCss(cssContent);
+
+  if (isFileIgnored) {
+    return [];
+  }
+
   const classNames = new Set<string>();
 
   const root = postcssScss.parse(cssContent);
 
   root.walkRules((rule) => {
+    if (rule.source?.start && ignoredLines.has(rule.source.start.line)) {
+      return;
+    }
+
     const ruleClassNames = extractClassNamesFromRule(rule);
     for (const className of ruleClassNames) {
       classNames.add(className);
@@ -31,11 +43,22 @@ export const extractCssClasses = (cssContent: string): string[] => {
 export const extractCssClassesWithLocations = (
   cssContent: string
 ): CssClassInfo[] => {
+  const { isFileIgnored, ignoredLines } =
+    parseIgnoreCommentsFromCss(cssContent);
+
+  if (isFileIgnored) {
+    return [];
+  }
+
   const classInfoMap = new Map<string, CssClassInfo>();
 
   const root = postcssScss.parse(cssContent);
 
   root.walkRules((rule) => {
+    if (rule.source?.start && ignoredLines.has(rule.source.start.line)) {
+      return;
+    }
+
     const ruleClassNames = extractClassNamesFromRule(rule);
     for (const className of ruleClassNames) {
       // Only keep the first occurrence of each class

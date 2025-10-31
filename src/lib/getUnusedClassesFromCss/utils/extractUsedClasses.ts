@@ -1,6 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
 import type { Node } from 'estree';
 import { walk } from 'estree-walker';
+import { parseIgnoreCommentsFromTs } from '../../../utils/parseIgnoreComments.js';
 import { contentToAst } from './findUnusedClasses/utils/contentToAst.js';
 
 type ExtractUsedClassesParams = {
@@ -18,8 +19,11 @@ export const extractUsedClasses = ({
   tsContent,
   importNames,
 }: ExtractUsedClassesParams): string[] => {
+  const { ignoredLines } = parseIgnoreCommentsFromTs(tsContent);
+
   const ast: TSESTree.Program = contentToAst(tsContent);
   const usedClasses = new Set<string>();
+  const ignoredUsedClasses = new Set<string>();
 
   walk(ast as Node, {
     enter(node: Node): void {
@@ -29,9 +33,14 @@ export const extractUsedClasses = ({
         !node.computed &&
         node.object.type === 'Identifier' &&
         importNames.includes(node.object.name) &&
-        node.property.type === 'Identifier'
+        node.property.type === 'Identifier' &&
+        node.property.loc
       ) {
-        usedClasses.add(node.property.name);
+        if (ignoredLines.has(node.property.loc.start.line)) {
+          ignoredUsedClasses.add(node.property.name);
+        } else {
+          usedClasses.add(node.property.name);
+        }
       }
 
       // Handle: importName['className'] (bracket notation)
@@ -41,20 +50,29 @@ export const extractUsedClasses = ({
         node.object.type === 'Identifier' &&
         importNames.includes(node.object.name) &&
         node.property.type === 'Literal' &&
-        typeof node.property.value === 'string'
+        typeof node.property.value === 'string' &&
+        node.property.loc
       ) {
-        usedClasses.add(node.property.value);
+        if (ignoredLines.has(node.property.loc.start.line)) {
+          ignoredUsedClasses.add(node.property.value);
+        } else {
+          usedClasses.add(node.property.value);
+        }
       }
     },
   });
 
-  return Array.from(usedClasses);
+  // Return both used and ignored classes - they should all be treated as "used"
+  // to avoid false positives for unused classes
+  return Array.from(new Set([...usedClasses, ...ignoredUsedClasses]));
 };
 
 export const extractUsedClassesWithLocations = ({
   tsContent,
   importNames,
 }: ExtractUsedClassesParams): UsedClassInfo[] => {
+  const { ignoredLines } = parseIgnoreCommentsFromTs(tsContent);
+
   const ast: TSESTree.Program = contentToAst(tsContent);
   const usedClasses: UsedClassInfo[] = [];
 
@@ -67,7 +85,8 @@ export const extractUsedClassesWithLocations = ({
         node.object.type === 'Identifier' &&
         importNames.includes(node.object.name) &&
         node.property.type === 'Identifier' &&
-        node.property.loc
+        node.property.loc &&
+        !ignoredLines.has(node.property.loc.start.line)
       ) {
         usedClasses.push({
           className: node.property.name,
@@ -84,7 +103,8 @@ export const extractUsedClassesWithLocations = ({
         importNames.includes(node.object.name) &&
         node.property.type === 'Literal' &&
         typeof node.property.value === 'string' &&
-        node.property.loc
+        node.property.loc &&
+        !ignoredLines.has(node.property.loc.start.line)
       ) {
         usedClasses.push({
           className: node.property.value,

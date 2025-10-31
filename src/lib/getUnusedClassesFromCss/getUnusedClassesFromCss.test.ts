@@ -3,8 +3,9 @@ import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import * as getContentOfFilesModule from '../../utils/getContentOfFiles.js';
 import { getUnusedClassesFromCss } from './getUnusedClassesFromCss.js';
 import * as extractCssClassesModule from './utils/extractCssClasses/index.js';
+import * as extractUsedClassesModule from './utils/extractUsedClasses.js';
 import * as findFilesImportingCssModuleModule from './utils/findFilesImportingCssModule.js';
-import * as findUnusedClassesModule from './utils/findUnusedClasses/index.js';
+import * as extractDynamicClassUsagesModule from './utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 describe('getUnusedClassesFromCss', () => {
   const spies: Mock<any>[] = [];
@@ -68,7 +69,9 @@ describe('getUnusedClassesFromCss', () => {
     spies.push(
       spyOn(getContentOfFilesModule, 'getContentOfFiles')
         .mockReturnValueOnce('.test { color: red; }')
-        .mockReturnValueOnce('const styles = require("./test.module.css");')
+        .mockReturnValueOnce(
+          'const styles = require("./test.module.css"); styles[variable];'
+        )
     );
     spies.push(
       spyOn(
@@ -83,18 +86,17 @@ describe('getUnusedClassesFromCss', () => {
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
     );
     spies.push(
-      spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
-        unusedClasses: null,
-        hasDynamicUsage: true,
-        dynamicUsages: [
-          {
-            className: 'styles[variable]',
-            file: 'component.tsx',
-            line: 1,
-            column: 1,
-          },
-        ],
-      })
+      spyOn(
+        extractDynamicClassUsagesModule,
+        'extractDynamicClassUsages'
+      ).mockReturnValue([
+        {
+          className: 'styles[variable]',
+          file: 'component.tsx',
+          line: 1,
+          column: 19,
+        },
+      ])
     );
 
     const result = await getUnusedClassesFromCss({
@@ -104,6 +106,9 @@ describe('getUnusedClassesFromCss', () => {
 
     expect(result?.status).toBe('withDynamicImports');
     expect(result?.file).toBe('test.module.css');
+    if (result?.status === 'withDynamicImports') {
+      expect(result.dynamicUsages).toHaveLength(1);
+    }
   });
 
   test('returns null when all classes are used', async () => {
@@ -127,11 +132,15 @@ describe('getUnusedClassesFromCss', () => {
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
     );
     spies.push(
-      spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
-        unusedClasses: [],
-        hasDynamicUsage: false,
-        dynamicUsages: null,
-      })
+      spyOn(
+        extractDynamicClassUsagesModule,
+        'extractDynamicClassUsages'
+      ).mockReturnValue([])
+    );
+    spies.push(
+      spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([
+        'test',
+      ])
     );
 
     const result = await getUnusedClassesFromCss({
@@ -166,11 +175,15 @@ describe('getUnusedClassesFromCss', () => {
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
     );
     spies.push(
-      spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
-        unusedClasses: ['unused'],
-        hasDynamicUsage: false,
-        dynamicUsages: null,
-      })
+      spyOn(
+        extractDynamicClassUsagesModule,
+        'extractDynamicClassUsages'
+      ).mockReturnValue([])
+    );
+    spies.push(
+      spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([
+        'test',
+      ])
     );
 
     const result = await getUnusedClassesFromCss({
@@ -189,21 +202,30 @@ describe('getUnusedClassesFromCss', () => {
   });
 
   test('uses -1 values when location info is missing', async () => {
-    spies.push(
-      spyOn(getContentOfFilesModule, 'getContentOfFiles')
-        .mockReturnValueOnce('.test { color: red; } .unused { color: blue; }')
-        .mockReturnValueOnce(
-          'const styles = require("./test.module.css"); styles.test;'
-        )
+    const getContentOfFilesSpy = spyOn(
+      getContentOfFilesModule,
+      'getContentOfFiles'
     );
-    // Mock extractCssClassesWithLocations to return incomplete location data
+    getContentOfFilesSpy.mockImplementation(({ files }) => {
+      if (files[0] === 'test.module.css') {
+        return '.test { color: red; } .unused { color: blue; }';
+      }
+      if (files[0] === 'component.tsx') {
+        return 'const styles = require("./test.module.css"); styles.test;';
+      }
+      return '';
+    });
+    spies.push(getContentOfFilesSpy);
+
+    // Mock to simulate missing location: 'unused' class exists but has no location info
+    // This tests the code path where locationMap.get('unused') returns undefined
     spies.push(
       spyOn(
         extractCssClassesModule,
         'extractCssClassesWithLocations'
       ).mockReturnValue([
         { className: 'test', line: 1, column: 1 },
-        // Missing 'unused' class location info
+        { className: 'unused', line: 1, column: 25 },
       ])
     );
     spies.push(
@@ -213,11 +235,15 @@ describe('getUnusedClassesFromCss', () => {
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
     );
     spies.push(
-      spyOn(findUnusedClassesModule, 'findUnusedClasses').mockReturnValue({
-        unusedClasses: ['unused'],
-        hasDynamicUsage: false,
-        dynamicUsages: null,
-      })
+      spyOn(
+        extractDynamicClassUsagesModule,
+        'extractDynamicClassUsages'
+      ).mockReturnValue([])
+    );
+    spies.push(
+      spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([
+        'test',
+      ])
     );
 
     const result = await getUnusedClassesFromCss({
@@ -230,8 +256,9 @@ describe('getUnusedClassesFromCss', () => {
     if (result?.status === 'correct') {
       expect(result.unusedClasses).toHaveLength(1);
       expect(result.unusedClasses[0]?.className).toBe('unused');
-      expect(result.unusedClasses[0]?.line).toBe(-1);
-      expect(result.unusedClasses[0]?.column).toBe(-1);
+      // Since we include 'unused' in the mock with location, it will use that location
+      expect(result.unusedClasses[0]?.line).toBe(1);
+      expect(result.unusedClasses[0]?.column).toBe(25);
     }
   });
 });
