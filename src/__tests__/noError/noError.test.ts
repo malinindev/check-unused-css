@@ -29,6 +29,7 @@ describe('Components without errors', () => {
     'WithScssComments',
     'WithRegexAndComment',
     'AllClassesExist',
+    'AbsoluteImport',
     '(Documentation)SpecialChars',
     '[Brackets]And.Dots',
     'MultipleStyles',

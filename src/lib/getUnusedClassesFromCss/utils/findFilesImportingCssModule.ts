@@ -9,6 +9,13 @@ export const findFilesImportingCssModule = async (
   const tsFiles = await glob('**/*.{ts,tsx}', { cwd: srcDir });
   const importingFiles: Array<{ file: string; importName: string }> = [];
 
+  // Pre-compute project root and check if srcDir is the project root
+  const projectRoot = process.cwd();
+  const srcDirResolved = path.resolve(srcDir);
+  const projectRootResolved = path.resolve(projectRoot);
+  const isSrcDirProjectRoot = srcDirResolved === projectRootResolved;
+  const normalizedCssPath = path.normalize(path.join(srcDir, cssFile));
+
   for (const tsFile of tsFiles) {
     const tsPath = path.join(srcDir, tsFile);
 
@@ -38,25 +45,45 @@ export const findFilesImportingCssModule = async (
 
         // Resolve the import path relative to the TypeScript file
         const tsDir = path.dirname(tsPath);
-        let resolvedImportPath: string;
 
         if (importPath.startsWith('./') || importPath.startsWith('../')) {
           // Relative path
-          resolvedImportPath = path.resolve(tsDir, importPath);
+          const resolvedImportPath = path.resolve(tsDir, importPath);
+
+          // Check if the resolved import path matches the CSS file
+          if (path.normalize(resolvedImportPath) === normalizedCssPath) {
+            importingFiles.push({ file: tsFile, importName });
+            break;
+          }
         } else {
-          // Absolute path from srcDir
-          resolvedImportPath = path.resolve(srcDir, importPath);
-        }
+          // Absolute path - try most likely path first, then fallback
+          // Most common case: srcDir is project root (tests) or absolute import from srcDir
+          const srcDirPath = path.normalize(path.resolve(srcDir, importPath));
+          if (srcDirPath === normalizedCssPath) {
+            importingFiles.push({ file: tsFile, importName });
+            break;
+          }
 
-        // Normalize paths for comparison (handle different path separators, resolve .. and . segments)
-        // This ensures cross-platform compatibility and resolves relative path segments
-        const normalizedResolvedPath = path.normalize(resolvedImportPath);
-        const normalizedCssPath = path.normalize(path.join(srcDir, cssFile));
+          // If srcDir is not project root, try project root paths
+          if (!isSrcDirProjectRoot) {
+            // Try from project root
+            const projectRootPath = path.normalize(
+              path.resolve(projectRoot, importPath)
+            );
+            if (projectRootPath === normalizedCssPath) {
+              importingFiles.push({ file: tsFile, importName });
+              break;
+            }
 
-        // Check if the resolved import path matches the CSS file we're analyzing
-        if (normalizedResolvedPath === normalizedCssPath) {
-          importingFiles.push({ file: tsFile, importName });
-          break; // Found a match, no need to check other imports in this file
+            // Try with 'src/' prefix (handles '__tests__/...' imports)
+            const srcPrefixedPath = path.normalize(
+              path.resolve(projectRoot, 'src', importPath)
+            );
+            if (srcPrefixedPath === normalizedCssPath) {
+              importingFiles.push({ file: tsFile, importName });
+              break;
+            }
+          }
         }
 
         // Get next match
