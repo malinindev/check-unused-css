@@ -37,6 +37,7 @@ describe('Components without errors', () => {
     'IgnoreNextLineCss',
     'IgnoreFileTs',
     'IgnoreNextLineTs',
+    'IgnoreMultiLineComment',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {
