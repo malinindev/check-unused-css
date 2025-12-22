@@ -1,6 +1,6 @@
 {
   "name": "check-unused-css",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Detect and remove unused CSS module classes",
   "author": "Serge Malinin <s@malinin.dev>",
   "license": "MIT",
