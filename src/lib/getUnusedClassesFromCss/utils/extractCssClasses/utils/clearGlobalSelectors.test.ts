@@ -151,21 +151,25 @@ describe('clearGlobalSelectors', () => {
     test('handles unclosed :global(', () => {
       const input = '.class :global(.global';
       const result = clearGlobalSelectors(input);
-      expect(result).toBe('.class :global(.global');
+      expect(result).toBe('.class');
     });
 
     test('handles empty :global()', () => {
       const input = '.class :global()';
       const result = clearGlobalSelectors(input);
-      // Empty :global() are not removed as the regex requires at least one character inside
-      expect(result).toBe('.class :global()');
+      expect(result).toBe('.class');
     });
 
     test('handles nested parentheses in :global()', () => {
       const input = '.class :global(.global:not(.excluded))';
       const result = clearGlobalSelectors(input);
-      // Regex removes only up to the first closing parenthesis
-      expect(result).toBe('.class )');
+      expect(result).toBe('.class');
+    });
+
+    test('handles :has() inside :global()', () => {
+      const input = ':global(body:has(.class) .class2)';
+      const result = clearGlobalSelectors(input);
+      expect(result).toBe('');
     });
 
     test('handles multiple spaces between selectors', () => {

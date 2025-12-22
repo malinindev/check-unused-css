@@ -19,3 +19,7 @@
 :global(.globalClass4.globalClass5) {
   color: #fff
 }
+
+:global(body:has(.globalClass6) .globalClass7) {
+  color: #fff
+}
