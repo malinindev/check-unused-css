@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.2.4
+
+### Patch Changes
+
+- 2541d44: add absolute path support
+- 8fb4b42: Fix clear global selectors util
+
 ## 0.2.3
 
 ### Patch Changes
