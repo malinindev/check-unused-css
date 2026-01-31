@@ -6,7 +6,7 @@ import { getContentOfFiles } from '../utils/getContentOfFiles.js';
 import { parseIgnoreComments } from '../utils/parseIgnoreComments.js';
 import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
-import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule.js';
+import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 type GetNonExistentClassesFromCssParams = {

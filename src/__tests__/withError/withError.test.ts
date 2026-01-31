@@ -3,49 +3,51 @@ import { runCheckUnusedCss } from '../runCheckUnusedCss.js';
 
 describe('Component with errors', () => {
   test.each([
-    ['Plain', 'css'],
-    ['PlainScss', 'scss'],
-    ['WithNotClosedQuote', 'css'],
-    ['WithRegex', 'css'],
-    ['WithComments', 'css'],
-    ['WithJSXComments', 'css'],
-    ['NonExistentClasses', 'css'],
-    ['NonExistentClassesScss', 'scss'],
-    ['NestedCss', 'css'],
-  ])('finds errors in %s component', (componentName, extension) => {
+    ['Plain', 'Plain.module.css'],
+    ['PlainScss', 'PlainScss.module.scss'],
+    ['WithNotClosedQuote', 'WithNotClosedQuote.module.css'],
+    ['WithRegex', 'WithRegex.module.css'],
+    ['WithComments', 'WithComments.module.css'],
+    ['WithJSXComments', 'WithJSXComments.module.css'],
+    ['NestedCss', 'NestedCss.module.css'],
+    ['AliasImportAt', 'AliasImportAt.module.css'],
+    ['AliasImportTilde', 'AliasImportTilde.module.css'],
+    ['AliasNested', 'components/Button.module.css'],
+  ])('finds errors in %s component', (componentName, cssFilePath) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
     );
     expect(result.exitCode).toBe(1);
 
-    // Check that some error is reported (could be unused or non-existent classes)
-    if (
-      componentName === 'NonExistentClasses' ||
-      componentName === 'NonExistentClassesScss'
-    ) {
-      // For non-existent classes tests, check for non-existent class errors
+    const fileRegexp = new RegExp(`${cssFilePath}:\\d+:\\d+`, 'm');
+    expect(result.stdout).toMatch(fileRegexp);
+
+    expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass$/m);
+    expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass2$/m);
+
+    expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
+    expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
+  });
+
+  test.each([
+    ['NonExistentClasses', 'NonExistentClasses.tsx'],
+    ['NonExistentClassesScss', 'NonExistentClassesScss.tsx'],
+  ])(
+    'finds non-existent classes in %s component',
+    (componentName, tsxFileName) => {
+      const result = runCheckUnusedCss(
+        `src/__tests__/withError/${componentName}`
+      );
+      expect(result.exitCode).toBe(1);
+
       expect(result.stderr).toMatch(
         /Found .* classes used in TypeScript but non-existent in CSS/
       );
-      // Check for .tsx file in output instead of .css/.scss
-      const tsxFileRegexp = new RegExp(`${componentName}\\.tsx:\\d+:\\d+`, 'm');
-      expect(result.stdout).toMatch(tsxFileRegexp);
-      return; // Skip unused class checks for non-existent tests
-    } else {
-      // For unused classes, check CSS file output
-      const fileRegexp = new RegExp(
-        `${componentName}.module.${extension}:\\d+:\\d+`,
-        'm'
-      );
-      expect(result.stdout).toMatch(fileRegexp);
-      // For other tests, check for unused class errors
-      expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass$/m);
-      expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass2$/m);
 
-      expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
-      expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
+      const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
+      expect(result.stdout).toMatch(tsxFileRegexp);
     }
-  });
+  );
 
   test('shows error for not imported css modules', () => {
     const result = runCheckUnusedCss(
