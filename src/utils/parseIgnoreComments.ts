@@ -8,163 +8,141 @@ export type IgnoreInfo = {
   ignoredLines: Set<number>;
 };
 
-type ParseOptions = {
-  supportSingleLineComments: boolean;
-  supportBlockComments: boolean;
+type ParseState = {
+  isFileIgnored: boolean;
+  ignoredLines: Set<number>;
+  inBlockComment: boolean;
+  blockCommentContent: string;
 };
 
-const processCommentContent = (
+// Compile regex once for performance
+const SINGLE_LINE_COMMENT_REGEX = /\/\/(.*)/;
+const BLOCK_COMMENT_REGEX = /\/\*(.*?)\*\//g;
+
+const checkIgnoreDirectives = (
   commentContent: string,
   lineNumber: number,
-  ignoredLines: Set<number>
-): { isFileIgnored: boolean } => {
-  const trimmedContent = commentContent.trim();
-  let isFileIgnored = false;
+  state: ParseState
+): void => {
+  const trimmed = commentContent.trim();
 
-  if (IGNORE_COMMENT_PATTERNS.disable.test(trimmedContent)) {
-    isFileIgnored = true;
+  if (IGNORE_COMMENT_PATTERNS.disable.test(trimmed)) {
+    state.isFileIgnored = true;
   }
-  if (IGNORE_COMMENT_PATTERNS.disableNextLine.test(trimmedContent)) {
-    ignoredLines.add(lineNumber + 1);
+  if (IGNORE_COMMENT_PATTERNS.disableNextLine.test(trimmed)) {
+    state.ignoredLines.add(lineNumber + 1);
   }
-
-  return { isFileIgnored };
 };
 
 const processSingleLineComment = (
   line: string,
   lineNumber: number,
-  ignoredLines: Set<number>
+  state: ParseState
+): void => {
+  const match = line.match(SINGLE_LINE_COMMENT_REGEX);
+  if (match?.[1]) {
+    checkIgnoreDirectives(match[1], lineNumber, state);
+  }
+};
+
+const processSingleLineBlockComments = (
+  line: string,
+  lineNumber: number,
+  state: ParseState
 ): boolean => {
-  const lineCommentMatch = line.match(/\/\/(.*)/);
-  if (!lineCommentMatch?.[1]) {
+  let found = false;
+
+  for (const match of line.matchAll(BLOCK_COMMENT_REGEX)) {
+    if (match[1]) {
+      checkIgnoreDirectives(match[1], lineNumber, state);
+      found = true;
+    }
+  }
+
+  return found;
+};
+
+const processMultiLineBlockCommentContinuation = (
+  line: string,
+  lineNumber: number,
+  state: ParseState
+): void => {
+  const endIndex = line.indexOf('*/');
+
+  if (endIndex === -1) {
+    state.blockCommentContent += `${line}\n`;
+    return;
+  }
+
+  state.blockCommentContent += line.substring(0, endIndex);
+  checkIgnoreDirectives(state.blockCommentContent, lineNumber, state);
+  state.inBlockComment = false;
+  state.blockCommentContent = '';
+};
+
+const processMultiLineBlockCommentStart = (
+  line: string,
+  lineNumber: number,
+  state: ParseState
+): boolean => {
+  const startIndex = line.indexOf('/*');
+  if (startIndex === -1) {
     return false;
   }
 
-  const result = processCommentContent(
-    lineCommentMatch[1],
-    lineNumber,
-    ignoredLines
-  );
-  return result.isFileIgnored;
+  const afterStart = line.substring(startIndex + 2);
+  const endIndex = afterStart.indexOf('*/');
+
+  if (endIndex !== -1) {
+    const content = afterStart.substring(0, endIndex);
+    checkIgnoreDirectives(content, lineNumber, state);
+  } else {
+    state.inBlockComment = true;
+    state.blockCommentContent = afterStart;
+  }
+
+  return true;
 };
 
-const parseIgnoreComments = (
-  content: string,
-  options: ParseOptions
-): IgnoreInfo => {
-  const ignoredLines = new Set<number>();
-  let isFileIgnored = false;
+/**
+ * Parses ignore comments from source content (CSS or TS).
+ */
+export const parseIgnoreComments = (content: string): IgnoreInfo => {
+  const state: ParseState = {
+    isFileIgnored: false,
+    ignoredLines: new Set<number>(),
+    inBlockComment: false,
+    blockCommentContent: '',
+  };
 
   const lines = content.split('\n');
-  let inBlockComment = false;
-  let blockCommentContent = '';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line === undefined) continue;
+
     const lineNumber = i + 1;
 
-    if (!options.supportBlockComments) {
-      if (!options.supportSingleLineComments) continue;
-      const fileIgnored = processSingleLineComment(
-        line,
-        lineNumber,
-        ignoredLines
-      );
-      if (fileIgnored) {
-        isFileIgnored = true;
-      }
+    if (state.inBlockComment) {
+      processMultiLineBlockCommentContinuation(line, lineNumber, state);
       continue;
     }
 
-    if (inBlockComment) {
-      const blockCommentEnd = line.indexOf('*/');
-      if (blockCommentEnd === -1) {
-        blockCommentContent += `${line}\n`;
-        continue;
-      }
-
-      blockCommentContent += line.substring(0, blockCommentEnd);
-      inBlockComment = false;
-
-      const result = processCommentContent(
-        blockCommentContent,
-        lineNumber,
-        ignoredLines
-      );
-      if (result.isFileIgnored) {
-        isFileIgnored = true;
-      }
-
-      blockCommentContent = '';
-      continue;
-    }
-
-    const singleLineBlockCommentMatch = line.match(/\/\*(.*?)\*\//);
-    if (singleLineBlockCommentMatch?.[1]) {
-      const result = processCommentContent(
-        singleLineBlockCommentMatch[1],
-        lineNumber,
-        ignoredLines
-      );
-      if (result.isFileIgnored) {
-        isFileIgnored = true;
-      }
-      continue;
-    }
-
-    const blockCommentStart = line.indexOf('/*');
-    if (blockCommentStart !== -1) {
-      inBlockComment = true;
-      blockCommentContent = line.substring(blockCommentStart + 2);
-
-      const blockCommentEnd = line.indexOf('*/', blockCommentStart + 2);
-      if (blockCommentEnd !== -1) {
-        blockCommentContent = blockCommentContent.substring(
-          0,
-          blockCommentEnd - blockCommentStart - 2
-        );
-        inBlockComment = false;
-
-        const result = processCommentContent(
-          blockCommentContent,
-          lineNumber,
-          ignoredLines
-        );
-        if (result.isFileIgnored) {
-          isFileIgnored = true;
-        }
-
-        blockCommentContent = '';
-      }
-      continue;
-    }
-
-    if (!options.supportSingleLineComments) continue;
-    const fileIgnored = processSingleLineComment(
+    const hasBlockComment = processSingleLineBlockComments(
       line,
       lineNumber,
-      ignoredLines
+      state
     );
-    if (fileIgnored) {
-      isFileIgnored = true;
+
+    if (!hasBlockComment) {
+      processMultiLineBlockCommentStart(line, lineNumber, state);
     }
+
+    processSingleLineComment(line, lineNumber, state);
   }
 
-  return { isFileIgnored, ignoredLines };
-};
-
-export const parseIgnoreCommentsFromCss = (cssContent: string): IgnoreInfo => {
-  return parseIgnoreComments(cssContent, {
-    supportSingleLineComments: true,
-    supportBlockComments: true,
-  });
-};
-
-export const parseIgnoreCommentsFromTs = (tsContent: string): IgnoreInfo => {
-  return parseIgnoreComments(tsContent, {
-    supportSingleLineComments: true,
-    supportBlockComments: true,
-  });
+  return {
+    isFileIgnored: state.isFileIgnored,
+    ignoredLines: state.ignoredLines,
+  };
 };

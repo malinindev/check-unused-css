@@ -2,7 +2,7 @@ import type { TSESTree } from '@typescript-eslint/typescript-estree';
 import type { Node } from 'estree';
 import { walk } from 'estree-walker';
 import type { DynamicClassUsage } from '../../../../types.js';
-import { parseIgnoreCommentsFromTs } from '../../../../utils/parseIgnoreComments.js';
+import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import { contentToAst } from './utils/contentToAst.js';
 import { extractDynamicClassUsages } from './utils/extractDynamicClassUsages.js';
 
@@ -27,7 +27,7 @@ export const findUnusedClasses = ({
   importNames,
   filePath,
 }: FindUnusedClassesParams): FindUnusedClassesResult => {
-  const { ignoredLines } = parseIgnoreCommentsFromTs(tsContent);
+  const { ignoredLines } = parseIgnoreComments(tsContent);
 
   const unusedClasses: string[] = [];
 

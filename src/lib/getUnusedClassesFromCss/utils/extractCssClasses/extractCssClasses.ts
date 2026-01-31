@@ -1,5 +1,5 @@
 import postcssScss from 'postcss-scss';
-import { parseIgnoreCommentsFromCss } from '../../../../utils/parseIgnoreComments.js';
+import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import { extractClassNamesFromRule } from './utils/extractClassNamesFromRule.js';
 import { extractComposedClasses } from './utils/extractComposedClasses.js';
 
@@ -10,8 +10,7 @@ export type CssClassInfo = {
 };
 
 export const extractCssClasses = (cssContent: string): string[] => {
-  const { isFileIgnored, ignoredLines } =
-    parseIgnoreCommentsFromCss(cssContent);
+  const { isFileIgnored, ignoredLines } = parseIgnoreComments(cssContent);
 
   if (isFileIgnored) {
     return [];
@@ -43,8 +42,7 @@ export const extractCssClasses = (cssContent: string): string[] => {
 export const extractCssClassesWithLocations = (
   cssContent: string
 ): CssClassInfo[] => {
-  const { isFileIgnored, ignoredLines } =
-    parseIgnoreCommentsFromCss(cssContent);
+  const { isFileIgnored, ignoredLines } = parseIgnoreComments(cssContent);
 
   if (isFileIgnored) {
     return [];

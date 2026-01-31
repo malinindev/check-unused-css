@@ -3,7 +3,7 @@ import type {
   NonExistentClassUsage,
 } from '../types.js';
 import { getContentOfFiles } from '../utils/getContentOfFiles.js';
-import { parseIgnoreCommentsFromTs } from '../utils/parseIgnoreComments.js';
+import { parseIgnoreComments } from '../utils/parseIgnoreComments.js';
 import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule.js';
@@ -37,7 +37,7 @@ export const getNonExistentClassesFromCss = async ({
       srcDir,
     });
 
-    const { isFileIgnored } = parseIgnoreCommentsFromTs(tsContent);
+    const { isFileIgnored } = parseIgnoreComments(tsContent);
     if (isFileIgnored) {
       continue;
     }

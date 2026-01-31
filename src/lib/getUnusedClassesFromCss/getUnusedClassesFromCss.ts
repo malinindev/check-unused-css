@@ -4,7 +4,7 @@ import type {
   UnusedClassUsage,
 } from '../../types.js';
 import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
-import { parseIgnoreCommentsFromTs } from '../../utils/parseIgnoreComments.js';
+import { parseIgnoreComments } from '../../utils/parseIgnoreComments.js';
 import { extractCssClassesWithLocations } from './utils/extractCssClasses/index.js';
 import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule.js';
@@ -46,7 +46,7 @@ export const getUnusedClassesFromCss = async ({
       srcDir,
     });
 
-    const { isFileIgnored } = parseIgnoreCommentsFromTs(tsContent);
+    const { isFileIgnored } = parseIgnoreComments(tsContent);
     if (isFileIgnored) {
       // If file is ignored, treat all CSS classes as used from this file
       // This way ignored files don't cause false positives for unused classes
