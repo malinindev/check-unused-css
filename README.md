@@ -104,6 +104,54 @@ This is useful in CI/CD pipelines where you want to enforce explicit class usage
 
 **[Read more about why dynamic class access should be avoided](./docs/avoid-dynamic-classes.md)**
 
+#### Ignoring files or lines with comments
+
+You can ignore specific lines or entire files from CSS checking using special comments, similar to ESLint:
+
+**For CSS files:**
+
+```css
+/* check-unused-css-disable */
+.unusedClass { }
+```
+
+```css
+.usedClass { }
+
+/* check-unused-css-disable-next-line */
+.unusedClass { }
+```
+
+**For TypeScript/TSX files:**
+
+```tsx
+// check-unused-css-disable
+import styles from './Component.module.css';
+
+export const Component = () => (
+  <div className={styles.unusedClass} />
+);
+```
+
+```tsx
+import styles from './Component.module.css';
+
+export const Component = () => (
+  <div>
+    <div className={styles.usedClass} />
+    {/* check-unused-css-disable-next-line */}
+    <div className={styles.unusedClass} />
+  </div>
+);
+```
+
+**Supported comment formats:**
+- `/* check-unused-css-disable */` - ignore entire CSS file
+- `/* check-unused-css-disable-next-line */` - ignore next line in CSS
+- `// check-unused-css-disable` - ignore entire TS/TSX file
+- `// check-unused-css-disable-next-line` - ignore next line in TS/TSX
+- `{/* check-unused-css-disable-next-line */}` - ignore next line in JSX (TSX)
+
 ## CI Integration
 
 Set up automated checks for unused CSS in your pipeline.  

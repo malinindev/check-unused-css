@@ -3,6 +3,7 @@ import type {
   NonExistentClassUsage,
 } from '../types.js';
 import { getContentOfFiles } from '../utils/getContentOfFiles.js';
+import { parseIgnoreComments } from '../utils/parseIgnoreComments.js';
 import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule.js';
@@ -35,6 +36,11 @@ export const getNonExistentClassesFromCss = async ({
       files: [importingFileData.file],
       srcDir,
     });
+
+    const { isFileIgnored } = parseIgnoreComments(tsContent);
+    if (isFileIgnored) {
+      continue;
+    }
 
     // Skip analysis if dynamic usage is detected
     if (

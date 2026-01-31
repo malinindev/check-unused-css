@@ -33,6 +33,11 @@ describe('Components without errors', () => {
     '(Documentation)SpecialChars',
     '[Brackets]And.Dots',
     'MultipleStyles',
+    'IgnoreFileCss',
+    'IgnoreNextLineCss',
+    'IgnoreFileTs',
+    'IgnoreNextLineTs',
+    'IgnoreMultiLineComment',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {

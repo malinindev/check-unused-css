@@ -1,0 +1,12 @@
+/*
+ * check-unused-css-disable
+ * This is a multi-line comment
+ */
+.unusedClass {
+  color: #fff;
+}
+
+.anotherUnusedClass {
+  color: #000;
+}
+

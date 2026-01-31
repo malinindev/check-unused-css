@@ -1,0 +1,13 @@
+.usedClass {
+  color: #fff;
+}
+
+/* check-unused-css-disable-next-line */
+.unusedClass {
+  color: #000;
+}
+
+.anotherUsedClass {
+  color: #333;
+}
+

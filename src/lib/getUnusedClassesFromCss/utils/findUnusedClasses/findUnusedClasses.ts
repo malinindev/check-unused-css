@@ -2,6 +2,7 @@ import type { TSESTree } from '@typescript-eslint/typescript-estree';
 import type { Node } from 'estree';
 import { walk } from 'estree-walker';
 import type { DynamicClassUsage } from '../../../../types.js';
+import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import { contentToAst } from './utils/contentToAst.js';
 import { extractDynamicClassUsages } from './utils/extractDynamicClassUsages.js';
 
@@ -26,6 +27,8 @@ export const findUnusedClasses = ({
   importNames,
   filePath,
 }: FindUnusedClassesParams): FindUnusedClassesResult => {
+  const { ignoredLines } = parseIgnoreComments(tsContent);
+
   const unusedClasses: string[] = [];
 
   // Check for dynamic usage patterns first
@@ -51,7 +54,9 @@ export const findUnusedClasses = ({
         !node.computed &&
         node.object.type === 'Identifier' &&
         importNames.includes(node.object.name) &&
-        node.property.type === 'Identifier'
+        node.property.type === 'Identifier' &&
+        node.property.loc &&
+        !ignoredLines.has(node.property.loc.start.line)
       ) {
         usedClasses.add(node.property.name);
       }
@@ -63,7 +68,9 @@ export const findUnusedClasses = ({
         node.object.type === 'Identifier' &&
         importNames.includes(node.object.name) &&
         node.property.type === 'Literal' &&
-        typeof node.property.value === 'string'
+        typeof node.property.value === 'string' &&
+        node.property.loc &&
+        !ignoredLines.has(node.property.loc.start.line)
       ) {
         usedClasses.add(node.property.value);
       }
