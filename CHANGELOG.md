@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.5
+
+### Patch Changes
+
+- cbf441b: add ignore comments
+
 ## 0.2.4
 
 ### Patch Changes
