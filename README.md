@@ -198,6 +198,7 @@ import styles from '~/shared/theme.module.css';         // ✅ Works
 - ✅ Nested aliases: `"@components/ui/*": ["src/components/ui/*"]`
 - ✅ Multiple path mappings (uses first match)
 - ✅ Config inheritance via `extends`
+- ✅ Project references (automatically resolves paths from referenced tsconfig files)
 
 ## CI Integration
 

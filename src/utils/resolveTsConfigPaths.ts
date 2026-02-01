@@ -1,4 +1,4 @@
-import { getTsconfig } from 'get-tsconfig';
+import { getTsconfig, parseTsconfig } from 'get-tsconfig';
 import path from 'node:path';
 
 type TsConfigCache = {
@@ -22,7 +22,40 @@ const loadTsConfig = (
   try {
     const result = getTsconfig(searchFromDir || projectRoot);
 
-    if (!result?.config.compilerOptions) {
+    if (!result?.config) {
+      cachedTsConfig = {};
+      cachedProjectRoot = cacheKey;
+      return cachedTsConfig;
+    }
+
+    // If the config has references and no paths, try to find a referenced config with paths
+    const hasPaths = result.config.compilerOptions?.paths;
+
+    if (!hasPaths && result.config.references) {
+      const tsconfigDir = path.dirname(result.path);
+
+      // Try to find a referenced tsconfig with paths configuration
+      for (const ref of result.config.references) {
+        if (!ref.path) continue;
+
+        const refPath = path.resolve(tsconfigDir, ref.path);
+        const refResult = parseTsconfig(refPath);
+
+        if (refResult?.compilerOptions?.paths) {
+          const { baseUrl, paths } = refResult.compilerOptions;
+
+          cachedTsConfig = {
+            baseUrl: baseUrl ? path.resolve(tsconfigDir, baseUrl) : undefined,
+            paths: paths || undefined,
+          };
+          cachedProjectRoot = cacheKey;
+
+          return cachedTsConfig;
+        }
+      }
+    }
+
+    if (!result.config.compilerOptions) {
       cachedTsConfig = {};
       cachedProjectRoot = cacheKey;
       return cachedTsConfig;

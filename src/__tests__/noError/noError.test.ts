@@ -41,6 +41,7 @@ describe('Components without errors', () => {
     'AliasImportAt',
     'AliasImportTilde',
     'AliasNested',
+    'AliasWithReferences',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {

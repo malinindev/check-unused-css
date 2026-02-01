@@ -13,6 +13,7 @@ describe('Component with errors', () => {
     ['AliasImportAt', 'AliasImportAt.module.css'],
     ['AliasImportTilde', 'AliasImportTilde.module.css'],
     ['AliasNested', 'components/Button.module.css'],
+    ['AliasWithReferences', 'AliasWithReferences.module.css'],
   ])('finds errors in %s component', (componentName, cssFilePath) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`

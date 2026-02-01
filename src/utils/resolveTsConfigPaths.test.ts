@@ -94,4 +94,20 @@ describe('resolvePathAlias', () => {
 
     expect(result).toBeNull();
   });
+
+  test('resolves aliases from referenced tsconfig (project references)', () => {
+    const projectRoot = path.resolve(
+      __dirname,
+      '../__tests__/noError/AliasWithReferences'
+    );
+    const result = resolvePathAlias(
+      '@/AliasWithReferences.module.css',
+      projectRoot,
+      projectRoot
+    );
+
+    expect(result).toBe(
+      path.resolve(projectRoot, 'AliasWithReferences.module.css')
+    );
+  });
 });
