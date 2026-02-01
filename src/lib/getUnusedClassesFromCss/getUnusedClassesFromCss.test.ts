@@ -4,7 +4,7 @@ import * as getContentOfFilesModule from '../../utils/getContentOfFiles.js';
 import { getUnusedClassesFromCss } from './getUnusedClassesFromCss.js';
 import * as extractCssClassesModule from './utils/extractCssClasses/index.js';
 import * as extractUsedClassesModule from './utils/extractUsedClasses.js';
-import * as findFilesImportingCssModuleModule from './utils/findFilesImportingCssModule.js';
+import * as findFilesImportingCssModuleModule from './utils/findFilesImportingCssModule/index.js';
 import * as extractDynamicClassUsagesModule from './utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 describe('getUnusedClassesFromCss', () => {

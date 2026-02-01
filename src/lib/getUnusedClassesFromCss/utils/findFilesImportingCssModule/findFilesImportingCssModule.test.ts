@@ -604,4 +604,167 @@ describe('findFilesImportingCssModule', () => {
       expect(result).toEqual([{ file: 'src/App.tsx', importName: 'styles' }]);
     });
   });
+
+  describe('should handle TypeScript path aliases', () => {
+    test('finds imports using @/* alias pattern', async () => {
+      createFile(
+        'tsconfig.json',
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '@/*': ['./*'],
+            },
+          },
+        })
+      );
+      createFile(
+        'components/Button.tsx',
+        'import styles from "@/styles/Button.module.css";'
+      );
+      createFile('styles/Button.module.css', '.button { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'styles/Button.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('finds imports using ~/* alias pattern', async () => {
+      createFile(
+        'tsconfig.json',
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '~/*': ['./*'],
+            },
+          },
+        })
+      );
+      createFile(
+        'components/Card.tsx',
+        'import styles from "~/theme/Card.module.css";'
+      );
+      createFile('theme/Card.module.css', '.card { padding: 10px; }');
+
+      const result = await findFilesImportingCssModule(
+        'theme/Card.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Card.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('finds imports using nested @components/* alias', async () => {
+      createFile(
+        'tsconfig.json',
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '@components/*': ['./components/*'],
+            },
+          },
+        })
+      );
+      createFile(
+        'pages/Home.tsx',
+        'import styles from "@components/ui/Button.module.css";'
+      );
+      createFile(
+        'components/ui/Button.module.css',
+        '.button { background: blue; }'
+      );
+
+      const result = await findFilesImportingCssModule(
+        'components/ui/Button.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'pages/Home.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('prefers alias resolution over absolute paths', async () => {
+      createFile(
+        'tsconfig.json',
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '@/*': ['./src/*'],
+            },
+          },
+        })
+      );
+      createFile(
+        'components/Button.tsx',
+        'import styles from "@/theme.module.css";'
+      );
+      createFile('src/theme.module.css', '.theme { color: blue; }');
+      createFile('theme.module.css', '.wrong { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'src/theme.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('falls back to absolute path when alias does not match', async () => {
+      createFile(
+        'tsconfig.json',
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '@components/*': ['./components/*'],
+            },
+          },
+        })
+      );
+      createFile(
+        'components/Button.tsx',
+        'import styles from "utils/theme.module.css";'
+      );
+      createFile('utils/theme.module.css', '.theme { margin: 0; }');
+
+      const result = await findFilesImportingCssModule(
+        'utils/theme.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.tsx', importName: 'styles' },
+      ]);
+    });
+
+    test('works without tsconfig.json (graceful fallback)', async () => {
+      createFile(
+        'components/Button.tsx',
+        'import styles from "./Button.module.css";'
+      );
+      createFile('components/Button.module.css', '.button { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'components/Button.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.tsx', importName: 'styles' },
+      ]);
+    });
+  });
 });

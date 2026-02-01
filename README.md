@@ -152,6 +152,54 @@ export const Component = () => (
 - `// check-unused-css-disable-next-line` - ignore next line in TS/TSX
 - `{/* check-unused-css-disable-next-line */}` - ignore next line in JSX (TSX)
 
+## TypeScript Path Aliases Support
+
+`check-unused-css` automatically supports TypeScript path aliases defined in your `tsconfig.json`.
+
+### Example
+
+If you have path aliases in your TypeScript configuration:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "~/*": ["lib/*"]
+    }
+  }
+}
+```
+
+Then imports using these aliases will be correctly resolved:
+
+```typescript
+// Component.tsx
+import styles from '@/components/Button.module.css';     // ✅ Works
+import styles from '@components/ui/Card.module.css';    // ✅ Works
+import styles from '~/shared/theme.module.css';         // ✅ Works
+```
+
+### How it works
+
+- Automatically finds and parses `tsconfig.json` in your project
+- Supports `extends` for shared configurations
+- Supports wildcard patterns (`*`)
+- Falls back to regular path resolution if no aliases match
+- No configuration needed - it just works!
+
+### Supported features
+
+- ✅ Simple aliases: `"@utils": ["src/utils"]`
+- ✅ Wildcard aliases: `"@/*": ["src/*"]`
+- ✅ Nested aliases: `"@components/ui/*": ["src/components/ui/*"]`
+- ✅ Multiple path mappings (uses first match)
+- ✅ Config inheritance via `extends`
+- ✅ Project references (automatically resolves paths from referenced tsconfig files)
+
 ## CI Integration
 
 Set up automated checks for unused CSS in your pipeline.  

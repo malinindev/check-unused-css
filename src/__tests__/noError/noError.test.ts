@@ -38,6 +38,10 @@ describe('Components without errors', () => {
     'IgnoreFileTs',
     'IgnoreNextLineTs',
     'IgnoreMultiLineComment',
+    'AliasImportAt',
+    'AliasImportTilde',
+    'AliasNested',
+    'AliasWithReferences',
   ])(
     'exits with code 0 when no unused classes found for component %s.tsx',
     (folderName) => {
