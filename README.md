@@ -177,10 +177,9 @@ If you have path aliases in your TypeScript configuration:
 Then imports using these aliases will be correctly resolved:
 
 ```typescript
-// Component.tsx
-import styles from '@/components/Button.module.css';     // ✅ Works
-import styles from '@components/ui/Card.module.css';    // ✅ Works
-import styles from '~/shared/theme.module.css';         // ✅ Works
+import styles from '@/components/Button.module.css';
+import styles from '@components/ui/Card.module.css';
+import styles from '~/shared/theme.module.css';
 ```
 
 ### How it works
@@ -193,12 +192,12 @@ import styles from '~/shared/theme.module.css';         // ✅ Works
 
 ### Supported features
 
-- ✅ Simple aliases: `"@utils": ["src/utils"]`
-- ✅ Wildcard aliases: `"@/*": ["src/*"]`
-- ✅ Nested aliases: `"@components/ui/*": ["src/components/ui/*"]`
-- ✅ Multiple path mappings (uses first match)
-- ✅ Config inheritance via `extends`
-- ✅ Project references (automatically resolves paths from referenced tsconfig files)
+- Simple aliases: `"@utils": ["src/utils"]`
+- Wildcard aliases: `"@/*": ["src/*"]`
+- Nested aliases: `"@components/ui/*": ["src/components/ui/*"]`
+- Multiple path mappings (uses first match)
+- Config inheritance via `extends`
+- Project references (automatically resolves paths from referenced tsconfig files)
 
 ## CI Integration
 
@@ -257,6 +256,27 @@ These libs require:
 - developing in watch mode to keep them up to date  
 
 `check-unused-css` works out of the box, supports `.css`, `.scss`, `.sass`, and requires zero config.
+
+---
+
+### Why not use [`eslint-plugin-css-modules`](https://www.npmjs.com/package/eslint-plugin-css-modules)?
+
+Short answer: it's abandoned, requires ESLint, and slower.
+
+Problems with `eslint-plugin-css-modules`:
+- Not maintained (abandoned by author)
+- Requires ESLint (doesn't work with Biome, oxlint, or without a linter)
+- Slower (runs through ESLint on every file)
+- Needs setup (config files, rules, ignores)
+
+Why `check-unused-css` is better:
+- Zero config - just run `npx check-unused-css`
+- Works everywhere - no ESLint needed (great for Biome/oxlint users)
+- Fast standalone tool, optimized for CSS modules
+- Modern TypeScript path aliases and project references support
+- Actively maintained with new features and bug fixes
+
+Use `check-unused-css` if you want a simple, fast tool that works without ESLint.
 
 ## License
 
