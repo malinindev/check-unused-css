@@ -1,4 +1,9 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }]
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
 }
