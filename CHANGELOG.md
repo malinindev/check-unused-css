@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.6
+
+### Patch Changes
+
+- fb99e32: Add TypeScript path aliases support
+
 ## 0.2.5
 
 ### Patch Changes
