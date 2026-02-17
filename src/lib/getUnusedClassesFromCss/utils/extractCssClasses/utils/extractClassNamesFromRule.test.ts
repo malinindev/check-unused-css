@@ -2,9 +2,13 @@ import { describe, expect, test } from 'bun:test';
 import type { Rule } from 'postcss';
 import { extractClassNamesFromRule } from './extractClassNamesFromRule.js';
 
-const createMockRule = (selector: string): Rule =>
+const createMockRule = (
+  selector: string,
+  parent?: { type: string; selector?: string; parent?: unknown }
+): Rule =>
   ({
     selector,
+    parent,
   }) as Rule;
 
 describe('extractClassNamesFromRule', () => {
@@ -228,6 +232,75 @@ describe('extractClassNamesFromRule', () => {
       const rule = createMockRule('.css-1234567 .css-abcdefg:hover');
       const result = extractClassNamesFromRule(rule);
       expect(result).toEqual(['css-1234567', 'css-abcdefg']);
+    });
+  });
+
+  describe('should resolve SCSS parent selector (&) concatenation', () => {
+    test('resolves & suffix with parent class', () => {
+      const rule = createMockRule('&Suffix', {
+        type: 'rule',
+        selector: '.usedClass',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['usedClassSuffix']);
+    });
+
+    test('resolves BEM element with parent class', () => {
+      const rule = createMockRule('&__element', {
+        type: 'rule',
+        selector: '.block',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['block__element']);
+    });
+
+    test('resolves BEM modifier with parent class', () => {
+      const rule = createMockRule('&--modifier', {
+        type: 'rule',
+        selector: '.block',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['block--modifier']);
+    });
+
+    test('does not concatenate &:hover (pseudo-class)', () => {
+      const rule = createMockRule('&:hover', {
+        type: 'rule',
+        selector: '.usedClass',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual([]);
+    });
+
+    test('does not concatenate &.otherClass', () => {
+      const rule = createMockRule('&.otherClass', {
+        type: 'rule',
+        selector: '.usedClass',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['otherClass']);
+    });
+
+    test('resolves multi-level & nesting', () => {
+      const grandParent = {
+        type: 'rule',
+        selector: '.usedClass',
+        parent: { type: 'root' },
+      };
+      const parent = {
+        type: 'rule',
+        selector: '&Nested',
+        parent: grandParent,
+      };
+      const rule = createMockRule('&Deep', parent);
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['usedClassNestedDeep']);
+    });
+
+    test('returns no class when & has no parent rule', () => {
+      const rule = createMockRule('&Suffix');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual([]);
     });
   });
 });

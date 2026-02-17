@@ -71,6 +71,16 @@ describe('Non-existent CSS classes detection', () => {
     );
   });
 
+  test('does not report false positive non-existent classes for SCSS & concatenation', () => {
+    const result = runCheckUnusedCss(
+      'src/__tests__/noError/ScssAmpersandConcat'
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).not.toMatch(/non-existent CSS classes/);
+    expect(result.stdout).toMatch(/No unused CSS classes found/);
+  });
+
   test('skips non-existent class detection when dynamic usage is present', () => {
     const result = runCheckUnusedCss('src/__tests__/noDynamic/WithDynamic');
 

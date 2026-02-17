@@ -1,0 +1,21 @@
+.used {
+  color: #fff;
+
+  &Class {
+    color: #fff;
+  }
+
+  &Class2 {
+    color: #fff;
+  }
+}
+
+.unused {
+  &Class {
+    color: #fff;
+  }
+
+  &Class2 {
+    color: #fff;
+  }
+}
