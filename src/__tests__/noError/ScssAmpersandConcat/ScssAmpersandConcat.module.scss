@@ -1,0 +1,35 @@
+.usedClass {
+  color: #fff;
+
+  &Suffix {
+    color: #fff;
+  }
+
+  &Suffix2 {
+    color: #fff;
+  }
+}
+
+.usedClass2 {
+  color: #fff;
+
+  &:hover {
+    color: #fff;
+  }
+
+  &Child {
+    color: #fff;
+  }
+}
+
+.usedClass3 {
+  color: #fff;
+
+  &Nested {
+    color: #fff;
+
+    &Deep {
+      color: #fff;
+    }
+  }
+}
