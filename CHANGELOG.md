@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.2.7
+
+### Patch Changes
+
+- 05ad8ad: resolve SCSS parent selector (&) concatenation in class name extraction
+
 ## 0.2.6
 
 ### Patch Changes
