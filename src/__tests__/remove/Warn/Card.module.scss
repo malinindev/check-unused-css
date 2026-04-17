@@ -1,0 +1,17 @@
+.wrapper {
+  color: blue;
+}
+
+.parent {
+  color: blue;
+}
+
+.wrapper .unusedCard {
+  color: red;
+}
+
+.parent {
+  .unusedCard {
+    color: green;
+  }
+}
