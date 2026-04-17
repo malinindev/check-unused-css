@@ -34,19 +34,25 @@ const fixture = (name: string): FixtureHandle => {
   return h;
 };
 
-afterEach(() => {
-  while (handles.length > 0) {
-    const h = handles.pop();
-    if (h) cleanup(h);
-  }
-});
-
 // Each fixture is copied to a temp dir and the CLI runs there so no fixture
 // is ever mutated on disk. The helper handles stdin and extraArgs so we can
-// exercise TTY / non-TTY / declined paths end-to-end.
+// exercise TTY / non-TTY paths end-to-end.
+//
+// NOTE: an "interactive decline" integration test would require a real PTY
+// (process.stdin.isTTY must be true for the CLI to even reach confirmPrompt).
+// The decline path is covered instead by confirmPrompt.test.ts (every
+// yes/no/EOF branch on a fake stream) + printRunSummary.test.ts
+// (declinedByUser output).
 
-describe('--remove: Simple', () => {
-  test('removes a plain .unusedCard { } and keeps the used rule intact', () => {
+describe('--remove', () => {
+  afterEach(() => {
+    while (handles.length > 0) {
+      const h = handles.pop();
+      if (h) cleanup(h);
+    }
+  });
+
+  test('Simple: removes a plain .unusedCard { } and keeps the used rule intact', () => {
     const h = fixture('Simple');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -65,10 +71,8 @@ describe('--remove: Simple', () => {
     // desired tidy behavior.
     expect(after).toMatch(/\.used\s*\{\s*color:\s*blue;\s*\}/);
   });
-});
 
-describe('--remove: LeadingCompound', () => {
-  test('removes every rule whose leading compound contains the unused class', () => {
+  test('LeadingCompound: removes every rule whose leading compound contains the unused class', () => {
     const h = fixture('LeadingCompound');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -78,17 +82,13 @@ describe('--remove: LeadingCompound', () => {
     expect(result.exitCode).toBe(0);
 
     const after = readCss(h);
-    // .used must remain
     expect(after).toContain('.used {');
-    // None of the unusedCard forms should remain
     expect(after).not.toContain('.unusedCard');
     // Summary reports 9 rule removals (every variant + plain .unusedCard)
     expect(result.stdout).toMatch(/removed 9 rule\(s\)/);
   });
-});
 
-describe('--remove: SharedList', () => {
-  test('strips .unusedCard from `.used, .unusedCard, .other` while keeping rule', () => {
+  test('SharedList: strips .unusedCard from `.used, .unusedCard, .other` while keeping rule', () => {
     const h = fixture('SharedList');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -102,14 +102,11 @@ describe('--remove: SharedList', () => {
     expect(after).toContain('.other');
     expect(after).not.toMatch(/\.unusedCard/);
     expect(after).toContain('color: red');
-    // Output should mention a stripped selector
     expect(result.stdout).toMatch(/stripped 1 selector\(s\)/);
     expect(result.stdout).toMatch(/removed 0 rule\(s\)/);
   });
-});
 
-describe('--remove: SharedListEmptied', () => {
-  test('empty shared list after strip degrades to rule removal', () => {
+  test('SharedListEmptied: empty shared list after strip degrades to rule removal', () => {
     const h = fixture('SharedListEmptied');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -122,10 +119,8 @@ describe('--remove: SharedListEmptied', () => {
     expect(after).toContain('.kept {');
     expect(after).not.toMatch(/\.unusedCard/);
   });
-});
 
-describe('--remove: NestedAmpersand', () => {
-  test('removes only the nested &.unusedCard rule, keeps parent untouched', () => {
+  test('NestedAmpersand: removes only the nested &.unusedCard rule, keeps parent untouched', () => {
     const h = fixture('NestedAmpersand');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -135,16 +130,12 @@ describe('--remove: NestedAmpersand', () => {
     expect(result.exitCode).toBe(0);
 
     const after = readCss(h);
-    // parent rule still there
     expect(after).toMatch(/\.parent\s*\{/);
     expect(after).toContain('color: blue');
-    // nested &.unusedCard gone
     expect(after).not.toMatch(/&\.unusedCard/);
   });
-});
 
-describe('--remove: Warn', () => {
-  test('non-leading uses trigger warnings, no writes', () => {
+  test('Warn: non-leading uses trigger warnings, no writes', () => {
     const h = fixture('Warn');
     const before = readCss(h);
     const result = runCheckUnusedCss({
@@ -156,15 +147,12 @@ describe('--remove: Warn', () => {
 
     const after = readCss(h);
     expect(after).toBe(before);
-    // Warnings block in stdout
     expect(result.stdout).toMatch(/Manual review/);
     expect(result.stdout).toContain('.wrapper .unusedCard');
     expect(result.stdout).toContain('.unusedCard');
   });
-});
 
-describe('--remove: NonTty', () => {
-  test('non-TTY without --yes aborts with exit 2 and no file writes', () => {
+  test('NonTty: non-TTY without --yes aborts with exit 2 and no file writes', () => {
     const h = fixture('NonTty');
     const before = readCss(h);
     const result = runCheckUnusedCss({
@@ -177,10 +165,8 @@ describe('--remove: NonTty', () => {
     expect(result.stderr).toMatch(/Refusing to run without a TTY/);
     expect(readCss(h)).toBe(before);
   });
-});
 
-describe('--remove: Yes', () => {
-  test('--yes skips prompt entirely and writes the file', () => {
+  test('Yes: --yes skips prompt entirely and writes the file', () => {
     const h = fixture('Yes');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -189,21 +175,10 @@ describe('--remove: Yes', () => {
     });
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toMatch(/Plan:/);
-    // The interactive prompt must NOT be shown when --yes is supplied.
     expect(result.stdout).not.toMatch(/Apply these changes\?/);
   });
-});
 
-// NOTE: an "interactive decline" integration test would require a real PTY
-// (process.stdin.isTTY must be true for the CLI to even reach confirmPrompt).
-// Instead, the decline path is covered by:
-//   * confirmPrompt.test.ts — unit tests of every yes/no/EOF branch;
-//   * buildSummary + printRunSummary unit tests verifying declinedByUser output;
-//   * the integration tests above that exercise the --yes (skip prompt) and
-//     non-TTY (require --yes) branches of the dispatcher in src/index.ts.
-
-describe('--remove: Empty', () => {
-  test('file becomes empty when every rule is removed', () => {
+  test('Empty: file becomes empty when every rule is removed', () => {
     const h = fixture('Empty');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -214,14 +189,11 @@ describe('--remove: Empty', () => {
 
     expect(fs.existsSync(h.css)).toBe(true);
     const after = readCss(h);
-    // Allow at most a trailing newline residue.
     expect(after.trim()).toBe('');
     expect(result.stdout).toMatch(/1 file\(s\) now empty/);
   });
-});
 
-describe('--remove: NothingToDo', () => {
-  test('no unused classes → graceful exit 0 with no prompt', () => {
+  test('NothingToDo: no unused classes → graceful exit 0 with no prompt', () => {
     const h = fixture('NothingToDo');
     const before = readCss(h);
     const result = runCheckUnusedCss({
@@ -234,10 +206,8 @@ describe('--remove: NothingToDo', () => {
     expect(result.stdout).not.toMatch(/Apply these changes\?/);
     expect(readCss(h)).toBe(before);
   });
-});
 
-describe('--remove: RuleWithNestedBody', () => {
-  test('removes the whole simple top-level rule including its nested body', () => {
+  test('RuleWithNestedBody: removes the whole simple top-level rule including its nested body', () => {
     const h = fixture('RuleWithNestedBody');
     const result = runCheckUnusedCss({
       targetPath: '.',
@@ -249,15 +219,12 @@ describe('--remove: RuleWithNestedBody', () => {
     const after = readCss(h);
     expect(after).toContain('.used {');
     expect(after).not.toMatch(/\.unusedCard/);
-    // No orphan braces left over.
     const openBraces = (after.match(/\{/g) ?? []).length;
     const closeBraces = (after.match(/\}/g) ?? []).length;
     expect(openBraces).toBe(closeBraces);
   });
-});
 
-describe('--remove: post-run report is clean', () => {
-  test('after --remove succeeds, re-running without flags reports no unused (SC-004)', () => {
+  test('post-run report is clean: re-running without flags reports no unused (SC-004)', () => {
     const h = fixture('Simple');
     const first = runCheckUnusedCss({
       targetPath: '.',
@@ -270,7 +237,6 @@ describe('--remove: post-run report is clean', () => {
       targetPath: '.',
       cwd: h.tmp,
     });
-    // Success: no unused classes, no non-existent classes.
     expect(second.exitCode).toBe(0);
   });
 });
