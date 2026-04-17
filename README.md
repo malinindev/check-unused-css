@@ -104,6 +104,38 @@ This is useful in CI/CD pipelines where you want to enforce explicit class usage
 
 **[Read more about why dynamic class access should be avoided](./docs/avoid-dynamic-classes.md)**
 
+#### Removing unused classes (`--remove`)
+
+Once the tool has identified unused classes, you can let it delete them for you in place:
+
+```bash
+# Preview, prompt, remove
+npx check-unused-css --remove
+
+# Skip the y/N confirmation (required in non-interactive environments)
+npx check-unused-css --remove --yes
+npx check-unused-css --remove -y
+```
+
+What the tool does in `--remove` mode:
+1. Runs the usual analysis.
+2. Prints a **plan** listing every change it intends to make, grouped by file:
+   - `remove <.className> (line N)` — the whole rule is dead and will be deleted.
+   - `strip <.className> from \`<selector list>\` (line N) → \`<new list>\`` — part of a shared selector list; the rule stays, the dead selector leaves.
+   - If any rules mention an unused class but aren't safely auto-removable, they're listed in a **Manual review** block (file, line, full selector).
+3. Asks `Apply these changes? [y/N]` in an interactive terminal. In CI or piped contexts you must pass `--yes` — the tool refuses to write without one or the other.
+4. Mutates the CSS/SCSS files in place using [PostCSS](https://postcss.org/)'s AST, preserving every unedited byte (whitespace, comments, other rules) exactly as authored.
+
+**What counts as "safely removable"** — the tool auto-removes a rule iff, after resolving SCSS `&` nesting, the unused class is a simple selector of the **leading (leftmost) compound** of the selector. That covers every rule where the target element is required to carry the unused class (including `.unused`, `.unused:hover`, `.other.unused`, `.unused > .child`, `.unused ~ x`, `&.unused` inside a used parent, shared lists). Rules where the unused class appears only as a descendant (`.wrapper .unused`, `.parent { .unused { } }`) are surfaced as warnings instead — those are the only ambiguous case in pure CSS semantics and the tool leaves them for manual review.
+
+**Rollback is yours.** The tool performs no git operations. Commit or stash before running if you want a clean rollback target — `git checkout -- .` reverts any write the tool made.
+
+**Exit codes:**
+- `0` — success (action applied, or report-only with nothing to flag).
+- `1` — report-only and unused/non-existent classes still exist (unchanged from before `--remove` existed).
+- `2` — bad argument combination (unknown flag, non-TTY without `--yes`).
+- `4` — user declined the interactive y/N prompt.
+
 #### Ignoring files or lines with comments
 
 You can ignore specific lines or entire files from CSS checking using special comments, similar to ESLint:
