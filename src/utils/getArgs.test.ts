@@ -607,13 +607,7 @@ describe('getArgs', () => {
   });
 
   test('handles --remove with path and --yes', () => {
-    process.argv = [
-      'node',
-      'script.js',
-      'src/components',
-      '--remove',
-      '--yes',
-    ];
+    process.argv = ['node', 'script.js', 'src/components', '--remove', '--yes'];
 
     const result = getArgs();
 
