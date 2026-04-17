@@ -23,6 +23,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -36,6 +38,8 @@ describe('getArgs', () => {
       targetPath: testPath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -49,6 +53,8 @@ describe('getArgs', () => {
       targetPath: relativePath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -62,6 +68,8 @@ describe('getArgs', () => {
       targetPath: absolutePath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -75,6 +83,8 @@ describe('getArgs', () => {
       targetPath: pathWithSpaces,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -88,6 +98,8 @@ describe('getArgs', () => {
       targetPath: windowsPath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -101,6 +113,8 @@ describe('getArgs', () => {
       targetPath: specialPath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -113,6 +127,8 @@ describe('getArgs', () => {
       targetPath: '',
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -149,6 +165,8 @@ describe('getArgs', () => {
       targetPath: numericArg,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -162,6 +180,8 @@ describe('getArgs', () => {
       targetPath: dotPath,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -175,6 +195,8 @@ describe('getArgs', () => {
       targetPath: currentDir,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -188,6 +210,8 @@ describe('getArgs', () => {
       targetPath: parentDir,
       excludePatterns: undefined,
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -201,6 +225,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -213,6 +239,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -225,6 +253,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -237,6 +267,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -256,6 +288,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**', '**/stories/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -274,6 +308,8 @@ describe('getArgs', () => {
       targetPath: 'src/components',
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -292,6 +328,8 @@ describe('getArgs', () => {
       targetPath: 'src/components',
       excludePatterns: ['**/test/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -349,6 +387,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/*.test.{css,scss}', '**/node_modules/**'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -361,6 +401,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['pattern=with=equals'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -373,6 +415,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['another=pattern=with=equals'],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -393,6 +437,8 @@ describe('getArgs', () => {
         'second=pattern=with=equals',
       ],
       noDynamic: false,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -406,6 +452,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: undefined,
       noDynamic: true,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -418,6 +466,8 @@ describe('getArgs', () => {
       targetPath: 'src/components',
       excludePatterns: undefined,
       noDynamic: true,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -436,6 +486,8 @@ describe('getArgs', () => {
       targetPath: undefined,
       excludePatterns: ['**/test/**'],
       noDynamic: true,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -457,6 +509,8 @@ describe('getArgs', () => {
       targetPath: 'src/components',
       excludePatterns: ['**/test/**', '**/stories/**'],
       noDynamic: true,
+      mode: 'report',
+      yes: false,
     });
   });
 
@@ -476,6 +530,133 @@ describe('getArgs', () => {
       targetPath: 'src/components',
       excludePatterns: ['**/test/**'],
       noDynamic: true,
+      mode: 'report',
+      yes: false,
     });
+  });
+
+  // --remove / --yes / -y
+  test('handles --remove flag alone', () => {
+    process.argv = ['node', 'script.js', '--remove'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'remove',
+      yes: false,
+    });
+  });
+
+  test('handles --yes flag alone (no-op without --remove)', () => {
+    process.argv = ['node', 'script.js', '--yes'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'report',
+      yes: true,
+    });
+  });
+
+  test('handles -y short alias', () => {
+    process.argv = ['node', 'script.js', '-y'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'report',
+      yes: true,
+    });
+  });
+
+  test('handles --remove --yes together', () => {
+    process.argv = ['node', 'script.js', '--remove', '--yes'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'remove',
+      yes: true,
+    });
+  });
+
+  test('handles --remove -y together', () => {
+    process.argv = ['node', 'script.js', '--remove', '-y'];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: undefined,
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'remove',
+      yes: true,
+    });
+  });
+
+  test('handles --remove with path and --yes', () => {
+    process.argv = [
+      'node',
+      'script.js',
+      'src/components',
+      '--remove',
+      '--yes',
+    ];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: 'src/components',
+      excludePatterns: undefined,
+      noDynamic: false,
+      mode: 'remove',
+      yes: true,
+    });
+  });
+
+  test('handles --remove with --exclude and --no-dynamic combined', () => {
+    process.argv = [
+      'node',
+      'script.js',
+      'src',
+      '--remove',
+      '--exclude',
+      '**/test/**',
+      '--no-dynamic',
+    ];
+
+    const result = getArgs();
+
+    expect(result).toEqual({
+      targetPath: 'src',
+      excludePatterns: ['**/test/**'],
+      noDynamic: true,
+      mode: 'remove',
+      yes: false,
+    });
+  });
+
+  test('rejects unknown flag like --dry-run (out of scope for this MVP)', () => {
+    process.argv = ['node', 'script.js', '--dry-run'];
+
+    expect(() => getArgs()).toThrow('Unknown flag: --dry-run');
+  });
+
+  test('rejects unknown flag like --comment (deferred to future feature)', () => {
+    process.argv = ['node', 'script.js', '--comment'];
+
+    expect(() => getArgs()).toThrow('Unknown flag: --comment');
   });
 });

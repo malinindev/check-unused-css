@@ -5,6 +5,8 @@ export const getArgs = (): Args => {
   let targetPath: string | undefined;
   const excludePatterns: string[] = [];
   let noDynamic = false;
+  let remove = false;
+  let yes = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -32,6 +34,10 @@ export const getArgs = (): Args => {
       excludePatterns.push(pattern);
     } else if (arg === '--no-dynamic') {
       noDynamic = true;
+    } else if (arg === '--remove') {
+      remove = true;
+    } else if (arg === '--yes' || arg === '-y') {
+      yes = true;
     } else if (arg.startsWith('-')) {
       throw new Error(`Unknown flag: ${arg}`);
     } else {
@@ -48,5 +54,7 @@ export const getArgs = (): Args => {
     targetPath,
     excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
     noDynamic,
+    mode: remove ? 'remove' : 'report',
+    yes,
   };
 };
