@@ -41,13 +41,20 @@ export type FilePlan = {
   originalSource: string;
   edits: Array<Extract<Candidate, { kind: 'remove' | 'stripSelectors' }>>;
   warnings: Array<Extract<Candidate, { kind: 'warn' }>>;
-  willBeEmpty: boolean;
 };
 
 /** Aggregate intent across every file in the run. */
 export type ChangePlan = {
   mode: 'remove';
   files: FilePlan[];
+  /** Real CSS/SCSS parse failures — the file's source is unreadable. */
+  parseErrors: Array<{ file: string; message: string }>;
+  /**
+   * Bugs or invariant violations caught while building the plan (distinct
+   * from parseErrors so the UI never mislabels an internal assertion as
+   * "failed to parse"). The file is skipped defensively.
+   */
+  internalErrors: Array<{ file: string; message: string }>;
 };
 
 /** Per-file outcome produced by the writer. */

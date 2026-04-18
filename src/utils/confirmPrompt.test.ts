@@ -60,6 +60,16 @@ describe('confirmPrompt', () => {
     expect(await promise).toBe(false);
   });
 
+  test('resolves false when the input stream errors (fail-closed)', async () => {
+    const input = new PassThrough();
+    const output = new PassThrough();
+    output.resume();
+    const promise = confirmPrompt('Apply? ', { input, output });
+    input.emit('error', new Error('EIO'));
+    input.end();
+    expect(await promise).toBe(false);
+  });
+
   test('writes the question to the provided output stream', async () => {
     const input = new PassThrough();
     const output = new PassThrough();

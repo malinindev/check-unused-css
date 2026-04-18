@@ -77,10 +77,74 @@ describe('printRunSummary', () => {
       warnings: [],
       declinedByUser: false,
     });
-    expect(lines[0]).toBe('Modified 2 file(s), removed 3 rule(s).');
+    expect(lines[0]).toBe('Done · 2 files modified · 3 rules removed');
   });
 
-  test('mixed summary: removes + strips + emptied + warnings', () => {
+  test('singular units pluralize correctly', () => {
+    const lines = capture({
+      mode: 'remove',
+      filesModified: 1,
+      rulesRemoved: 1,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [],
+      declinedByUser: false,
+    });
+    expect(lines[0]).toBe('Done · 1 file modified · 1 rule removed');
+  });
+
+  test('"Heads up" safety line appears after Done but NOT on decline/warn-only/nothing/skipped paths', () => {
+    const activity = capture({
+      mode: 'remove',
+      filesModified: 1,
+      rulesRemoved: 1,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [],
+      declinedByUser: false,
+    });
+    expect(activity.some((l) => l.startsWith('Heads up:'))).toBe(true);
+
+    const declined = capture({
+      mode: 'remove',
+      filesModified: 0,
+      rulesRemoved: 0,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [],
+      declinedByUser: true,
+    });
+    expect(declined.some((l) => l.includes('Heads up'))).toBe(false);
+
+    const warnOnly = capture({
+      mode: 'remove',
+      filesModified: 0,
+      rulesRemoved: 0,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [mkWarn('/virtual/a.scss', '.wrapper .unused', 12)],
+      declinedByUser: false,
+    });
+    expect(warnOnly.some((l) => l.includes('Heads up'))).toBe(false);
+
+    const nothing = capture({
+      mode: 'remove',
+      filesModified: 0,
+      rulesRemoved: 0,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [],
+      declinedByUser: false,
+    });
+    expect(nothing.some((l) => l.includes('Heads up'))).toBe(false);
+  });
+
+  test('mixed summary: removes + strips + emptied (warnings are NOT repeated here)', () => {
     const lines = capture({
       mode: 'remove',
       filesModified: 1,
@@ -92,11 +156,25 @@ describe('printRunSummary', () => {
       declinedByUser: false,
     });
     expect(lines[0]).toBe(
-      'Modified 1 file(s), removed 2 rule(s), stripped 1 selector(s), 1 file(s) now empty.'
+      'Done · 1 file modified · 2 rules removed · 1 selector stripped · 1 file emptied'
     );
-    // Find the warn line — color-stripping so ordering is deterministic.
-    expect(lines.some((l) => l.includes('a.scss:12'))).toBe(true);
-    expect(lines.some((l) => l.includes('.wrapper .unused'))).toBe(true);
+    // Warnings were already shown by printChangePlan; don't duplicate them.
+    expect(lines.some((l) => l.includes('a.scss:12'))).toBe(false);
+    expect(lines.some((l) => l.includes('.wrapper .unused'))).toBe(false);
+  });
+
+  test('warn-only run with no edits → points back to the preview', () => {
+    const lines = capture({
+      mode: 'remove',
+      filesModified: 0,
+      rulesRemoved: 0,
+      selectorsStripped: 0,
+      filesEmptied: 0,
+      filesSkipped: [],
+      warnings: [mkWarn('/virtual/a.scss', '.wrapper .unused', 12)],
+      declinedByUser: false,
+    });
+    expect(lines).toEqual(['No automatic changes — see Manual review above.']);
   });
 
   test('summary with skipped files lists each skip reason', () => {

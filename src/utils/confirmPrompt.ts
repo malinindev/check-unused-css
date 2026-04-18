@@ -28,20 +28,37 @@ export const confirmPrompt = (
       output: options.output ?? process.stdout,
     });
 
-    let answered = false;
+    let settled = false;
+    const settle = (value: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
 
     rl.question(question, (answer) => {
-      answered = true;
       const normalized = answer.trim().toLowerCase();
       const accepted = normalized === 'y' || normalized === 'yes';
+      settle(accepted);
       rl.close();
-      resolve(accepted);
     });
 
     // If stdin closes before any line is read (EOF in non-TTY), treat it as
     // "no" so we never hang or silently proceed.
-    rl.once('close', () => {
-      if (!answered) resolve(false);
+    rl.once('close', () => settle(false));
+
+    // Stream errors (e.g. EIO on a disconnected terminal) must fail closed —
+    // resolving true here could trigger a destructive write without consent.
+    // Log before settling so an invisible terminal problem isn't mistaken for
+    // a deliberate decline.
+    rl.once('error', (err) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`confirmPrompt: input stream error — ${message}`);
+      try {
+        rl.close();
+      } catch {
+        // already closed
+      }
+      settle(false);
     });
   });
 };

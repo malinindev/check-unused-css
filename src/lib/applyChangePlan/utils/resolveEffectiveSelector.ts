@@ -1,22 +1,13 @@
 import type { Container, Document, Root, Rule } from 'postcss';
 
-// Matches postcss's `Node.parent` return type (Container | Document | Root)
-// so we can walk freely without TS narrowing issues between Document and
-// Container-with-children.
 type AnyAncestor = Container | Document | Root | undefined;
 
 const combineOne = (baseSel: string, childSel: string): string => {
-  if (childSel.includes('&')) {
-    // SCSS parent-selector substitution.
-    if (baseSel === '') {
-      return childSel.replace(/&/g, '');
-    }
-    return childSel.replace(/&/g, baseSel);
-  }
-  // No '&' → descendant combinator between parent and child.
-  if (baseSel === '') {
-    return childSel;
-  }
+  // SCSS parent-selector substitution. When base is empty, `&` collapses out.
+  if (childSel.includes('&')) return childSel.replace(/&/g, baseSel);
+  // No '&' → descendant combinator between parent and child (or just the
+  // child when there is no parent context to prepend).
+  if (baseSel === '') return childSel;
   return `${baseSel} ${childSel}`;
 };
 

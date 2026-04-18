@@ -20,7 +20,7 @@ import { printRunSummary } from './lib/printRunSummary.js';
 import type { Args, CssAnalysisResult } from './types.js';
 import { confirmPrompt } from './utils/confirmPrompt.js';
 import { getArgs } from './utils/getArgs.js';
-import { isStdinTty } from './utils/isTty.js';
+import { isInteractiveTty } from './utils/isTty.js';
 
 const DEFAULT_TARGET_PATH = 'src';
 
@@ -43,14 +43,14 @@ const runAnalysis = async (): Promise<AnalysisContext> => {
     console.log(
       `${COLORS.red}Error: Directory "${targetPath || DEFAULT_TARGET_PATH}" does not exist.${COLORS.reset}`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.BAD_ARGS);
   }
 
   if (!fs.statSync(srcDir).isDirectory()) {
     console.log(
       `${COLORS.red}Error: "${targetPath || DEFAULT_TARGET_PATH}" is a file. Please provide a directory path.${COLORS.reset}`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.BAD_ARGS);
   }
 
   const globOptions: GlobOptionsWithFileTypesFalse = {
@@ -152,14 +152,14 @@ const reportMode = (ctx: AnalysisContext): never => {
   process.exit(EXIT_CODES.OK);
 };
 
-const collectUnusedForRemoval = (
-  ctx: AnalysisContext
-): Array<{ file: string; cssSource: string; unusedClassNames: string[] }> => {
-  const perFile: Array<{
-    file: string;
-    cssSource: string;
-    unusedClassNames: string[];
-  }> = [];
+type UnusedForRemoval = {
+  file: string;
+  cssSource: string;
+  unusedClassNames: string[];
+};
+
+const collectUnusedForRemoval = (ctx: AnalysisContext): UnusedForRemoval[] => {
+  const perFile: UnusedForRemoval[] = [];
 
   for (const result of ctx.results) {
     if (result.status !== 'correct' || result.unusedClasses.length === 0) {
@@ -169,7 +169,11 @@ const collectUnusedForRemoval = (
     let cssSource: string;
     try {
       cssSource = fs.readFileSync(absolutePath, 'utf-8');
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `${COLORS.yellow}Warning: could not read "${absolutePath}": ${message}. Skipping.${COLORS.reset}`
+      );
       continue;
     }
     const unusedClassNames = result.unusedClasses.map((c) => c.className);
@@ -193,6 +197,24 @@ const buildSummary = (
     warnings.push(...fp.warnings);
   }
 
+  const filesSkipped: RunSummary['filesSkipped'] = [
+    ...plan.parseErrors.map((p) => ({
+      file: p.file,
+      reason: `parse failed: ${p.message}`,
+    })),
+    ...plan.internalErrors.map((p) => ({
+      file: p.file,
+      reason: `internal error: ${p.message}`,
+    })),
+    ...editResults
+      .filter((r) => r.status === 'failed' || r.status === 'skipped')
+      .filter((r) => r.skipReason !== 'nothing to apply')
+      .map((r) => ({
+        file: r.file,
+        reason: r.skipReason ?? 'unknown',
+      })),
+  ];
+
   return {
     mode: plan.mode,
     filesModified: editResults.filter((r) => r.status === 'written').length,
@@ -202,19 +224,15 @@ const buildSummary = (
       0
     ),
     filesEmptied: editResults.filter((r) => r.emptied).length,
-    filesSkipped: editResults
-      .filter((r) => r.status === 'failed' || r.status === 'skipped')
-      .filter((r) => r.skipReason !== 'nothing to apply')
-      .map((r) => ({
-        file: r.file,
-        reason: r.skipReason ?? 'unknown',
-      })),
+    filesSkipped,
     warnings,
     declinedByUser,
   };
 };
 
 const planHasAnyActivity = (plan: ChangePlan): boolean =>
+  plan.parseErrors.length > 0 ||
+  plan.internalErrors.length > 0 ||
   plan.files.some(
     (fp: FilePlan) => fp.edits.length > 0 || fp.warnings.length > 0
   );
@@ -223,6 +241,14 @@ const removeMode = async (ctx: AnalysisContext): Promise<never> => {
   const { args } = ctx;
   const perFile = collectUnusedForRemoval(ctx);
   const plan = buildChangePlan({ perFile });
+
+  // Parse errors and internal errors must never exit clean — both indicate
+  // input/code we couldn't process, which CI should catch. Any cleaner signal
+  // (OK, DECLINED) gets escalated when either was part of the plan.
+  const hasBlockingErrors =
+    plan.parseErrors.length > 0 || plan.internalErrors.length > 0;
+  const exitOr = (fallback: number): number =>
+    hasBlockingErrors ? EXIT_CODES.REPORT_ISSUES : fallback;
 
   if (!planHasAnyActivity(plan)) {
     console.log(`${COLORS.green}Nothing to remove.${COLORS.reset}`);
@@ -234,14 +260,14 @@ const removeMode = async (ctx: AnalysisContext): Promise<never> => {
   const hasWritableEdits = plan.files.some((fp) => fp.edits.length > 0);
 
   if (!hasWritableEdits) {
-    // Only warnings — nothing to write, but the user should still see them.
-    // Exit 0 (warnings are informational).
+    // Only warnings / parse errors — nothing to write. Parse errors surface
+    // via buildSummary.filesSkipped + a non-zero exit so CI catches them.
     printRunSummary(buildSummary(plan, [], false));
-    process.exit(EXIT_CODES.OK);
+    process.exit(exitOr(EXIT_CODES.OK));
   }
 
   if (!args.yes) {
-    if (!isStdinTty()) {
+    if (!isInteractiveTty()) {
       console.error(
         `${COLORS.red}Refusing to run without a TTY. Re-run with --yes to proceed non-interactively.${COLORS.reset}`
       );
@@ -250,7 +276,9 @@ const removeMode = async (ctx: AnalysisContext): Promise<never> => {
     const accepted = await confirmPrompt('Apply these changes? [y/N] ');
     if (!accepted) {
       printRunSummary(buildSummary(plan, [], true));
-      process.exit(EXIT_CODES.DECLINED);
+      // DECLINED is the primary signal (user action), but parse errors take
+      // precedence so CI doesn't treat a decline-during-broken-input as clean.
+      process.exit(exitOr(EXIT_CODES.DECLINED));
     }
   }
 
@@ -258,7 +286,7 @@ const removeMode = async (ctx: AnalysisContext): Promise<never> => {
   printRunSummary(buildSummary(plan, editResults, false));
 
   const anyFailed = editResults.some((r) => r.status === 'failed');
-  process.exit(anyFailed ? EXIT_CODES.REPORT_ISSUES : EXIT_CODES.OK);
+  process.exit(anyFailed ? EXIT_CODES.REPORT_ISSUES : exitOr(EXIT_CODES.OK));
 };
 
 const runCssChecker = async (): Promise<void> => {
@@ -270,8 +298,14 @@ const runCssChecker = async (): Promise<void> => {
       reportMode(ctx);
     }
   } catch (error) {
-    console.error('Error:', error);
-    process.exit(EXIT_CODES.REPORT_ISSUES);
+    // An uncaught exception here is an internal failure — not the same as
+    // "analysis found issues." Use a distinct exit code so CI can tell them
+    // apart, and include a stack so the bug can be diagnosed.
+    console.error(
+      'check-unused-css: internal error.',
+      error instanceof Error ? `${error.stack ?? error.message}` : error
+    );
+    process.exit(EXIT_CODES.INTERNAL);
   }
 };
 

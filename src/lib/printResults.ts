@@ -146,6 +146,10 @@ export const printResults = (
 
       console.log('');
     }
+
+    console.log(
+      `${COLORS.cyan}Tip:${COLORS.reset} run ${COLORS.cyan}check-unused-css --remove${COLORS.reset} to delete the safely-removable ones automatically (preview + confirmation before any file is touched).\n`
+    );
   } else if (
     notImportedResults.length === 0 &&
     nonExistentClassResults.length === 0

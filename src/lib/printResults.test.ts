@@ -81,6 +81,40 @@ describe('printResults', () => {
         `${COLORS.red}Found 1 classes defined in CSS but unused in TypeScript:${COLORS.reset}\n`
       );
     });
+
+    test('prints the --remove tip when unused classes are found', () => {
+      const results: CssAnalysisResult[] = [
+        {
+          file: 'components/Button.module.css',
+          unusedClasses: [{ className: 'unused', line: 5, column: 1 }],
+          status: 'correct',
+        },
+      ];
+
+      printResults(results);
+
+      const tipCalls = consoleLogSpy.mock.calls
+        .map((args) => String(args[0] ?? ''))
+        .filter((s) => s.includes('check-unused-css --remove'));
+      expect(tipCalls.length).toBeGreaterThan(0);
+    });
+
+    test('does NOT print the --remove tip when nothing was unused', () => {
+      const results: CssAnalysisResult[] = [
+        {
+          file: 'components/Button.module.css',
+          unusedClasses: [],
+          status: 'correct',
+        },
+      ];
+
+      printResults(results);
+
+      const tipCalls = consoleLogSpy.mock.calls
+        .map((args) => String(args[0] ?? ''))
+        .filter((s) => s.includes('check-unused-css --remove'));
+      expect(tipCalls.length).toBe(0);
+    });
   });
 
   describe('when non-existent classes found', () => {

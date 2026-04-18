@@ -1,4 +1,13 @@
+import path from 'node:path';
 import { COLORS } from '../consts.js';
+
+export const plural = (n: number, word: string): string =>
+  `${n} ${word}${n === 1 ? '' : 's'}`;
+
+export const toRel = (file: string, cwd: string): string => {
+  const rel = path.relative(cwd, file);
+  return rel === '' ? file : rel;
+};
 
 export const formatLocationLine = (
   file: string,

@@ -64,10 +64,7 @@ describe('--remove', () => {
     expect(after).toContain('.used {');
     expect(after).toContain('color: blue;');
     expect(after).not.toContain('.unusedCard');
-    // Rule-body preservation is an architectural guarantee (postcss raws) —
-    // the .used rule's declaration stays byte-identical. Whitespace that
-    // belonged to `.unusedCard`'s `raws.before` (the blank line between
-    // rules) is consumed together with the removed rule, which is the
+    // `raws.before` of the removed rule is consumed with it, which is the
     // desired tidy behavior.
     expect(after).toMatch(/\.used\s*\{\s*color:\s*blue;\s*\}/);
   });
@@ -84,8 +81,7 @@ describe('--remove', () => {
     const after = readCss(h);
     expect(after).toContain('.used {');
     expect(after).not.toContain('.unusedCard');
-    // Summary reports 9 rule removals (every variant + plain .unusedCard)
-    expect(result.stdout).toMatch(/removed 9 rule\(s\)/);
+    expect(result.stdout).toMatch(/9 rules removed/);
   });
 
   test('SharedList: strips .unusedCard from `.used, .unusedCard, .other` while keeping rule', () => {
@@ -102,8 +98,34 @@ describe('--remove', () => {
     expect(after).toContain('.other');
     expect(after).not.toMatch(/\.unusedCard/);
     expect(after).toContain('color: red');
-    expect(result.stdout).toMatch(/stripped 1 selector\(s\)/);
-    expect(result.stdout).toMatch(/removed 0 rule\(s\)/);
+    expect(result.stdout).toMatch(/1 selector stripped/);
+    expect(result.stdout).toMatch(/0 rules removed/);
+  });
+
+  test('MultiClassSharedList: strips every unused entry in one pass (idempotent second run)', () => {
+    const h = fixture('MultiClassSharedList');
+    const result = runCheckUnusedCss({
+      targetPath: '.',
+      extraArgs: ['--remove', '--yes'],
+      cwd: h.tmp,
+    });
+    expect(result.exitCode).toBe(0);
+
+    const after = readCss(h);
+    expect(after).toContain('.modal');
+    expect(after).not.toMatch(/\.azaza/);
+    expect(after).not.toMatch(/\.test:hover/);
+
+    // Second run must be a no-op — the first pass must have killed every
+    // unused selector, not just one.
+    const second = runCheckUnusedCss({
+      targetPath: '.',
+      extraArgs: ['--remove', '--yes'],
+      cwd: h.tmp,
+    });
+    expect(second.exitCode).toBe(0);
+    expect(second.stdout).toMatch(/Nothing to remove\./);
+    expect(readCss(h)).toBe(after);
   });
 
   test('SharedListEmptied: empty shared list after strip degrades to rule removal', () => {
@@ -174,7 +196,7 @@ describe('--remove', () => {
       cwd: h.tmp,
     });
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toMatch(/Plan:/);
+    expect(result.stdout).toMatch(/Plan ·/);
     expect(result.stdout).not.toMatch(/Apply these changes\?/);
   });
 
@@ -190,7 +212,7 @@ describe('--remove', () => {
     expect(fs.existsSync(h.css)).toBe(true);
     const after = readCss(h);
     expect(after.trim()).toBe('');
-    expect(result.stdout).toMatch(/1 file\(s\) now empty/);
+    expect(result.stdout).toMatch(/1 file emptied/);
   });
 
   test('NothingToDo: no unused classes → graceful exit 0 with no prompt', () => {

@@ -30,7 +30,7 @@ export const runCheckUnusedCss = (
   excludePatterns?: string[],
   noDynamic?: boolean
 ): { stdout: string; stderr: string; exitCode: number } => {
-  // Backwards-compatible overload: previous callers pass positional args.
+  // Positional-args form kept for older callsites.
   const options: RunOptions =
     typeof targetPathOrOptions === 'object' && targetPathOrOptions !== null
       ? targetPathOrOptions

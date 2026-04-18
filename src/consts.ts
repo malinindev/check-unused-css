@@ -10,7 +10,6 @@ export const EXIT_CODES = {
   OK: 0,
   REPORT_ISSUES: 1,
   BAD_ARGS: 2,
-  // 3 is intentionally unassigned — reserved for a potential future
-  // git-dirty safety check (see research.md R-009).
   DECLINED: 4,
+  INTERNAL: 5,
 } as const;

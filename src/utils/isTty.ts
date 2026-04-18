@@ -1,7 +1,8 @@
 /**
- * Returns true when stdin is a real interactive terminal.
- *
- * Small wrapper so tests can replace this module; we don't reach for
- * `process.stdin.isTTY` directly at call sites.
+ * Returns true when BOTH stdin and stdout are attached to an interactive
+ * terminal. Required before issuing an interactive prompt: if stdout is
+ * piped while stdin is a TTY, the question text goes to a file and the user
+ * sees nothing yet the process still waits for keystrokes.
  */
-export const isStdinTty = (): boolean => process.stdin.isTTY === true;
+export const isInteractiveTty = (): boolean =>
+  process.stdin.isTTY === true && process.stdout.isTTY === true;

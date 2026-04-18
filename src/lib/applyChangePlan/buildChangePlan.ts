@@ -1,9 +1,10 @@
-import type { Root, Rule } from 'postcss';
+import type { Container, Document, Root, Rule } from 'postcss';
+import { CssSyntaxError } from 'postcss';
 import postcssScss from 'postcss-scss';
-import { classifySelector } from './classifySelector.js';
-import { resolveEffectiveSelector } from './resolveEffectiveSelector.js';
-import { stripSelectorsFromList } from './stripSelectorsFromList.js';
 import type { Candidate, ChangePlan, FilePlan } from './types.js';
+import { classifySelector } from './utils/classifySelector.js';
+import { resolveEffectiveSelector } from './utils/resolveEffectiveSelector.js';
+import { stripSelectorsFromList } from './utils/stripSelectorsFromList.js';
 
 export type BuildChangePlanInput = {
   perFile: Array<{
@@ -13,72 +14,72 @@ export type BuildChangePlanInput = {
   }>;
 };
 
-type ClassificationResult =
-  | { kind: 'none' }
-  | { kind: 'remove' }
-  | { kind: 'strip'; dead: string[]; surviving: string }
-  | { kind: 'warn' };
+type SlotVerdict = 'dead' | 'warn' | 'notMentioned';
 
-const classifyRule = (rule: Rule, className: string): ClassificationResult => {
+type RuleVerdict = {
+  // Per-authored-slot verdict after OR-ing across every unused class.
+  slotVerdicts: SlotVerdict[];
+  // className → appears if that class marks at least one slot as 'warn'
+  // (regardless of whether another class marks the same slot as 'dead').
+  warnClasses: Set<string>;
+  // className → first slot index that this class kills. Used to pick a
+  // representative `className` for the emitted Candidate.
+  firstDeadByClass: Map<string, number>;
+};
+
+const verdictForRule = (rule: Rule, classNames: string[]): RuleVerdict => {
   const effective = resolveEffectiveSelector(rule);
   const authored = rule.selectors.map((s) => s.trim());
 
-  // Map authored selector → its effective form. We rely on positional pairing:
-  // `rule.selectors` length corresponds to comma-entries; resolveEffective
-  // produces one entry per (parentBase × authoredSelector) pair, so authored
-  // length ≤ effective length. We classify per-authored-selector by checking
-  // ALL effective forms that derived from it. Since Cartesian product with
-  // parents only multiplies the count, we split `effective` into chunks
-  // equal to `rule.selectors.length`.
-  //
-  // Specifically: effective.length === parentBaseCount * authored.length,
-  // with authored index cycling fastest (see combine() loop in
-  // resolveEffectiveSelector). We classify each authored slot by OR-ing the
-  // classifications of all its effective forms.
-  const base = effective.length / Math.max(authored.length, 1);
-  const authoredClassifications: Array<'dead' | 'warn' | 'notMentioned'> = [];
+  // effective.length === parentBaseCount * authored.length by construction;
+  // authored index cycles fastest. If that invariant ever breaks, we can't
+  // trust per-slot classification — continuing with any fallback is a
+  // destructive silent failure. Throw so the file is skipped via parseErrors
+  // and the user sees it in the plan preview.
+  if (authored.length === 0 || effective.length % authored.length !== 0) {
+    throw new Error(
+      `effective/authored mismatch (effective=${effective.length}, authored=${authored.length}) — refusing to classify "${rule.selector}". Please file a bug.`
+    );
+  }
+  const base = effective.length / authored.length;
 
-  for (let i = 0; i < authored.length; i++) {
-    let slotClass: 'dead' | 'warn' | 'notMentioned' = 'notMentioned';
+  // OR-reduce classification across every parent-slice for one (slot, class)
+  // pair: any 'dead' short-circuits; 'warn' is sticky unless 'dead' arrives.
+  const classifySlotForClass = (
+    slotIndex: number,
+    className: string
+  ): SlotVerdict => {
+    let verdict: SlotVerdict = 'notMentioned';
     for (let p = 0; p < base; p++) {
-      const idx = p * authored.length + i;
-      const sel = effective[idx];
+      const sel = effective[p * authored.length + slotIndex];
       if (sel === undefined) continue;
       const c = classifySelector(sel, className);
-      if (c === 'dead') {
-        slotClass = 'dead';
-        break;
-      }
-      if (c === 'warn') {
-        slotClass = 'warn';
+      if (c === 'dead') return 'dead';
+      if (c === 'warn') verdict = 'warn';
+    }
+    return verdict;
+  };
+
+  const slotVerdicts: SlotVerdict[] = [];
+  const warnClasses = new Set<string>();
+  const firstDeadByClass = new Map<string, number>();
+
+  for (let i = 0; i < authored.length; i++) {
+    let slot: SlotVerdict = 'notMentioned';
+    for (const name of classNames) {
+      const thisClass = classifySlotForClass(i, name);
+      if (thisClass === 'dead') {
+        slot = 'dead';
+        if (!firstDeadByClass.has(name)) firstDeadByClass.set(name, i);
+      } else if (thisClass === 'warn') {
+        warnClasses.add(name);
+        if (slot === 'notMentioned') slot = 'warn';
       }
     }
-    authoredClassifications.push(slotClass);
+    slotVerdicts.push(slot);
   }
 
-  const deadIndices = authoredClassifications
-    .map((c, i) => (c === 'dead' ? i : -1))
-    .filter((i) => i >= 0);
-  const warnOnly = authoredClassifications.some((c) => c === 'warn');
-
-  if (deadIndices.length === 0) {
-    return warnOnly ? { kind: 'warn' } : { kind: 'none' };
-  }
-
-  if (deadIndices.length === authored.length) {
-    return { kind: 'remove' };
-  }
-
-  const deadSelectors = deadIndices
-    .map((i) => authored[i])
-    .filter((s): s is string => typeof s === 'string');
-  const surviving = stripSelectorsFromList(rule, deadSelectors);
-  if (surviving === null) {
-    // Should not happen (we already checked not-all-dead), but defensively
-    // degrade to remove.
-    return { kind: 'remove' };
-  }
-  return { kind: 'strip', dead: deadSelectors, surviving };
+  return { slotVerdicts, warnClasses, firstDeadByClass };
 };
 
 const buildFilePlan = (
@@ -89,65 +90,89 @@ const buildFilePlan = (
   const root: Root = postcssScss.parse(cssSource, { from: file });
   const edits: FilePlan['edits'] = [];
   const warnings: FilePlan['warnings'] = [];
-  const editedRules = new Set<Rule>();
-  let totalRules = 0;
+  const rulesMarkedForRemoval = new Set<Rule>();
+
+  const hasRemovedAncestor = (rule: Rule): boolean => {
+    let parent: Container | Document | undefined = rule.parent;
+    while (parent) {
+      if (parent.type === 'rule' && rulesMarkedForRemoval.has(parent as Rule)) {
+        return true;
+      }
+      parent = parent.parent;
+    }
+    return false;
+  };
 
   root.walkRules((rule) => {
-    totalRules++;
-    for (const className of unusedClassNames) {
-      const classification = classifyRule(rule, className);
-      if (classification.kind === 'none') continue;
+    // A rule nested inside one that will be removed is already dead — don't
+    // emit a duplicate edit for it. walkRules visits descendants after their
+    // ancestor, so the parent's mark is already in place by this point.
+    if (hasRemovedAncestor(rule)) return;
 
-      const line = rule.source?.start?.line ?? 1;
-      const originalSelector = rule.selector;
+    const { slotVerdicts, warnClasses, firstDeadByClass } = verdictForRule(
+      rule,
+      unusedClassNames
+    );
+    const deadSlotCount = slotVerdicts.filter((v) => v === 'dead').length;
+    if (deadSlotCount === 0 && warnClasses.size === 0) return;
 
-      if (classification.kind === 'remove') {
-        edits.push({
-          kind: 'remove',
-          file,
-          className,
-          rule,
-          originalSelector,
-          line,
-        } satisfies Candidate);
-        editedRules.add(rule);
-        break; // one remove is enough; don't keep classifying the same rule for other unused classes
+    const line = rule.source?.start?.line ?? 1;
+    const originalSelector = rule.selector;
+    const authored = rule.selectors.map((s) => s.trim());
+
+    const firstDeadClass = unusedClassNames.find((name) =>
+      firstDeadByClass.has(name)
+    );
+
+    if (deadSlotCount === authored.length && firstDeadClass !== undefined) {
+      edits.push({
+        kind: 'remove',
+        file,
+        className: firstDeadClass,
+        rule,
+        originalSelector,
+        line,
+      } satisfies Candidate);
+      rulesMarkedForRemoval.add(rule);
+      return;
+    }
+
+    if (deadSlotCount > 0 && firstDeadClass !== undefined) {
+      const deadSelectors = slotVerdicts
+        .map((v, i) => (v === 'dead' ? authored[i] : undefined))
+        .filter((s): s is string => typeof s === 'string');
+      const surviving = stripSelectorsFromList(rule, deadSelectors);
+      if (surviving === null) {
+        throw new Error(
+          `stripSelectorsFromList returned null despite surviving slots for ${file}:${line}`
+        );
       }
+      edits.push({
+        kind: 'stripSelectors',
+        file,
+        className: firstDeadClass,
+        rule,
+        originalSelector,
+        line,
+        deadSelectors,
+        survivingSelector: surviving,
+      } satisfies Candidate);
+    }
 
-      if (classification.kind === 'strip') {
-        edits.push({
-          kind: 'stripSelectors',
-          file,
-          className,
-          rule,
-          originalSelector,
-          line,
-          deadSelectors: classification.dead,
-          survivingSelector: classification.surviving,
-        } satisfies Candidate);
-        editedRules.add(rule);
-        // Continue classifying for other unused classes in case multiple
-        // classes appear in the same shared list (rare but possible).
-        continue;
-      }
-
-      if (classification.kind === 'warn') {
-        warnings.push({
-          kind: 'warn',
-          file,
-          className,
-          rule,
-          originalSelector,
-          line,
-        } satisfies Candidate);
-        // Don't break — a rule can be warn for multiple classes.
-      }
+    // warnings: report each warn-class whose warning survives the edit.
+    for (const name of unusedClassNames) {
+      if (!warnClasses.has(name)) continue;
+      if (deadSlotCount === authored.length) continue; // rule gone anyway
+      warnings.push({
+        kind: 'warn',
+        file,
+        className: name,
+        rule,
+        originalSelector,
+        line,
+      } satisfies Candidate);
     }
   });
-
-  const willBeEmpty =
-    totalRules > 0 &&
-    edits.filter((c) => c.kind === 'remove').length === totalRules;
 
   return {
     file,
@@ -155,17 +180,35 @@ const buildFilePlan = (
     originalSource: cssSource,
     edits,
     warnings,
-    willBeEmpty,
   };
 };
 
 export const buildChangePlan = (input: BuildChangePlanInput): ChangePlan => {
   const files: FilePlan[] = [];
+  const parseErrors: ChangePlan['parseErrors'] = [];
+  const internalErrors: ChangePlan['internalErrors'] = [];
   for (const entry of input.perFile) {
     if (entry.unusedClassNames.length === 0) continue;
-    files.push(
-      buildFilePlan(entry.file, entry.cssSource, entry.unusedClassNames)
-    );
+    try {
+      files.push(
+        buildFilePlan(entry.file, entry.cssSource, entry.unusedClassNames)
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      // postcss's CssSyntaxError is the only error we want to label "parse
+      // failed" — anything else is an assertion, invariant break, or bug
+      // inside our own code and deserves a distinct bucket so the UI doesn't
+      // lie to the user about what went wrong.
+      if (err instanceof CssSyntaxError) {
+        parseErrors.push({ file: entry.file, message });
+      } else {
+        console.error(
+          `check-unused-css: internal error while planning "${entry.file}":`,
+          err
+        );
+        internalErrors.push({ file: entry.file, message });
+      }
+    }
   }
-  return { mode: 'remove', files };
+  return { mode: 'remove', files, parseErrors, internalErrors };
 };

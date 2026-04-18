@@ -108,8 +108,72 @@ describe('classifySelector', () => {
     expect(classifySelector('.notcard', 'card')).toBe('notMentioned');
   });
 
-  // Malformed selector returns notMentioned (gracefully, matches existing pattern in codebase)
-  test('malformed selector → notMentioned', () => {
-    expect(classifySelector('.card {', 'card')).toBe('notMentioned');
+  // Malformed selector demoted to 'warn' so the rule is surfaced for manual
+  // review rather than silently removed — a parse failure must never allow
+  // another parent-slice to promote the slot to 'dead' in buildChangePlan.
+  test('malformed selector → warn (never silently notMentioned)', () => {
+    expect(classifySelector('.card {', 'card')).toBe('warn');
+  });
+
+  // :global(...) — CSS Modules escape hatch; sanitized before parsing so the
+  // local parts of the selector can still be analyzed.
+  test('.card :global(.foo) → dead (leading compound still .card)', () => {
+    expect(classifySelector('.card :global(.foo)', 'card')).toBe('dead');
+  });
+
+  test(':global(.foo) .card → warn (.card lives in a non-leading compound)', () => {
+    expect(classifySelector(':global(.foo) .card', 'card')).toBe('warn');
+  });
+
+  test(':global(.foo) alone → notMentioned for any local class', () => {
+    expect(classifySelector(':global(.foo)', 'card')).toBe('notMentioned');
+  });
+
+  test(':global(.x.y) multi-class inside global → notMentioned', () => {
+    expect(classifySelector(':global(.x.y)', 'card')).toBe('notMentioned');
+  });
+
+  test(':global(.foo):global(.bar) adjacent globals → notMentioned', () => {
+    expect(classifySelector(':global(.foo):global(.bar)', 'card')).toBe(
+      'notMentioned'
+    );
+  });
+
+  test(':global(:is(.foo, .card)) — nested pseudo inside global → notMentioned (global hides the card)', () => {
+    // Whether `.card` inside a `:global(:is(...))` counts as "mentioned" is a
+    // judgment call; current behavior treats everything inside :global as
+    // globally-named and therefore not referring to our local class name.
+    expect(classifySelector(':global(:is(.foo, .card))', 'card')).toBe(
+      'notMentioned'
+    );
+  });
+
+  test('unterminated :global( → warn (never silently dropped)', () => {
+    // Unbalanced :global(... means we can't trust any classification of the
+    // tail. Returning 'warn' keeps the rule out of auto-remove.
+    expect(classifySelector(':global(.foo .card', 'card')).toBe('warn');
+  });
+
+  // Middle-of-compound — most common real-world shape in CSS Modules BEM
+  test('.a.unused.b (unused in the middle of a 3-class compound) → dead', () => {
+    expect(classifySelector('.a.unused.b', 'unused')).toBe('dead');
+  });
+
+  test('.a.b.unused (unused at the end of a compound) → dead', () => {
+    expect(classifySelector('.a.b.unused', 'unused')).toBe('dead');
+  });
+
+  // :is() / :where() / :has() — argument selectors must stay "warn" because
+  // they're not top-level items of the leading compound.
+  test('.foo:is(.unused, .bar) → warn (leading compound has :is, not .unused directly)', () => {
+    expect(classifySelector('.foo:is(.unused, .bar)', 'unused')).toBe('warn');
+  });
+
+  test('.foo:where(.unused) → warn', () => {
+    expect(classifySelector('.foo:where(.unused)', 'unused')).toBe('warn');
+  });
+
+  test('.foo:has(.unused) → warn', () => {
+    expect(classifySelector('.foo:has(.unused)', 'unused')).toBe('warn');
   });
 });
