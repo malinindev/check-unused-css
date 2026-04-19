@@ -104,6 +104,23 @@ This is useful in CI/CD pipelines where you want to enforce explicit class usage
 
 **[Read more about why dynamic class access should be avoided](./docs/avoid-dynamic-classes.md)**
 
+#### Removing unused classes (`--remove`)
+
+Delete unused classes from CSS/SCSS files in place:
+
+```bash
+npx check-unused-css --remove          # preview + y/N prompt
+npx check-unused-css --remove --yes    # skip prompt (required in CI)
+```
+
+The tool prints a plan, asks for confirmation, then rewrites files via PostCSS. Rule bodies and formatting outside edited selectors are preserved; trimmed selector lists are rejoined with `", "`.
+
+**What gets removed:** a rule is auto-removed when the unused class is in the leading compound of the selector — `.unused`, `.unused:hover`, `.other.unused`, `.unused > .child`, `&.unused`, shared selector lists. Descendants (`.wrapper .unused`) go to a manual-review list; the tool won't touch them.
+
+Commit before running — the tool makes no backups.
+
+**Exit codes:** `0` ok · `1` issues or partial failures · `2` bad args · `4` declined · `5` internal error.
+
 #### Ignoring files or lines with comments
 
 You can ignore specific lines or entire files from CSS checking using special comments, similar to ESLint:

@@ -51,5 +51,7 @@ export type CssAnalysisResult = UnusedClassResult | NonExistentClassResult;
 export type Args = {
   targetPath?: string;
   excludePatterns?: string[];
-  noDynamic?: boolean;
+  noDynamic: boolean;
+  mode: 'report' | 'remove';
+  yes: boolean;
 };

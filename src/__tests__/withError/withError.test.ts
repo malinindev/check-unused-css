@@ -158,7 +158,9 @@ describe('Component with errors', () => {
   test('shows error if not existed path', () => {
     const result = runCheckUnusedCss('src/NOT_EXISTED_PATH');
 
-    expect(result.exitCode).toBe(1);
+    // BAD_ARGS (2) — a missing target is an argument problem, not an analysis
+    // finding.
+    expect(result.exitCode).toBe(2);
 
     expect(result.stdout).toMatch(
       /^Error: Directory "src\/NOT_EXISTED_PATH" does not exist\.$/m
@@ -168,7 +170,9 @@ describe('Component with errors', () => {
   test('shows error if passed path to file, not folder', () => {
     const result = runCheckUnusedCss('src/__tests__/withError/Plain/Plain.tsx');
 
-    expect(result.exitCode).toBe(1);
+    // BAD_ARGS (2) — passing a file where a directory is expected is an
+    // argument problem.
+    expect(result.exitCode).toBe(2);
 
     expect(result.stdout).toMatch(
       /^Error: "src\/__tests__\/withError\/Plain\/Plain\.tsx" is a file. Please provide a directory path\.$/m

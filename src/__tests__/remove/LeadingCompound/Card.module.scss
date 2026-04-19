@@ -1,0 +1,39 @@
+.used {
+  color: blue;
+}
+
+.unusedCard {
+  color: red;
+}
+
+.unusedCard:hover {
+  color: orange;
+}
+
+.unusedCard::before {
+  content: '';
+}
+
+.unusedCard.selected {
+  color: pink;
+}
+
+.other.unusedCard {
+  color: yellow;
+}
+
+.unusedCard > .title {
+  font-weight: bold;
+}
+
+.unusedCard .desc {
+  font-size: 12px;
+}
+
+.unusedCard + .next {
+  margin-top: 4px;
+}
+
+.unusedCard ~ .sibling {
+  opacity: 0.5;
+}

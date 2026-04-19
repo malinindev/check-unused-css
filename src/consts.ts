@@ -5,3 +5,11 @@ export const COLORS = {
   yellow: '\x1b[33m',
   reset: '\x1b[0m',
 } as const;
+
+export const EXIT_CODES = {
+  OK: 0,
+  REPORT_ISSUES: 1,
+  BAD_ARGS: 2,
+  DECLINED: 4,
+  INTERNAL: 5,
+} as const;

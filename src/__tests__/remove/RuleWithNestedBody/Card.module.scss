@@ -1,0 +1,15 @@
+.used {
+  color: blue;
+}
+
+.unusedCard {
+  color: red;
+
+  &.modifier {
+    color: orange;
+  }
+
+  .inner {
+    font-weight: bold;
+  }
+}

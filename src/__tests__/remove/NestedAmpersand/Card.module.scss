@@ -1,0 +1,7 @@
+.parent {
+  color: blue;
+
+  &.unusedCard {
+    color: red;
+  }
+}
