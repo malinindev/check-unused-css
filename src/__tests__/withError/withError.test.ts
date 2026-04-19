@@ -34,18 +34,19 @@ describe('Component with errors', () => {
   test.each([
     ['NonExistentClasses', 'NonExistentClasses.tsx'],
     ['NonExistentClassesScss', 'NonExistentClassesScss.tsx'],
-  ])('finds non-existent classes in %s component', (componentName, tsxFileName) => {
+    ['NonExistentClassesJsx', 'NonExistentClassesJsx.jsx'],
+  ])('finds non-existent classes in %s component', (componentName, sourceFileName) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
     );
     expect(result.exitCode).toBe(1);
 
     expect(result.stderr).toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
 
-    const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
-    expect(result.stdout).toMatch(tsxFileRegexp);
+    const sourceFileRegexp = new RegExp(`${sourceFileName}:\\d+:\\d+`, 'm');
+    expect(result.stdout).toMatch(sourceFileRegexp);
   });
 
   test('shows error for not imported css modules', () => {
@@ -133,7 +134,7 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass2$/m);
 
-    // Should report classes used only in CSS selectors but not in TypeScript
+    // Should report classes used only in CSS selectors but not in source files
     expect(result.stdout).toMatch(/:\d+:\d+ - \.specialState$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.disabled$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.active$/m);
@@ -141,14 +142,14 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/:\d+:\d+ - \.container$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.item$/m);
 
-    // Should NOT report classes that are actually used in TypeScript
+    // Should NOT report classes that are actually used in source files
     expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
     expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
     expect(result.stdout).not.toMatch(/^\s+\.usedClass3$/m);
 
     // Should NOT show non-existent class errors (classes in :not() should be extracted correctly)
     expect(result.stderr).not.toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
   });
 
@@ -174,5 +175,17 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(
       /^Error: "src\/__tests__\/withError\/Plain\/Plain\.tsx" is a file. Please provide a directory path\.$/m
     );
+  });
+
+  test('reports the offending file path when a .jsx source fails to parse', () => {
+    const result = runCheckUnusedCss('src/__tests__/withError/UnparseableJsx');
+
+    // INTERNAL (5) — parser failure is an internal failure, distinct from
+    // analysis findings.
+    expect(result.exitCode).toBe(5);
+
+    // The error MUST name the specific file so users can locate it.
+    expect(result.stderr).toMatch(/UnparseableJsx\.jsx/);
+    expect(result.stderr).toMatch(/Failed to parse source content/);
   });
 });

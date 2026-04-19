@@ -78,7 +78,7 @@ describe('printResults', () => {
       printResults(results);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        `${COLORS.red}Found 1 classes defined in CSS but unused in TypeScript:${COLORS.reset}\n`
+        `${COLORS.red}Found 1 classes defined in CSS but unused in source files:${COLORS.reset}\n`
       );
     });
 
@@ -132,7 +132,7 @@ describe('printResults', () => {
       printResults(results);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        `${COLORS.red}Found 1 classes used in TypeScript but non-existent in CSS:${COLORS.reset}\n`
+        `${COLORS.red}Found 1 classes used in source files but non-existent in CSS:${COLORS.reset}\n`
       );
     });
   });

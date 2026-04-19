@@ -1,7 +1,7 @@
 import type { DynamicClassUsage } from '../../../../../types.js';
 
 export const extractDynamicClassUsages = (
-  tsContent: string,
+  sourceContent: string,
   importNames: string[],
   filePath: string
 ): DynamicClassUsage[] => {
@@ -12,23 +12,25 @@ export const extractDynamicClassUsages = (
     let match: RegExpExecArray | null;
 
     // biome-ignore lint/suspicious/noAssignInExpressions: regex exec pattern requires assignment in loop
-    while ((match = importRegex.exec(tsContent)) !== null) {
+    while ((match = importRegex.exec(sourceContent)) !== null) {
       const startIndex = match.index + match[0].length - 1;
       let bracketCount = 1;
       let endIndex = startIndex + 1;
 
       // Find matching closing bracket
-      while (endIndex < tsContent.length && bracketCount > 0) {
-        if (tsContent[endIndex] === '[') {
+      while (endIndex < sourceContent.length && bracketCount > 0) {
+        if (sourceContent[endIndex] === '[') {
           bracketCount++;
-        } else if (tsContent[endIndex] === ']') {
+        } else if (sourceContent[endIndex] === ']') {
           bracketCount--;
         }
         endIndex++;
       }
 
       if (bracketCount === 0) {
-        const expression = tsContent.slice(startIndex + 1, endIndex - 1).trim();
+        const expression = sourceContent
+          .slice(startIndex + 1, endIndex - 1)
+          .trim();
 
         if (!expression) {
           continue;
@@ -59,7 +61,7 @@ export const extractDynamicClassUsages = (
 
         if (dynamicPatterns.some((pattern) => pattern.test(expression))) {
           // Calculate line and column
-          const beforeMatch = tsContent.slice(0, match.index);
+          const beforeMatch = sourceContent.slice(0, match.index);
           const lineNumber = beforeMatch.split('\n').length;
           const lastLineStart = beforeMatch.lastIndexOf('\n') + 1;
           const columnNumber = match.index - lastLineStart + 1;

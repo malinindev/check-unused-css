@@ -9,7 +9,7 @@ describe('Non-existent CSS classes detection', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
     expect(result.stdout).toMatch(
       /NonExistentClasses\.tsx:\d+:\d+ - \.nonExistentClass1/
@@ -33,7 +33,7 @@ describe('Non-existent CSS classes detection', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
     expect(result.stdout).toMatch(
       /NonExistentClassesScss\.tsx:\d+:\d+ - \.invalidClass/
@@ -61,7 +61,7 @@ describe('Non-existent CSS classes detection', () => {
     expect(result.exitCode).toBe(1);
     // Should report unused classes (existing functionality)
     expect(result.stderr).toMatch(
-      /Found .* classes defined in CSS but unused in TypeScript/
+      /Found .* classes defined in CSS but unused in source files/
     );
     expect(result.stdout).toMatch(
       /Plain\.module\.css:\d+:\d+ - \.unusedClass$/m

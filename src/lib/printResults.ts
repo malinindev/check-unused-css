@@ -90,7 +90,7 @@ export const printResults = (
     );
 
     console.error(
-      `${COLORS.red}Found ${totalNonExistentClasses} classes used in TypeScript but non-existent in CSS:${COLORS.reset}\n`
+      `${COLORS.red}Found ${totalNonExistentClasses} classes used in source files but non-existent in CSS:${COLORS.reset}\n`
     );
 
     for (const result of nonExistentClassResults) {
@@ -128,7 +128,7 @@ export const printResults = (
     );
 
     console.error(
-      `${COLORS.red}Found ${totalUnusedClasses} classes defined in CSS but unused in TypeScript:${COLORS.reset}\n`
+      `${COLORS.red}Found ${totalUnusedClasses} classes defined in CSS but unused in source files:${COLORS.reset}\n`
     );
 
     for (const result of resultsWithUnusedClasses) {

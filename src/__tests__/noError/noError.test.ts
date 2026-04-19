@@ -43,7 +43,9 @@ describe('Components without errors', () => {
     'AliasNested',
     'AliasWithReferences',
     'ScssAmpersandConcat',
-  ])('exits with code 0 when no unused classes found for component %s.tsx', (folderName) => {
+    'PlainJsx',
+    'MixedTsxJsx',
+  ])('exits with code 0 when no unused classes found for component %s', (folderName) => {
     const result = runCheckUnusedCss(`src/__tests__/noError/${folderName}`);
 
     expect(result.exitCode).toBe(0);
@@ -57,7 +59,8 @@ describe('Components without errors', () => {
     'DynamicWithNullish',
     'DynamicWithOr',
     'DynamicWithTemplates',
-  ])('exits with code 0 when no unused classes found for component dynamic/%s.tsx', (folderName) => {
+    'DynamicJsx',
+  ])('exits with code 0 when no unused classes found for component dynamic/%s', (folderName) => {
     const result = runCheckUnusedCss(
       `src/__tests__/noError/dynamic/${folderName}`
     );
@@ -73,7 +76,8 @@ describe('Components without errors', () => {
     'DynamicWithNullish',
     'DynamicWithOr',
     'DynamicWithTemplates',
-  ])('shows warning for dynamic used styles component dynamic/%s.tsx', (folderName) => {
+    'DynamicJsx',
+  ])('shows warning for dynamic used styles component dynamic/%s', (folderName) => {
     const result = runCheckUnusedCss(
       `src/__tests__/noError/dynamic/${folderName}`
     );
@@ -83,7 +87,7 @@ describe('Components without errors', () => {
       /Cannot determine usability when using dynamic class access/
     );
     expect(result.stdout).toMatch(
-      new RegExp(`${folderName}\\.tsx:\\d+:\\d+ - \\.styles\\[`)
+      new RegExp(`${folderName}\\.(?:tsx|jsx):\\d+:\\d+ - \\.styles\\[`)
     );
   });
 });

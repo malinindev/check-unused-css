@@ -16,11 +16,12 @@
 
     "module": "NodeNext",
     "outDir": "dist",
+    "rootDir": "./src",
 
     "declaration": true,
     "lib": ["es2022", "dom"],
     "types": ["node", "@types/bun"]
   },
   "include": ["src/**/*", "src/**/*.css"],
-  "exclude": []
+  "exclude": ["src/__tests__/withError/UnparseableJsx/**"]
 }

@@ -1,6 +1,6 @@
 # check-unused-css
 
-A **zero-config** tool to find unused CSS classes and non-existent class references in your TypeScript project. Works with .module.css, .module.scss, and .module.sass.
+A **zero-config** tool to find unused CSS classes and non-existent class references in your TypeScript or JavaScript project. Scans `.ts`, `.tsx`, `.js`, and `.jsx` source files, and works with `.module.css`, `.module.scss`, and `.module.sass`.
 
 No more dead styles in your codebase!
 
@@ -139,7 +139,7 @@ You can ignore specific lines or entire files from CSS checking using special co
 .unusedClass { }
 ```
 
-**For TypeScript/TSX files:**
+**For TypeScript/TSX/JS/JSX files:**
 
 ```tsx
 // check-unused-css-disable
@@ -165,9 +165,9 @@ export const Component = () => (
 **Supported comment formats:**
 - `/* check-unused-css-disable */` - ignore entire CSS file
 - `/* check-unused-css-disable-next-line */` - ignore next line in CSS
-- `// check-unused-css-disable` - ignore entire TS/TSX file
-- `// check-unused-css-disable-next-line` - ignore next line in TS/TSX
-- `{/* check-unused-css-disable-next-line */}` - ignore next line in JSX (TSX)
+- `// check-unused-css-disable` - ignore entire TS/TSX/JS/JSX file
+- `// check-unused-css-disable-next-line` - ignore next line in TS/TSX/JS/JSX
+- `{/* check-unused-css-disable-next-line */}` - ignore next line in JSX/TSX
 
 ## TypeScript Path Aliases Support
 
