@@ -43,7 +43,7 @@
     "check:type": "tsc --noEmit",
     "check:lint": "biome lint ./src",
     "check:format": "biome format ./src",
-    "fix:lint": "biome lint --apply ./src",
+    "fix:lint": "biome lint --write ./src",
     "fix:format": "biome format --write ./src"
   },
   "engines": {
