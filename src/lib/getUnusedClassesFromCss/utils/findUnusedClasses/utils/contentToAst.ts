@@ -13,7 +13,7 @@ export const contentToAst = (content: string): TSESTree.Program => {
   } catch (error) {
     // If parsing fails, the file likely has syntax errors and bigger problems
     throw new Error(
-      `Failed to parse TypeScript/JSX content: ${error instanceof Error ? error.message : 'unknown'}`
+      `Failed to parse source content: ${error instanceof Error ? error.message : 'unknown'}`
     );
   }
 };

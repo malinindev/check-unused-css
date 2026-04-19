@@ -5,7 +5,7 @@ import { parseIgnoreComments } from '../../../utils/parseIgnoreComments.js';
 import { contentToAst } from './findUnusedClasses/utils/contentToAst.js';
 
 type ExtractUsedClassesParams = {
-  tsContent: string;
+  sourceContent: string;
   importNames: string[];
 };
 
@@ -54,10 +54,10 @@ const isMemberExpressionWithBracketNotation = (
 };
 
 export const extractUsedClasses = ({
-  tsContent,
+  sourceContent,
   importNames,
 }: ExtractUsedClassesParams): string[] => {
-  const ast: TSESTree.Program = contentToAst(tsContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent);
   const usedClasses = new Set<string>();
 
   walk(ast as Node, {
@@ -74,12 +74,12 @@ export const extractUsedClasses = ({
 };
 
 export const extractUsedClassesWithLocations = ({
-  tsContent,
+  sourceContent,
   importNames,
 }: ExtractUsedClassesParams): UsedClassInfo[] => {
-  const { ignoredLines } = parseIgnoreComments(tsContent);
+  const { ignoredLines } = parseIgnoreComments(sourceContent);
 
-  const ast: TSESTree.Program = contentToAst(tsContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent);
   const usedClasses: UsedClassInfo[] = [];
 
   walk(ast as Node, {

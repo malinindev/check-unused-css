@@ -8,7 +8,7 @@ import { extractDynamicClassUsages } from './utils/extractDynamicClassUsages.js'
 
 type FindUnusedClassesParams = {
   cssClasses: string[];
-  tsContent: string;
+  sourceContent: string;
   importNames: string[];
   filePath: string;
 };
@@ -23,17 +23,17 @@ type FindUnusedClassesResult =
 
 export const findUnusedClasses = ({
   cssClasses,
-  tsContent,
+  sourceContent,
   importNames,
   filePath,
 }: FindUnusedClassesParams): FindUnusedClassesResult => {
-  const { ignoredLines } = parseIgnoreComments(tsContent);
+  const { ignoredLines } = parseIgnoreComments(sourceContent);
 
   const unusedClasses: string[] = [];
 
   // Check for dynamic usage patterns first
   const dynamicUsages = extractDynamicClassUsages(
-    tsContent,
+    sourceContent,
     importNames,
     filePath
   );
@@ -42,7 +42,7 @@ export const findUnusedClasses = ({
     return { hasDynamicUsage: true, unusedClasses: null, dynamicUsages };
   }
 
-  const ast: TSESTree.Program = contentToAst(tsContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent);
 
   const usedClasses = new Set<string>();
 

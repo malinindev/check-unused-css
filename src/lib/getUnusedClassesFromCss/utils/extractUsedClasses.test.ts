@@ -3,7 +3,7 @@ import { extractUsedClasses } from './extractUsedClasses.js';
 
 describe('extractUsedClasses', () => {
   test('extracts classes used with dot notation', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       
       const Component = () => (
@@ -14,7 +14,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles'],
     });
 
@@ -23,7 +23,7 @@ describe('extractUsedClasses', () => {
   });
 
   test('extracts classes used with bracket notation', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       
       const Component = () => (
@@ -34,7 +34,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles'],
     });
 
@@ -43,7 +43,7 @@ describe('extractUsedClasses', () => {
   });
 
   test('extracts classes from multiple import names', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       import otherStyles from './other.module.css';
       
@@ -55,7 +55,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles', 'otherStyles'],
     });
 
@@ -64,7 +64,7 @@ describe('extractUsedClasses', () => {
   });
 
   test('ignores classes from non-imported objects', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       
       const someObject = { class1: 'value' };
@@ -77,7 +77,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles'],
     });
 
@@ -86,7 +86,7 @@ describe('extractUsedClasses', () => {
   });
 
   test('handles complex expressions', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       
       const Component = () => {
@@ -100,7 +100,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles'],
     });
 
@@ -110,7 +110,7 @@ describe('extractUsedClasses', () => {
   });
 
   test('returns empty array when no classes are used', () => {
-    const tsContent = `
+    const sourceContent = `
       import styles from './test.module.css';
       
       const Component = () => (
@@ -121,7 +121,7 @@ describe('extractUsedClasses', () => {
     `;
 
     const result = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: ['styles'],
     });
 

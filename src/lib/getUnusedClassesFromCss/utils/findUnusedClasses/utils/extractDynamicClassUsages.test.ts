@@ -6,22 +6,25 @@ describe('extractDynamicClassUsages', () => {
 
   describe('should return dynamic usages for dynamic patterns', () => {
     test('detects template strings with variables', () => {
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
-      const tsContent = 'const className = styles[`prefix${variable}suffix`];';
+      const sourceContent =
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
+        'const className = styles[`prefix${variable}suffix`];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
       expect(result.length).toBeGreaterThan(0);
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
-      expect(result[0]?.className).toBe('styles[`prefix${variable}suffix`]');
+      expect(result[0]?.className).toBe(
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: for test
+        'styles[`prefix${variable}suffix`]'
+      );
     });
 
     test('detects simple variables without quotes', () => {
-      const tsContent = 'const className = styles[variable];';
+      const sourceContent = 'const className = styles[variable];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -29,9 +32,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects function calls', () => {
-      const tsContent = 'const className = styles[getClassName()];';
+      const sourceContent = 'const className = styles[getClassName()];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -39,10 +42,10 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects logical OR expressions', () => {
-      const tsContent =
+      const sourceContent =
         'const className = styles[test || fallback || "default"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -50,9 +53,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects nullish coalescing operator', () => {
-      const tsContent = 'const className = styles[test ?? "fallback"];';
+      const sourceContent = 'const className = styles[test ?? "fallback"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -60,10 +63,10 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects ternary operator', () => {
-      const tsContent =
+      const sourceContent =
         'const className = styles[condition ? "active" : "inactive"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -71,10 +74,10 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects logical AND expressions', () => {
-      const tsContent =
+      const sourceContent =
         'const className = styles[condition && "conditionalClass"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -89,9 +92,9 @@ describe('extractDynamicClassUsages', () => {
         'const className = styles[total / 3];',
       ];
 
-      for (const tsContent of operations) {
+      for (const sourceContent of operations) {
         const result = extractDynamicClassUsages(
-          tsContent,
+          sourceContent,
           importNames,
           'test.tsx'
         );
@@ -100,9 +103,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects object property access', () => {
-      const tsContent = 'const className = styles[config.theme];';
+      const sourceContent = 'const className = styles[config.theme];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -110,9 +113,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects array access', () => {
-      const tsContent = 'const className = styles[classNames[0]];';
+      const sourceContent = 'const className = styles[classNames[0]];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -120,9 +123,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects method calls in brackets', () => {
-      const tsContent = 'const className = styles[obj.getClassName()];';
+      const sourceContent = 'const className = styles[obj.getClassName()];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -130,10 +133,10 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects complex nested expressions', () => {
-      const tsContent =
+      const sourceContent =
         'const className = styles[obj.method() || fallback ?? "default"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -141,9 +144,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('works with different import names', () => {
-      const tsContent = 'const className = classes[variable];';
+      const sourceContent = 'const className = classes[variable];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -151,12 +154,12 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('detects multiple dynamic usages in same content', () => {
-      const tsContent = `
+      const sourceContent = `
         const className1 = styles[variable1];
         const className2 = styles[variable2 || "fallback"];
       `;
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -166,9 +169,9 @@ describe('extractDynamicClassUsages', () => {
 
   describe('should return empty array for static usage patterns', () => {
     test('static string literals', () => {
-      const tsContent = 'const className = styles["staticClass"];';
+      const sourceContent = 'const className = styles["staticClass"];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -176,9 +179,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('static property access', () => {
-      const tsContent = 'const className = styles.staticClass;';
+      const sourceContent = 'const className = styles.staticClass;';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -186,9 +189,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('template strings without variables', () => {
-      const tsContent = 'const className = styles[`staticString`];';
+      const sourceContent = 'const className = styles[`staticString`];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -196,9 +199,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('no styles usage at all', () => {
-      const tsContent = 'const className = "regular-class";';
+      const sourceContent = 'const className = "regular-class";';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -206,9 +209,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('styles usage outside of brackets', () => {
-      const tsContent = 'const obj = { styles: "something" };';
+      const sourceContent = 'const obj = { styles: "something" };';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -221,9 +224,9 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('import name not in provided list', () => {
-      const tsContent = 'const className = otherStyles[variable];';
+      const sourceContent = 'const className = otherStyles[variable];';
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );
@@ -240,9 +243,9 @@ describe('extractDynamicClassUsages', () => {
         'styles[  condition ? "a" : "b"  ]',
       ];
 
-      for (const tsContent of variations) {
+      for (const sourceContent of variations) {
         const result = extractDynamicClassUsages(
-          tsContent,
+          sourceContent,
           importNames,
           'test.tsx'
         );
@@ -251,7 +254,7 @@ describe('extractDynamicClassUsages', () => {
     });
 
     test('handles newlines in expressions', () => {
-      const tsContent = `
+      const sourceContent = `
         const className = styles[
           condition
             ? "active"
@@ -259,7 +262,7 @@ describe('extractDynamicClassUsages', () => {
         ];
       `;
       const result = extractDynamicClassUsages(
-        tsContent,
+        sourceContent,
         importNames,
         'test.tsx'
       );

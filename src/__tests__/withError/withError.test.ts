@@ -34,6 +34,7 @@ describe('Component with errors', () => {
   test.each([
     ['NonExistentClasses', 'NonExistentClasses.tsx'],
     ['NonExistentClassesScss', 'NonExistentClassesScss.tsx'],
+    ['NonExistentClassesJsx', 'NonExistentClassesJsx.jsx'],
   ])('finds non-existent classes in %s component', (componentName, tsxFileName) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
@@ -41,7 +42,7 @@ describe('Component with errors', () => {
     expect(result.exitCode).toBe(1);
 
     expect(result.stderr).toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
 
     const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
@@ -133,7 +134,7 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass2$/m);
 
-    // Should report classes used only in CSS selectors but not in TypeScript
+    // Should report classes used only in CSS selectors but not in source files
     expect(result.stdout).toMatch(/:\d+:\d+ - \.specialState$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.disabled$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.active$/m);
@@ -141,14 +142,14 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(/:\d+:\d+ - \.container$/m);
     expect(result.stdout).toMatch(/:\d+:\d+ - \.item$/m);
 
-    // Should NOT report classes that are actually used in TypeScript
+    // Should NOT report classes that are actually used in source files
     expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
     expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
     expect(result.stdout).not.toMatch(/^\s+\.usedClass3$/m);
 
     // Should NOT show non-existent class errors (classes in :not() should be extracted correctly)
     expect(result.stderr).not.toMatch(
-      /Found .* classes used in TypeScript but non-existent in CSS/
+      /Found .* classes used in source files but non-existent in CSS/
     );
   });
 

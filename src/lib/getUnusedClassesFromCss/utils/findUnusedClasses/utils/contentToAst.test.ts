@@ -3,7 +3,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/typescript-estree';
 import { contentToAst } from './contentToAst.js';
 
 describe('contentToAst', () => {
-  describe('should parse valid TypeScript/JSX content', () => {
+  describe('should parse valid source content', () => {
     test('parses simple TypeScript code', () => {
       const content = 'const x = 42;';
       const ast = contentToAst(content);
@@ -131,7 +131,7 @@ describe('contentToAst', () => {
       const content = 'const broken = `unclosed template';
 
       expect(() => contentToAst(content)).toThrow(
-        'Failed to parse TypeScript/JSX content'
+        'Failed to parse source content'
       );
       expect(() => contentToAst(content)).toThrow(
         'Unterminated template literal'
@@ -142,7 +142,7 @@ describe('contentToAst', () => {
       const content = 'const broken = "unclosed string';
 
       expect(() => contentToAst(content)).toThrow(
-        'Failed to parse TypeScript/JSX content'
+        'Failed to parse source content'
       );
     });
 
@@ -150,7 +150,7 @@ describe('contentToAst', () => {
       const content = '<div><span></div>';
 
       expect(() => contentToAst(content)).toThrow(
-        'Failed to parse TypeScript/JSX content'
+        'Failed to parse source content'
       );
     });
 
@@ -158,7 +158,7 @@ describe('contentToAst', () => {
       const content = 'const x = {[}';
 
       expect(() => contentToAst(content)).toThrow(
-        'Failed to parse TypeScript/JSX content'
+        'Failed to parse source content'
       );
     });
 
@@ -171,7 +171,7 @@ describe('contentToAst', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toMatch(
-          /Failed to parse TypeScript\/JSX content:/
+          /Failed to parse source content:/
         );
         expect((error as Error).message).toMatch(
           /Unterminated template literal/

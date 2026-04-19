@@ -193,7 +193,7 @@ describe('findFilesImportingCssModule', () => {
   });
 
   describe('should handle edge cases', () => {
-    test('returns empty array when no TypeScript files found', async () => {
+    test('returns empty array when no source files found', async () => {
       createFile('components/Button.module.css', '.button { color: red; }');
 
       const result = await findFilesImportingCssModule(
@@ -337,6 +337,75 @@ describe('findFilesImportingCssModule', () => {
       expect(result).toEqual([
         { file: 'components/Button.tsx', importName: 'styles' },
       ]);
+    });
+
+    test('finds imports in .js files', async () => {
+      createFile(
+        'utils/styles.js',
+        'import styles from "./Button.module.css";'
+      );
+      createFile('utils/Button.module.css', '.button { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'utils/Button.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'utils/styles.js', importName: 'styles' },
+      ]);
+    });
+
+    test('finds imports in .jsx files', async () => {
+      createFile(
+        'components/Button.jsx',
+        'import styles from "./Button.module.css";'
+      );
+      createFile('components/Button.module.css', '.button { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'components/Button.module.css',
+        testDir
+      );
+
+      expect(result).toEqual([
+        { file: 'components/Button.jsx', importName: 'styles' },
+      ]);
+    });
+
+    test('searches for .ts, .tsx, .js and .jsx files together', async () => {
+      createFile(
+        'a/Button.ts',
+        'import tsStyles from "../shared/Button.module.css";'
+      );
+      createFile(
+        'a/Button.tsx',
+        'import tsxStyles from "../shared/Button.module.css";'
+      );
+      createFile(
+        'b/Button.js',
+        'import jsStyles from "../shared/Button.module.css";'
+      );
+      createFile(
+        'b/Button.jsx',
+        'import jsxStyles from "../shared/Button.module.css";'
+      );
+      createFile('shared/Button.module.css', '.button { color: red; }');
+
+      const result = await findFilesImportingCssModule(
+        'shared/Button.module.css',
+        testDir
+      );
+
+      expect(result).toHaveLength(4);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          { file: 'a/Button.ts', importName: 'tsStyles' },
+          { file: 'a/Button.tsx', importName: 'tsxStyles' },
+          { file: 'b/Button.js', importName: 'jsStyles' },
+          { file: 'b/Button.jsx', importName: 'jsxStyles' },
+        ])
+      );
     });
   });
 

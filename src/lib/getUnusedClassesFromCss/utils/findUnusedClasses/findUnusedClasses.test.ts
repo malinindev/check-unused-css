@@ -26,7 +26,7 @@ describe('findUnusedClasses', () => {
     test('returns early when dynamic usage is detected', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
-        tsContent: 'const className = styles[dynamicKey];',
+        sourceContent: 'const className = styles[dynamicKey];',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -48,7 +48,7 @@ describe('findUnusedClasses', () => {
     test('continues with AST analysis when no dynamic usage', () => {
       const result = findUnusedClasses({
         cssClasses: ['button'],
-        tsContent: 'const className = styles.button;',
+        sourceContent: 'const className = styles.button;',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -68,7 +68,7 @@ describe('findUnusedClasses', () => {
     test('finds used classes with direct notation', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
-        tsContent: 'const className = styles.button;',
+        sourceContent: 'const className = styles.button;',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -83,7 +83,8 @@ describe('findUnusedClasses', () => {
     test('finds used classes with multiple import names', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text', 'header'],
-        tsContent: 'const className = styles.button; const other = css.text;',
+        sourceContent:
+          'const className = styles.button; const other = css.text;',
         importNames: ['styles', 'css'],
         filePath: 'test.tsx',
       });
@@ -98,7 +99,7 @@ describe('findUnusedClasses', () => {
     test('handles multiple usages of same class', () => {
       const result = findUnusedClasses({
         cssClasses: ['button'],
-        tsContent: 'const a = styles.button; const b = styles.button;',
+        sourceContent: 'const a = styles.button; const b = styles.button;',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -113,7 +114,7 @@ describe('findUnusedClasses', () => {
     test('ignores similar variable names', () => {
       const result = findUnusedClasses({
         cssClasses: ['button'],
-        tsContent: 'const mystyles = {}; const className = styles.button;',
+        sourceContent: 'const mystyles = {}; const className = styles.button;',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -130,7 +131,7 @@ describe('findUnusedClasses', () => {
     test('finds used classes with single quotes', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
-        tsContent: "const className = styles['button'];",
+        sourceContent: "const className = styles['button'];",
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -145,7 +146,7 @@ describe('findUnusedClasses', () => {
     test('finds used classes with double quotes', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
-        tsContent: 'const className = styles["button"];',
+        sourceContent: 'const className = styles["button"];',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -160,7 +161,7 @@ describe('findUnusedClasses', () => {
     test('handles classes with special characters', () => {
       const result = findUnusedClasses({
         cssClasses: ['button-primary', 'text_large', 'header'],
-        tsContent:
+        sourceContent:
           'const className = styles["button-primary"]; const other = styles.text_large;',
         importNames: ['styles'],
         filePath: 'test.tsx',
@@ -178,7 +179,7 @@ describe('findUnusedClasses', () => {
     test('finds classes used in JSX attributes', () => {
       const result = findUnusedClasses({
         cssClasses: ['container', 'button', 'text-small', 'unused'],
-        tsContent: `
+        sourceContent: `
           <div className={styles.container}>
             <button className={styles.button}>Click</button>
             <span className={styles['text-small']}>Text</span>
@@ -198,7 +199,7 @@ describe('findUnusedClasses', () => {
     test('handles conditional JSX usage', () => {
       const result = findUnusedClasses({
         cssClasses: ['active', 'inactive', 'button', 'unused'],
-        tsContent: `
+        sourceContent: `
           const className = isActive ? styles.active : styles.inactive;
           const buttonClass = styles["button"];
         `,
@@ -216,7 +217,7 @@ describe('findUnusedClasses', () => {
     test('handles complex JSX with apostrophes in text', () => {
       const result = findUnusedClasses({
         cssClasses: ['usedClass1', 'usedClass2', 'unused'],
-        tsContent: `
+        sourceContent: `
           <div className={styles.usedClass1}>
             The ' character is making
             <span className={styles.usedClass2}>the test fail</span>
@@ -238,7 +239,7 @@ describe('findUnusedClasses', () => {
     test('returns all classes as unused when none are used', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text', 'header'],
-        tsContent: 'const someCode = "hello world";',
+        sourceContent: 'const someCode = "hello world";',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -253,7 +254,7 @@ describe('findUnusedClasses', () => {
     test('handles empty CSS classes array', () => {
       const result = findUnusedClasses({
         cssClasses: [],
-        tsContent: 'const className = styles.button;',
+        sourceContent: 'const className = styles.button;',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -268,7 +269,7 @@ describe('findUnusedClasses', () => {
     test('handles empty import names array', () => {
       const result = findUnusedClasses({
         cssClasses: ['button'],
-        tsContent: 'const className = styles.button;',
+        sourceContent: 'const className = styles.button;',
         importNames: [],
         filePath: 'test.tsx',
       });
@@ -283,7 +284,7 @@ describe('findUnusedClasses', () => {
     test('handles empty TypeScript content', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
-        tsContent: '',
+        sourceContent: '',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -298,7 +299,7 @@ describe('findUnusedClasses', () => {
     test('correctly handles text content that looks like class usage', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'used'],
-        tsContent: `
+        sourceContent: `
           const text = 'styles.button should not be detected';
           const className = styles.used;
         `,
@@ -318,7 +319,7 @@ describe('findUnusedClasses', () => {
     test('handles React component with hooks', () => {
       const result = findUnusedClasses({
         cssClasses: ['container', 'activeButton', 'button', 'unused'],
-        tsContent: `
+        sourceContent: `
           import React, { useState } from 'react';
           
           export const Component = () => {
@@ -356,7 +357,7 @@ describe('findUnusedClasses', () => {
           'footer-content',
           'unused',
         ],
-        tsContent: `
+        sourceContent: `
           const button = styles.primaryButton;
           const text = styles["secondary-text"];
           const header = css.mainHeader;
@@ -376,7 +377,7 @@ describe('findUnusedClasses', () => {
     test('handles content with syntax that would break regex parsing', () => {
       const result = findUnusedClasses({
         cssClasses: ['usedClass', 'usedClass2', 'unused'],
-        tsContent: `
+        sourceContent: `
           const text = 'test error with apostrophe - "';
           return (
             <div className={styles.usedClass}>
@@ -398,34 +399,34 @@ describe('findUnusedClasses', () => {
 
   describe('should properly call dependencies', () => {
     test('calls extractDynamicClassUsages with correct parameters', () => {
-      const tsContent = 'const className = styles[key];';
+      const sourceContent = 'const className = styles[key];';
       const importNames = ['styles'];
 
       findUnusedClasses({
         cssClasses: ['button'],
-        tsContent,
+        sourceContent,
         importNames,
         filePath: 'test.tsx',
       });
     });
 
     test('calls contentToAst with TypeScript content', () => {
-      const tsContent = 'const className = styles.button;';
+      const sourceContent = 'const className = styles.button;';
 
       findUnusedClasses({
         cssClasses: ['button'],
-        tsContent,
+        sourceContent,
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
 
-      expect(contentToAstSpy).toHaveBeenCalledWith(tsContent);
+      expect(contentToAstSpy).toHaveBeenCalledWith(sourceContent);
     });
 
     test('does not call contentToAst when dynamic usage is detected', () => {
       findUnusedClasses({
         cssClasses: ['button'],
-        tsContent: 'const className = styles[key];',
+        sourceContent: 'const className = styles[key];',
         importNames: ['styles'],
         filePath: 'test.tsx',
       });
@@ -444,7 +445,7 @@ describe('findUnusedClasses', () => {
       expect(() => {
         findUnusedClasses({
           cssClasses: ['button'],
-          tsContent: 'invalid syntax {[}',
+          sourceContent: 'invalid syntax {[}',
           importNames: ['styles'],
           filePath: 'test.tsx',
         });

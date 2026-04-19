@@ -3,7 +3,7 @@ import { resolvePathAlias } from '../../../../../utils/resolveTsConfigPaths.js';
 
 type ResolveOptions = {
   importPath: string;
-  tsDir: string;
+  sourceDir: string;
   normalizedCssPath: string;
   projectRoot: string;
   srcDir: string;
@@ -13,7 +13,7 @@ type ResolveOptions = {
 export const resolveImportPath = (options: ResolveOptions): boolean => {
   const {
     importPath,
-    tsDir,
+    sourceDir,
     normalizedCssPath,
     projectRoot,
     srcDir,
@@ -21,7 +21,7 @@ export const resolveImportPath = (options: ResolveOptions): boolean => {
   } = options;
 
   if (importPath.startsWith('./') || importPath.startsWith('../')) {
-    const resolvedImportPath = path.resolve(tsDir, importPath);
+    const resolvedImportPath = path.resolve(sourceDir, importPath);
     return path.normalize(resolvedImportPath) === normalizedCssPath;
   }
 

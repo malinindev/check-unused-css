@@ -41,12 +41,12 @@ export const getUnusedClassesFromCss = async ({
   const dynamicUsages: DynamicClassUsage[] = [];
 
   for (const importingFileData of importingFilesData) {
-    const tsContent = getContentOfFiles({
+    const sourceContent = getContentOfFiles({
       files: [importingFileData.file],
       srcDir,
     });
 
-    const { isFileIgnored } = parseIgnoreComments(tsContent);
+    const { isFileIgnored } = parseIgnoreComments(sourceContent);
     if (isFileIgnored) {
       // If file is ignored, treat all CSS classes as used from this file
       // This way ignored files don't cause false positives for unused classes
@@ -57,7 +57,7 @@ export const getUnusedClassesFromCss = async ({
     }
 
     const fileDynamicUsages = extractDynamicClassUsages(
-      tsContent,
+      sourceContent,
       [importingFileData.importName],
       importingFileData.file
     );
@@ -69,7 +69,7 @@ export const getUnusedClassesFromCss = async ({
     }
 
     const fileUsedClasses = extractUsedClasses({
-      tsContent,
+      sourceContent,
       importNames: [importingFileData.importName],
     });
 

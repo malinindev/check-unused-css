@@ -32,26 +32,29 @@ export const getNonExistentClassesFromCss = async ({
 
   // Process each importing file separately to get precise location info
   for (const importingFileData of importingFilesData) {
-    const tsContent = getContentOfFiles({
+    const sourceContent = getContentOfFiles({
       files: [importingFileData.file],
       srcDir,
     });
 
-    const { isFileIgnored } = parseIgnoreComments(tsContent);
+    const { isFileIgnored } = parseIgnoreComments(sourceContent);
     if (isFileIgnored) {
       continue;
     }
 
     // Skip analysis if dynamic usage is detected
     if (
-      extractDynamicClassUsages(tsContent, [importingFileData.importName], '')
-        .length > 0
+      extractDynamicClassUsages(
+        sourceContent,
+        [importingFileData.importName],
+        ''
+      ).length > 0
     ) {
       continue;
     }
 
     const usedClassesWithLocations = extractUsedClassesWithLocations({
-      tsContent,
+      sourceContent,
       importNames: [importingFileData.importName],
     });
 
