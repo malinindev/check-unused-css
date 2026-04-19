@@ -35,7 +35,7 @@ describe('Component with errors', () => {
     ['NonExistentClasses', 'NonExistentClasses.tsx'],
     ['NonExistentClassesScss', 'NonExistentClassesScss.tsx'],
     ['NonExistentClassesJsx', 'NonExistentClassesJsx.jsx'],
-  ])('finds non-existent classes in %s component', (componentName, tsxFileName) => {
+  ])('finds non-existent classes in %s component', (componentName, sourceFileName) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
     );
@@ -45,8 +45,8 @@ describe('Component with errors', () => {
       /Found .* classes used in source files but non-existent in CSS/
     );
 
-    const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
-    expect(result.stdout).toMatch(tsxFileRegexp);
+    const sourceFileRegexp = new RegExp(`${sourceFileName}:\\d+:\\d+`, 'm');
+    expect(result.stdout).toMatch(sourceFileRegexp);
   });
 
   test('shows error for not imported css modules', () => {
@@ -175,5 +175,17 @@ describe('Component with errors', () => {
     expect(result.stdout).toMatch(
       /^Error: "src\/__tests__\/withError\/Plain\/Plain\.tsx" is a file. Please provide a directory path\.$/m
     );
+  });
+
+  test('reports the offending file path when a .jsx source fails to parse', () => {
+    const result = runCheckUnusedCss('src/__tests__/withError/UnparseableJsx');
+
+    // INTERNAL (5) — parser failure is an internal failure, distinct from
+    // analysis findings.
+    expect(result.exitCode).toBe(5);
+
+    // The error MUST name the specific file so users can locate it.
+    expect(result.stderr).toMatch(/UnparseableJsx\.jsx/);
+    expect(result.stderr).toMatch(/Failed to parse source content/);
   });
 });

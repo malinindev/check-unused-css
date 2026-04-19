@@ -320,7 +320,7 @@ describe('findFilesImportingCssModule', () => {
       ]);
     });
 
-    test('searches for both .ts and .tsx files', async () => {
+    test('scopes results to the correct CSS module when similar names exist', async () => {
       createFile(
         'components/Button.tsx',
         'import styles from "./Button.module.css";'

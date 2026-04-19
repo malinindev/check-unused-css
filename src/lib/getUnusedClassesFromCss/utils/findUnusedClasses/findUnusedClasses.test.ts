@@ -59,7 +59,8 @@ describe('findUnusedClasses', () => {
         dynamicUsages: null,
       });
       expect(contentToAstSpy).toHaveBeenCalledWith(
-        'const className = styles.button;'
+        'const className = styles.button;',
+        'test.tsx'
       );
     });
   });
@@ -281,7 +282,7 @@ describe('findUnusedClasses', () => {
       });
     });
 
-    test('handles empty TypeScript content', () => {
+    test('handles empty source content', () => {
       const result = findUnusedClasses({
         cssClasses: ['button', 'text'],
         sourceContent: '',
@@ -410,7 +411,7 @@ describe('findUnusedClasses', () => {
       });
     });
 
-    test('calls contentToAst with TypeScript content', () => {
+    test('calls contentToAst with source content', () => {
       const sourceContent = 'const className = styles.button;';
 
       findUnusedClasses({
@@ -420,7 +421,7 @@ describe('findUnusedClasses', () => {
         filePath: 'test.tsx',
       });
 
-      expect(contentToAstSpy).toHaveBeenCalledWith(sourceContent);
+      expect(contentToAstSpy).toHaveBeenCalledWith(sourceContent, 'test.tsx');
     });
 
     test('does not call contentToAst when dynamic usage is detected', () => {

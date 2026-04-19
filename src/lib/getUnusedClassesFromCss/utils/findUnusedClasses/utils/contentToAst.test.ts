@@ -178,6 +178,14 @@ describe('contentToAst', () => {
         );
       }
     });
+
+    test('includes file path in error message when provided', () => {
+      const content = 'const broken = `unclosed';
+
+      expect(() => contentToAst(content, 'components/Broken.jsx')).toThrow(
+        /Failed to parse source content "components\/Broken\.jsx":/
+      );
+    });
   });
 
   describe('should handle real-world examples', () => {

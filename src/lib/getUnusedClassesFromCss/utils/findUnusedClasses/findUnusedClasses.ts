@@ -42,7 +42,7 @@ export const findUnusedClasses = ({
     return { hasDynamicUsage: true, unusedClasses: null, dynamicUsages };
   }
 
-  const ast: TSESTree.Program = contentToAst(sourceContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent, filePath);
 
   const usedClasses = new Set<string>();
 

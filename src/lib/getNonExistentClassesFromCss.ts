@@ -56,6 +56,7 @@ export const getNonExistentClassesFromCss = async ({
     const usedClassesWithLocations = extractUsedClassesWithLocations({
       sourceContent,
       importNames: [importingFileData.importName],
+      filePath: importingFileData.file,
     });
 
     // Find classes that are used in code but don't exist in CSS

@@ -22,5 +22,5 @@
     "types": ["node", "@types/bun"]
   },
   "include": ["src/**/*", "src/**/*.css"],
-  "exclude": []
+  "exclude": ["src/__tests__/withError/UnparseableJsx/**"]
 }

@@ -44,6 +44,7 @@ describe('Components without errors', () => {
     'AliasWithReferences',
     'ScssAmpersandConcat',
     'PlainJsx',
+    'MixedTsxJsx',
   ])('exits with code 0 when no unused classes found for component %s', (folderName) => {
     const result = runCheckUnusedCss(`src/__tests__/noError/${folderName}`);
 

@@ -8,7 +8,10 @@ export const findFilesImportingCssModule = async (
   cssFile: string,
   srcDir: string
 ): Promise<Array<{ file: string; importName: string }>> => {
-  const sourceFiles = await glob('**/*.{ts,tsx,js,jsx}', { cwd: srcDir });
+  const sourceFiles = await glob('**/*.{ts,tsx,js,jsx}', {
+    cwd: srcDir,
+    nodir: true,
+  });
   const importingFiles: Array<{ file: string; importName: string }> = [];
 
   const projectRoot = process.cwd();
@@ -21,11 +24,6 @@ export const findFilesImportingCssModule = async (
     const sourcePath = path.join(srcDir, sourceFile);
 
     try {
-      const stats = fs.statSync(sourcePath);
-      if (!stats.isFile()) {
-        continue;
-      }
-
       const sourceContent = fs.readFileSync(sourcePath, 'utf-8');
       const cssImports = extractCssImports(sourceContent);
 
@@ -47,17 +45,9 @@ export const findFilesImportingCssModule = async (
         }
       }
     } catch (error) {
-      const errorCode =
-        error instanceof Error && 'code' in error ? error.code : '';
       console.warn(
         `Warning: Could not read "${sourcePath}": ${error instanceof Error ? error.message : String(error)}`
       );
-      if (errorCode === 'EISDIR') {
-        console.warn(
-          `  This source file path points to a directory instead of a file`
-        );
-        console.warn(`  Original glob result: "${sourceFile}"`);
-      }
     }
   }
 

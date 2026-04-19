@@ -71,6 +71,7 @@ export const getUnusedClassesFromCss = async ({
     const fileUsedClasses = extractUsedClasses({
       sourceContent,
       importNames: [importingFileData.importName],
+      filePath: importingFileData.file,
     });
 
     for (const className of fileUsedClasses) {

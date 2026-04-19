@@ -7,6 +7,7 @@ import { contentToAst } from './findUnusedClasses/utils/contentToAst.js';
 type ExtractUsedClassesParams = {
   sourceContent: string;
   importNames: string[];
+  filePath?: string;
 };
 
 export type UsedClassInfo = {
@@ -56,8 +57,9 @@ const isMemberExpressionWithBracketNotation = (
 export const extractUsedClasses = ({
   sourceContent,
   importNames,
+  filePath,
 }: ExtractUsedClassesParams): string[] => {
-  const ast: TSESTree.Program = contentToAst(sourceContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent, filePath);
   const usedClasses = new Set<string>();
 
   walk(ast as Node, {
@@ -76,10 +78,11 @@ export const extractUsedClasses = ({
 export const extractUsedClassesWithLocations = ({
   sourceContent,
   importNames,
+  filePath,
 }: ExtractUsedClassesParams): UsedClassInfo[] => {
   const { ignoredLines } = parseIgnoreComments(sourceContent);
 
-  const ast: TSESTree.Program = contentToAst(sourceContent);
+  const ast: TSESTree.Program = contentToAst(sourceContent, filePath);
   const usedClasses: UsedClassInfo[] = [];
 
   walk(ast as Node, {
