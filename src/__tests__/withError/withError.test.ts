@@ -34,22 +34,19 @@ describe('Component with errors', () => {
   test.each([
     ['NonExistentClasses', 'NonExistentClasses.tsx'],
     ['NonExistentClassesScss', 'NonExistentClassesScss.tsx'],
-  ])(
-    'finds non-existent classes in %s component',
-    (componentName, tsxFileName) => {
-      const result = runCheckUnusedCss(
-        `src/__tests__/withError/${componentName}`
-      );
-      expect(result.exitCode).toBe(1);
+  ])('finds non-existent classes in %s component', (componentName, tsxFileName) => {
+    const result = runCheckUnusedCss(
+      `src/__tests__/withError/${componentName}`
+    );
+    expect(result.exitCode).toBe(1);
 
-      expect(result.stderr).toMatch(
-        /Found .* classes used in TypeScript but non-existent in CSS/
-      );
+    expect(result.stderr).toMatch(
+      /Found .* classes used in TypeScript but non-existent in CSS/
+    );
 
-      const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
-      expect(result.stdout).toMatch(tsxFileRegexp);
-    }
-  );
+    const tsxFileRegexp = new RegExp(`${tsxFileName}:\\d+:\\d+`, 'm');
+    expect(result.stdout).toMatch(tsxFileRegexp);
+  });
 
   test('shows error for not imported css modules', () => {
     const result = runCheckUnusedCss(

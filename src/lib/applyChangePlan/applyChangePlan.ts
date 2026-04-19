@@ -14,7 +14,7 @@ const LEADING_BLANK_REPLACE = /(\r?\n)[\t ]*(?:\r?\n)+/g;
 export const normalizeLeadingBlanks = (root: Root): void => {
   const fix = (container: Container): void => {
     const first = container.first;
-    if (!first || !first.raws) return;
+    if (!first?.raws) return;
     const before = first.raws.before;
     if (typeof before !== 'string') return;
     const next = before.replace(LEADING_BLANK_REPLACE, (_m, nl: string) => nl);
