@@ -1,5 +1,13 @@
 # check-unused-css
 
+## 0.4.1
+
+### Patch Changes
+
+- 6e38467: Resolve TypeScript `paths` aliases when `baseUrl` is not set.
+
+  `baseUrl` is deprecated in TypeScript 6, so modern configs declare `paths` without it. Resolution previously required `baseUrl`, causing alias-imported CSS modules to be wrongly reported as not imported (#73). Configs that still set `baseUrl` are unaffected.
+
 ## 0.4.0
 
 ### Minor Changes
