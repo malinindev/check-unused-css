@@ -5,10 +5,14 @@ import type {
 } from '../../types.js';
 import { getContentOfFiles } from '../../utils/getContentOfFiles.js';
 import { parseIgnoreComments } from '../../utils/parseIgnoreComments.js';
+import {
+  applyCoverage,
+  type ClassAccess,
+  extractClassAccesses,
+} from './utils/coverage/index.js';
 import { extractCssClassesWithLocations } from './utils/extractCssClasses/index.js';
 import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule/index.js';
-import { extractDynamicClassUsages } from './utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
@@ -37,8 +41,7 @@ export const getUnusedClassesFromCss = async ({
   }
 
   const usedClasses = new Set<string>();
-  let hasDynamicUsage = false;
-  const dynamicUsages: DynamicClassUsage[] = [];
+  const allAccesses: ClassAccess[] = [];
 
   for (const importingFileData of importingFilesData) {
     const sourceContent = getContentOfFiles({
@@ -56,35 +59,55 @@ export const getUnusedClassesFromCss = async ({
       continue;
     }
 
-    const fileDynamicUsages = extractDynamicClassUsages(
-      sourceContent,
-      [importingFileData.importName],
-      importingFileData.file
-    );
-
-    if (fileDynamicUsages.length > 0) {
-      hasDynamicUsage = true;
-      dynamicUsages.push(...fileDynamicUsages);
-      continue;
-    }
-
+    // Static usages (importName.foo / importName['foo']) are collected via a
+    // dedicated pass so the long-standing ignore semantics of that path are
+    // preserved. Dynamic access sites (variables, templates, ternaries) are
+    // gathered separately for coverage analysis. The Set dedupes overlaps.
     const fileUsedClasses = extractUsedClasses({
       sourceContent,
       importNames: [importingFileData.importName],
       filePath: importingFileData.file,
     });
-
     for (const className of fileUsedClasses) {
       usedClasses.add(className);
     }
+
+    allAccesses.push(
+      ...extractClassAccesses(
+        sourceContent,
+        [importingFileData.importName],
+        importingFileData.file
+      )
+    );
   }
 
-  if (hasDynamicUsage) {
+  // Aggregate coverage across the whole module after gathering every access
+  // site, so a covers-all expression in any file suppresses unused-checking
+  // even if another file would have left some class uncovered.
+  const { coveredClasses, coversAll, coversAllAccesses } = applyCoverage(
+    cssClasses,
+    allAccesses
+  );
+
+  if (coversAll) {
+    const dynamicUsages: DynamicClassUsage[] = coversAllAccesses.map(
+      (access) => ({
+        className: access.display,
+        file: access.file,
+        line: access.line,
+        column: access.column,
+      })
+    );
+
     return {
       file: cssFile,
       status: 'withDynamicImports',
       dynamicUsages,
     };
+  }
+
+  for (const className of coveredClasses) {
+    usedClasses.add(className);
   }
 
   const unusedClasses: string[] = [];
