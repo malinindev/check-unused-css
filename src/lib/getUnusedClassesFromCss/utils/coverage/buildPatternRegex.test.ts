@@ -121,4 +121,29 @@ describe('buildPatternRegex', () => {
       expect(buildPatternRegex(['', '', ''])).toBeNull();
     });
   });
+
+  describe('BEM-shaped patterns (double underscores / modifiers)', () => {
+    test('block__{el} -> matches anything with the `__` separator', () => {
+      // quasis for `${block}__${el}` are ['', '__', '']
+      const quasis = ['', '__', ''];
+      expect(matches(quasis, 'button__icon')).toBe(true);
+      expect(matches(quasis, '__')).toBe(true);
+      expect(matches(quasis, 'noSeparator')).toBe(false);
+    });
+
+    test('block__el--{mod} -> requires both `__` and `--`', () => {
+      // quasis for `${b}__${e}--${m}` are ['', '__', '--', '']
+      const quasis = ['', '__', '--', ''];
+      expect(matches(quasis, 'card__title--big')).toBe(true);
+      expect(matches(quasis, 'card__title')).toBe(false);
+    });
+
+    test('btn__{el} with a constant block prefix', () => {
+      // quasis for `btn__${el}` are ['btn__', '']
+      const quasis = ['btn__', ''];
+      expect(matches(quasis, 'btn__icon')).toBe(true);
+      expect(matches(quasis, 'btn__icon--lg')).toBe(true);
+      expect(matches(quasis, 'card__icon')).toBe(false);
+    });
+  });
 });

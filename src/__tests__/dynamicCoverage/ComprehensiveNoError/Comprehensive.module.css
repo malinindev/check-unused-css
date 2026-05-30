@@ -1,0 +1,67 @@
+/* Static access */
+.root {
+  color: #fff;
+}
+.header {
+  color: #fff;
+}
+
+/* Ternary of string literals (simple + nested) */
+.active {
+  color: #fff;
+}
+.inactive {
+  color: #fff;
+}
+.small {
+  color: #fff;
+}
+.medium {
+  color: #fff;
+}
+.large {
+  color: #fff;
+}
+
+/* Prefix pattern `icon${x}` -> ^icon.* (the bare-constant class `icon` is
+   covered too, via the empty wildcard) */
+.icon {
+  color: #fff;
+}
+.iconHome {
+  color: #fff;
+}
+.iconUser {
+  color: #fff;
+}
+
+/* A second, distinct prefix pattern `button${y}` -> ^button.* */
+.buttonPrimary {
+  color: #fff;
+}
+.buttonSecondary {
+  color: #fff;
+}
+
+/* Middle-const pattern `col${n}Span` -> ^col.*Span$ */
+.col3Span {
+  color: #fff;
+}
+.col12Span {
+  color: #fff;
+}
+
+/* Multi-substitution pattern `grid${a}x${b}` -> ^grid.*x.*$ */
+.grid2x4 {
+  color: #fff;
+}
+
+/* Suffix pattern `${z}Active` -> ^.*Active$ */
+.tabActive {
+  color: #fff;
+}
+
+/* Covered by BOTH a literal AND a pattern (Set-dedup at module level) */
+.sizeLarge {
+  color: #fff;
+}

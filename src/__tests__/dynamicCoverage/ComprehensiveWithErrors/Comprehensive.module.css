@@ -1,0 +1,45 @@
+/* --- Covered classes (must NOT be reported) --- */
+
+/* static */
+.root {
+  color: #fff;
+}
+/* ternary literals */
+.active {
+  color: #fff;
+}
+.inactive {
+  color: #fff;
+}
+/* prefix pattern `button${x}` -> ^button.*$ */
+.buttonPrimary {
+  color: #fff;
+}
+.buttonSecondary {
+  color: #fff;
+}
+/* second pattern `icon${y}` -> ^icon.*$ */
+.iconHome {
+  color: #fff;
+}
+.iconUser {
+  color: #fff;
+}
+
+/* --- Genuinely UNUSED classes (must be reported) --- */
+
+/* not matched by either pattern, used nowhere */
+.orphan {
+  color: #fff;
+}
+/* shares a word with a covered class but no `image${...}` access exists */
+.imageThumbnail {
+  color: #fff;
+}
+/* legacy leftovers, referenced nowhere */
+.deprecatedBanner {
+  color: #fff;
+}
+.legacyTooltip {
+  color: #fff;
+}
