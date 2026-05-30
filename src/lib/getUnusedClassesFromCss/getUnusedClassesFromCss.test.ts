@@ -5,7 +5,6 @@ import { getUnusedClassesFromCss } from './getUnusedClassesFromCss.js';
 import * as extractCssClassesModule from './utils/extractCssClasses/index.js';
 import * as extractUsedClassesModule from './utils/extractUsedClasses.js';
 import * as findFilesImportingCssModuleModule from './utils/findFilesImportingCssModule/index.js';
-import * as extractDynamicClassUsagesModule from './utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 
 describe('getUnusedClassesFromCss', () => {
   const spies: Mock<any>[] = [];
@@ -85,19 +84,8 @@ describe('getUnusedClassesFromCss', () => {
         'findFilesImportingCssModule'
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
     );
-    spies.push(
-      spyOn(
-        extractDynamicClassUsagesModule,
-        'extractDynamicClassUsages'
-      ).mockReturnValue([
-        {
-          className: 'styles[variable]',
-          file: 'component.tsx',
-          line: 1,
-          column: 19,
-        },
-      ])
-    );
+    // The mocked source (`styles[variable]`) is a bare variable, so the real
+    // coverage analyzer classifies it as coversAll -> withDynamicImports.
 
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
@@ -108,6 +96,11 @@ describe('getUnusedClassesFromCss', () => {
     expect(result?.file).toBe('test.module.css');
     if (result?.status === 'withDynamicImports') {
       expect(result.dynamicUsages).toHaveLength(1);
+      const usage = result.dynamicUsages[0];
+      expect(usage?.className).toBe('styles[variable]');
+      expect(usage?.file).toBe('component.tsx');
+      expect(usage?.line).toBeGreaterThan(0);
+      expect(usage?.column).toBeGreaterThan(0);
     }
   });
 
@@ -130,12 +123,6 @@ describe('getUnusedClassesFromCss', () => {
         findFilesImportingCssModuleModule,
         'findFilesImportingCssModule'
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
-    );
-    spies.push(
-      spyOn(
-        extractDynamicClassUsagesModule,
-        'extractDynamicClassUsages'
-      ).mockReturnValue([])
     );
     spies.push(
       spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([
@@ -173,12 +160,6 @@ describe('getUnusedClassesFromCss', () => {
         findFilesImportingCssModuleModule,
         'findFilesImportingCssModule'
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
-    );
-    spies.push(
-      spyOn(
-        extractDynamicClassUsagesModule,
-        'extractDynamicClassUsages'
-      ).mockReturnValue([])
     );
     spies.push(
       spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([
@@ -233,12 +214,6 @@ describe('getUnusedClassesFromCss', () => {
         findFilesImportingCssModuleModule,
         'findFilesImportingCssModule'
       ).mockResolvedValue([{ file: 'component.tsx', importName: 'styles' }])
-    );
-    spies.push(
-      spyOn(
-        extractDynamicClassUsagesModule,
-        'extractDynamicClassUsages'
-      ).mockReturnValue([])
     );
     spies.push(
       spyOn(extractUsedClassesModule, 'extractUsedClasses').mockReturnValue([

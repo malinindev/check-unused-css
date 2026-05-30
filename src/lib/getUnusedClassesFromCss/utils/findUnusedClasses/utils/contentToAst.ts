@@ -8,7 +8,7 @@ export const contentToAst = (
   try {
     return parse(content, {
       loc: true,
-      range: false,
+      range: true,
       jsx: true,
       errorOnUnknownASTType: false,
       errorOnTypeScriptSyntacticAndSemanticIssues: false,
