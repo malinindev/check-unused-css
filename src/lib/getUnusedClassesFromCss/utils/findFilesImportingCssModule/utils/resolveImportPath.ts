@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { resolvePathAlias } from '../../../../../utils/resolveTsConfigPaths.js';
+import { resolvePathAliases } from '../../../../../utils/resolveTsConfigPaths.js';
 
 type ResolveOptions = {
   importPath: string;
@@ -25,10 +25,15 @@ export const resolveImportPath = (options: ResolveOptions): boolean => {
     return path.normalize(resolvedImportPath) === normalizedCssPath;
   }
 
-  const aliasResolvedPath = resolvePathAlias(importPath, projectRoot, srcDir);
+  const aliasResolvedPaths = resolvePathAliases(
+    importPath,
+    projectRoot,
+    srcDir
+  );
   if (
-    aliasResolvedPath &&
-    path.normalize(aliasResolvedPath) === normalizedCssPath
+    aliasResolvedPaths.some(
+      (resolved) => path.normalize(resolved) === normalizedCssPath
+    )
   ) {
     return true;
   }
