@@ -1,5 +1,10 @@
 import type { AtRule } from 'postcss';
 
+// Matches a CSS class token, including the `.--modifier` double-dash convention.
+// Used to confirm the params actually define a class rather than merely
+// containing a stray `.` (e.g. a decimal in `(min-width: 1.5rem)` or a URL).
+const CLASS_TOKEN_PATTERN = /\.[-_a-zA-Z]/;
+
 /**
  * Standard at-rules whose `params` are NOT a selector. Some take a condition
  * (`@media (min-width: …)`, `@supports (display: grid)`, `@container`), some an
@@ -29,18 +34,25 @@ const NON_SELECTOR_AT_RULES = new Set([
 ]);
 
 /**
- * Whether an at-rule's direct children are `@value` blocks. Such an at-rule is a
- * responsive-value container (e.g. `@responsive .--size { @value small { … } }`):
+ * Whether an at-rule's direct children include a `@value` BLOCK. Such an at-rule
+ * is a responsive-value container (e.g. `@responsive .--size { @value small { … } }`):
  * its selector is a TEMPLATE expanded at build time into `--size-small` etc.,
  * never referenced literally as `s['--size']` (source reaches it via helpers
  * like `responsiveClassNames(s, '--size', value)`). Extracting the template name
  * as a class would produce a false "unused" finding, so these are skipped.
  * Any real classes nested deeper (e.g. `&.--visibility` inside a `@value` block)
  * are still picked up by the normal rule walk.
+ *
+ * Only block-form `@value` (with a `{ … }` body, i.e. a `nodes` array) signals a
+ * template container. Statement-form `@value foo: 1;` is a CSS-Modules variable
+ * declaration and must NOT cause the selector to be skipped.
  */
 const containsValueBlocks = (atRule: AtRule): boolean =>
   (atRule.nodes ?? []).some(
-    (node) => node.type === 'atrule' && node.name.toLowerCase() === 'value'
+    (node) =>
+      node.type === 'atrule' &&
+      node.name.toLowerCase() === 'value' &&
+      node.nodes !== undefined
   );
 
 /**
@@ -56,10 +68,12 @@ export const isSelectorBearingAtRule = (atRule: AtRule): boolean => {
     return false;
   }
 
-  // A class token is required for the params to define a class. This also
-  // filters out custom at-rules used purely as condition wrappers
-  // (e.g. `@responsive (min-width: 1px)`), which invent no class names.
-  if (!atRule.params.includes('.')) {
+  // An actual class token is required for the params to define a class. A bare
+  // `.includes('.')` is too broad — it matches condition wrappers with decimals
+  // or URLs (e.g. `@responsive (min-width: 1.5rem)`), so match a real class
+  // token instead. This also filters out condition-only custom at-rules, which
+  // invent no class names.
+  if (!CLASS_TOKEN_PATTERN.test(atRule.params)) {
     return false;
   }
 

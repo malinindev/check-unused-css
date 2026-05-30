@@ -101,9 +101,31 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual([]);
     });
 
+    test('A4b: statement-form @value does not make the selector a template', () => {
+      // `@value foo: 1;` is a CSS-Modules variable, not a template container, so
+      // `.root` is still extracted as a real class.
+      expect(
+        extractSorted('@responsive .root { @value foo: 1; color: red; }')
+      ).toEqual(sorted(['root']));
+    });
+
     test('A5: @responsive with a condition (no class) invents nothing', () => {
       expect(
         extractSorted('@responsive (min-width: 1px) { color: red; }')
+      ).toEqual([]);
+    });
+
+    test('A5b: @responsive condition with a decimal invents nothing', () => {
+      expect(
+        extractSorted('@responsive (min-width: 1.5rem) { color: red; }')
+      ).toEqual([]);
+    });
+
+    test('A5c: @responsive condition containing url() with a dot invents nothing', () => {
+      // The cheap detector may let `url(a.b)` through, but the selector parser
+      // finds no class in a condition, so nothing is invented.
+      expect(
+        extractSorted('@responsive (foo: url(a.b)) { color: red; }')
       ).toEqual([]);
     });
 

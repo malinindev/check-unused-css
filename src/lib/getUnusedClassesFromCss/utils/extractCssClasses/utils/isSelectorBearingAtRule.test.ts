@@ -89,5 +89,28 @@ describe('isSelectorBearingAtRule', () => {
         )
       ).toBe(false);
     });
+
+    test('statement-form @value (no block) does NOT make a selector a template', () => {
+      // `@value foo: 1;` is a CSS-Modules variable declaration, not a template
+      // container, so `.root` is still a real selector-bearing class.
+      expect(
+        firstAtRule('@responsive .root { @value foo: 1; color: red; }')
+      ).toBe(true);
+    });
+  });
+
+  describe('condition params with stray dots are not selectors (false)', () => {
+    test('decimal in a condition is not treated as a class', () => {
+      // `.5` / `1.5` — a dot followed by a digit is not a class token.
+      expect(
+        firstAtRule('@responsive (min-width: 1.5rem) { color: red; }')
+      ).toBe(false);
+    });
+
+    test('a dot directly followed by a digit is not a class token', () => {
+      expect(firstAtRule('@responsive (margin: .5em) { color: red; }')).toBe(
+        false
+      );
+    });
   });
 });
