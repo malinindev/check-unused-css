@@ -191,4 +191,83 @@ describe('getParentClassName', () => {
       expect(getParentClassName(rule)).toBe('nested');
     });
   });
+
+  describe('should resolve the last class of a compound parent', () => {
+    // SCSS suffix concatenation (`&-faded`) joins to the IMMEDIATE parent class,
+    // which is the rightmost class token of a compound parent selector. For
+    // `.root.--variant { &-faded { … } }` the resulting class is
+    // `--variant-faded` (matching how source accesses it: `s[`--variant-${x}`]`),
+    // not `root-faded`.
+    test('resolves the last class of `.root.--variant`', () => {
+      const rule = createMockRule('&-faded', {
+        type: 'rule',
+        selector: '.root.--variant',
+      });
+      expect(getParentClassName(rule)).toBe('--variant');
+    });
+
+    test('resolves the last class of `.root.--size`', () => {
+      const rule = createMockRule('&-small', {
+        type: 'rule',
+        selector: '.root.--size',
+      });
+      expect(getParentClassName(rule)).toBe('--size');
+    });
+
+    test('resolves the last class of a three-class compound', () => {
+      const rule = createMockRule('&Suffix', {
+        type: 'rule',
+        selector: '.a.b.c',
+      });
+      expect(getParentClassName(rule)).toBe('c');
+    });
+
+    test('single-class parent is unaffected (last === first)', () => {
+      const rule = createMockRule('&-x', {
+        type: 'rule',
+        selector: '.root',
+      });
+      expect(getParentClassName(rule)).toBe('root');
+    });
+
+    test('single-class parent with pseudo is unaffected', () => {
+      const rule = createMockRule('&-x', {
+        type: 'rule',
+        selector: '.usedClass:hover',
+      });
+      expect(getParentClassName(rule)).toBe('usedClass');
+    });
+
+    test('ignores a dot-prefixed token inside an attribute value', () => {
+      const rule = createMockRule('&-bar', {
+        type: 'rule',
+        selector: '.item[style*=".foo"]',
+      });
+      expect(getParentClassName(rule)).toBe('item');
+    });
+
+    test('ignores a class inside a :not() argument', () => {
+      const rule = createMockRule('&-suffix', {
+        type: 'rule',
+        selector: '.real:not(.fake)',
+      });
+      expect(getParentClassName(rule)).toBe('real');
+    });
+
+    test('uses the last class of the right-most compound in a descendant selector', () => {
+      const rule = createMockRule('&-x', {
+        type: 'rule',
+        selector: '.a .b.c',
+      });
+      expect(getParentClassName(rule)).toBe('c');
+    });
+
+    test('uses the last selector in a selector list', () => {
+      const rule = createMockRule('&-x', {
+        type: 'rule',
+        selector: '.a, .b',
+      });
+      expect(getParentClassName(rule)).toBe('b');
+    });
+  });
 });
