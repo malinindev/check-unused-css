@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@bad/*/*": ["./*/*"]
+    }
+  },
+  "references": [{ "path": "./config" }]
+}
