@@ -69,6 +69,24 @@ describe('--remove', () => {
     expect(after).toMatch(/\.used\s*\{\s*color:\s*blue;\s*\}/);
   });
 
+  test('DynamicPattern: removes only the genuinely-unused class, never the pattern-covered ones', () => {
+    const h = fixture('DynamicPattern');
+    const result = runCheckUnusedCss({
+      targetPath: '.',
+      extraArgs: ['--remove', '--yes'],
+      cwd: h.tmp,
+    });
+    expect(result.exitCode).toBe(0);
+
+    const after = readCss(h);
+    // The pattern `icon${variant}` (^icon.*$) covers these — deleting a class
+    // used dynamically at runtime would break styles, so they MUST survive.
+    expect(after).toContain('.iconHome');
+    expect(after).toContain('.iconUser');
+    // Only the truly-unreferenced class is removed.
+    expect(after).not.toContain('.unusedCard');
+  });
+
   test('LeadingCompound: removes every rule whose leading compound contains the unused class', () => {
     const h = fixture('LeadingCompound');
     const result = runCheckUnusedCss({

@@ -76,4 +76,26 @@ describe('applyCoverage', () => {
     expect(out.coversAllAccesses).toHaveLength(1);
     expect(out.coversAllAccesses[0]?.display).toBe('styles[expr]');
   });
+
+  test('a class covered by both a literal and a pattern is not double-counted', () => {
+    // `btn-lg` is reached as a literal AND matched by `^btn-.*$`; the Set must
+    // contain it exactly once.
+    const out = applyCoverage(
+      ['btn-lg', 'btn-sm', 'other'],
+      [literals('btn-lg'), pattern('^btn-.*$')]
+    );
+    expect([...out.coveredClasses].sort()).toEqual(['btn-lg', 'btn-sm']);
+    expect(out.coveredClasses.size).toBe(2);
+    expect(out.coveredClasses.has('other')).toBe(false);
+  });
+
+  test('two patterns with overlapping regex spaces cover the union, each class once', () => {
+    // `^btn-.*$` and `^btn-.*-.*$` both match `btn-x-y`; it stays counted once.
+    const out = applyCoverage(
+      ['btn-x', 'btn-x-y', 'nav-z'],
+      [pattern('^btn-.*$'), pattern('^btn-.*-.*$')]
+    );
+    expect([...out.coveredClasses].sort()).toEqual(['btn-x', 'btn-x-y']);
+    expect(out.coveredClasses.has('nav-z')).toBe(false);
+  });
 });
