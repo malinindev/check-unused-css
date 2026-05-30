@@ -11,6 +11,18 @@ import {
 let cachedMatchers: PathsMatcher[] | null = null;
 let cachedProjectRoot: string | null = null;
 
+// Warn instead of silently dropping aliases when a tsconfig exists but is
+// broken: dropping them would make alias-imported modules look un-imported,
+// which auto-fix could then delete. A missing tsconfig stays silent.
+const warnAliasFailure = (err: unknown): void => {
+  const message = err instanceof Error ? err.message : String(err);
+  console.warn(
+    `check-unused-css: failed to resolve tsconfig path aliases (${message}) — ` +
+      'alias imports will not be matched, which may cause false "not imported" reports. ' +
+      'Check your tsconfig "paths"/"references".'
+  );
+};
+
 /**
  * Build a `paths` matcher from a project-reference target. A reference may point
  * at a directory or directly at a config file, so the directory form is
@@ -48,38 +60,40 @@ const loadMatchers = (
   }
 
   const matchers: PathsMatcher[] = [];
+  let result: TsConfigResult | null = null;
 
   try {
-    const result = getTsconfig(cacheKey);
+    result = getTsconfig(cacheKey);
+  } catch (err) {
+    warnAliasFailure(err);
+  }
 
-    if (result?.config) {
-      const entryMatcher = createPathsMatcher(result);
-      if (entryMatcher) matchers.push(entryMatcher);
+  if (result?.config) {
+    // Build the entry matcher and each referenced matcher in isolation, so one
+    // broken config (e.g. an invalid `paths` pattern or an unresolvable
+    // reference) never drops the aliases of the others.
+    const sources: Array<() => PathsMatcher | null> = [
+      () => createPathsMatcher(result as TsConfigResult),
+    ];
 
-      if (result.config.references) {
-        const tsconfigDir = path.dirname(result.path);
+    if (result.config.references) {
+      const tsconfigDir = path.dirname(result.path);
 
-        for (const ref of result.config.references) {
-          if (!ref.path) continue;
-
-          const refMatcher = matcherFromReference(
-            path.resolve(tsconfigDir, ref.path)
-          );
-          if (refMatcher) matchers.push(refMatcher);
-        }
+      for (const ref of result.config.references) {
+        if (!ref.path) continue;
+        const refPath = path.resolve(tsconfigDir, ref.path);
+        sources.push(() => matcherFromReference(refPath));
       }
     }
-  } catch (err) {
-    // The tsconfig exists but is broken (invalid `paths` pattern, unresolvable
-    // `references`). Warn instead of silently dropping aliases: that would make
-    // alias-imported modules look un-imported, which auto-fix could then delete.
-    // A missing tsconfig returns null without throwing and stays silent.
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn(
-      `check-unused-css: failed to resolve tsconfig path aliases (${message}) — ` +
-        'alias imports will not be matched, which may cause false "not imported" reports. ' +
-        'Check your tsconfig "paths"/"references".'
-    );
+
+    for (const buildMatcher of sources) {
+      try {
+        const matcher = buildMatcher();
+        if (matcher) matchers.push(matcher);
+      } catch (err) {
+        warnAliasFailure(err);
+      }
+    }
   }
 
   cachedMatchers = matchers;

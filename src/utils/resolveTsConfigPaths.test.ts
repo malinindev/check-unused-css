@@ -249,6 +249,46 @@ describe('resolvePathAliases', () => {
     );
   });
 
+  test('a broken reference does not drop a valid sibling reference', () => {
+    const noop = (): void => undefined;
+    const warnSpy = spyOn(console, 'warn').mockImplementation(noop);
+    const projectRoot = path.resolve(
+      __dirname,
+      '../__tests__/noError/AliasRefWithBrokenSibling'
+    );
+
+    // First reference (./missing.json) throws; the second (./config, with
+    // `@/*`) must still resolve.
+    const result = resolvePathAliases(
+      '@/Foo.module.css',
+      projectRoot,
+      projectRoot
+    );
+
+    expect(result).toEqual([path.resolve(projectRoot, 'Foo.module.css')]);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('a broken entry config does not drop a valid reference', () => {
+    const noop = (): void => undefined;
+    const warnSpy = spyOn(console, 'warn').mockImplementation(noop);
+    const projectRoot = path.resolve(
+      __dirname,
+      '../__tests__/noError/AliasBrokenEntryValidRef'
+    );
+
+    // The entry config has an invalid `paths` pattern (throws), but its
+    // reference (./config, with `@/*`) must still resolve.
+    const result = resolvePathAliases(
+      '@/Foo.module.css',
+      projectRoot,
+      projectRoot
+    );
+
+    expect(result).toEqual([path.resolve(projectRoot, 'Foo.module.css')]);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
   test('resolves a non-matching bare import against baseUrl when baseUrl is set', () => {
     // With `baseUrl`, a non-relative import that matches no alias still resolves
     // against `baseUrl` (TypeScript behavior). Locked in here.
