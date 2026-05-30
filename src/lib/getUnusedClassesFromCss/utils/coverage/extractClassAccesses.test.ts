@@ -80,11 +80,11 @@ describe('extractClassAccesses', () => {
     expect(result[0]?.column).toBe(11);
   });
 
-  test('unparseable source falls back to a single coversAll access with a descriptive display', () => {
-    // Deliberately broken syntax that typescript-estree cannot parse.
-    const result = extractClassAccesses('const c = styles[<<<;', ['styles']);
-    expect(result).toHaveLength(1);
-    expect(result[0]?.classification.kind).toBe('coversAll');
-    expect(result[0]?.display).toBe('styles[<unparseable>]');
+  test('throws on unparseable source (surfaces as an INTERNAL error naming the file)', () => {
+    // The project deliberately treats unparseable input as an internal error
+    // rather than silently swallowing a broken file.
+    expect(() =>
+      extractClassAccesses('const c = styles[<<<;', ['styles'])
+    ).toThrow(/Failed to parse source content/);
   });
 });

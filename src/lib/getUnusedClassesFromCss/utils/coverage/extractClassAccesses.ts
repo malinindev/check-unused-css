@@ -32,9 +32,9 @@ const reconstructDisplay = (
  * which likewise applies only file-level `check-unused-css-disable`, not
  * per-line directives.
  *
- * If the source cannot be parsed, a single conservative `coversAll` access is
- * returned so the module is treated as fully covered (never a false positive)
- * instead of crashing the whole run.
+ * A source the parser cannot handle throws (via `contentToAst`), surfacing as
+ * an INTERNAL error naming the offending file — the project's deliberate policy
+ * for unparseable input, rather than silently swallowing a broken file.
  */
 export const extractClassAccesses = (
   sourceContent: string,
@@ -43,23 +43,7 @@ export const extractClassAccesses = (
 ): ClassAccess[] => {
   const file = filePath ?? '';
 
-  let ast: TSESTree.Program;
-  try {
-    ast = contentToAst(sourceContent, filePath);
-  } catch {
-    // The file cannot be parsed: conservatively treat the module as fully
-    // covered (no false positives) rather than crashing the whole run. A
-    // descriptive display keeps the --no-dynamic report readable.
-    return [
-      {
-        classification: { kind: 'coversAll' },
-        display: `${importNames[0] ?? 'styles'}[<unparseable>]`,
-        file,
-        line: -1,
-        column: -1,
-      },
-    ];
-  }
+  const ast = contentToAst(sourceContent, filePath);
 
   const accesses: ClassAccess[] = [];
 
