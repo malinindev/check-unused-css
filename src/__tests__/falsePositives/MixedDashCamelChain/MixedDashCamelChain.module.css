@@ -1,0 +1,11 @@
+.list {
+  display: block;
+
+  &Item {
+    display: flex;
+
+    &-active {
+      font-weight: bold;
+    }
+  }
+}

@@ -1,0 +1,11 @@
+.--color {
+  color: inherit;
+
+  &-primary {
+    color: blue;
+
+    &-faded {
+      opacity: 0.5;
+    }
+  }
+}

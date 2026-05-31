@@ -134,6 +134,10 @@ const reportMode = (ctx: AnalysisContext): never => {
     (result) => result.status === 'withDynamicImports'
   );
 
+  const hasIgnoredModule = results.some(
+    (result) => result.status === 'ignoredPassedToFunction'
+  );
+
   const hasNonExistentClasses = results.some(
     (result) =>
       result.status === 'nonExistentClasses' &&
@@ -144,7 +148,7 @@ const reportMode = (ctx: AnalysisContext): never => {
     hasUnusedClasses ||
     hasNotImportedModules ||
     hasNonExistentClasses ||
-    (args.noDynamic && hasDynamicUsage)
+    (args.noDynamic && (hasDynamicUsage || hasIgnoredModule))
   ) {
     process.exit(EXIT_CODES.REPORT_ISSUES);
   }

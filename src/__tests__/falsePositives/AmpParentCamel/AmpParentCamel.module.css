@@ -1,0 +1,11 @@
+.button {
+  display: inline-flex;
+
+  &Black {
+    background: black;
+  }
+
+  &White {
+    background: white;
+  }
+}

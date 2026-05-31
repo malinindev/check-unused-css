@@ -8,6 +8,7 @@ import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssCla
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
+import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -39,6 +40,19 @@ export const getNonExistentClassesFromCss = async ({
 
     const { isFileIgnored } = parseIgnoreComments(sourceContent);
     if (isFileIgnored) {
+      continue;
+    }
+
+    // If the whole module object is passed to a function, the class set this
+    // file actually references cannot be determined, so skip it (the unused
+    // path emits the single ignore warning for the module).
+    if (
+      detectModulePassedToFunction(
+        sourceContent,
+        importingFileData.importName,
+        importingFileData.file
+      )
+    ) {
       continue;
     }
 

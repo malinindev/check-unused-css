@@ -1,0 +1,15 @@
+.--orientation {
+  display: flex;
+
+  &-horizontal {
+    flex-direction: row;
+  }
+
+  &-vertical {
+    flex-direction: column;
+  }
+}
+
+.legacy {
+  color: red;
+}
