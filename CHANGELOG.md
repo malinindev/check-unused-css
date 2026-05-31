@@ -1,5 +1,26 @@
 # check-unused-css
 
+## 0.5.0
+
+### Minor Changes
+
+- 92f91c9: Detect unused classes in files that also use dynamic class access.
+
+  Previously, any dynamic access (`styles[variant]`, `` styles[`btn-${x}`] ``, `styles[cond ? 'a' : 'b']`) hid the whole module from unused-class detection. Now a template with a constant part covers only matching classes, a ternary of string literals resolves to those exact names, and only fully indeterminate expressions still cover the whole module — so genuinely unused classes are reported, with zero false positives.
+
+### Patch Changes
+
+- 3587d92: Fix two sources of false positives.
+
+  - A parent class of an SCSS ampersand family (`.--orientation { &-horizontal {} }`) is no longer reported as unused when its children are used.
+  - A CSS module passed whole into a function (e.g. `responsiveClassNames(s, …)`) is now skipped with a warning, since its class usage can't be determined.
+
+- 22c4cf6: Recognize modern CSS-Modules selector styles when extracting defined classes, eliminating false positives.
+
+  Stylesheets using double-dash modifier classes (`.--reversed`), native CSS Nesting (`.root { &.--error {} }`), SCSS-style suffix concatenation under a compound parent (`.root.--variant { &-faded {} }` → `--variant-faded`), and selector-bearing custom at-rules (`@responsive .item[style*="…"] {}`) previously had those classes dropped during extraction. They were then wrongly reported as "used in source but non-existent in CSS", and mis-derived names were reported as "unused". Extraction now handles all of these, while genuinely missing/unused classes are still reported. Responsive-value containers (`@responsive .--size { @value … }`) whose selector is a build-time template are intentionally not treated as defined classes.
+
+- fa23fc4: Stop treating SCSS directives as class selectors. `@include fonts.body-accent-xs`, `@use "…/_fonts.scss"` and similar carry a dot in their params, which was misread as a class definition and produced false "unused" reports for mixin names. Such directives are now recognized and skipped; only genuine custom at-rules (e.g. `@responsive .item`) still contribute classes.
+
 ## 0.4.1
 
 ### Patch Changes
