@@ -39,6 +39,57 @@ describe('isSelectorBearingAtRule', () => {
         true
       );
     });
+
+    test('@at-root with a class selector in its params', () => {
+      // `@at-root .promoted { … }` holds the class in params (no nested rule),
+      // so it must be recognized as selector-bearing.
+      expect(firstAtRule('@at-root .promoted { color: red; }')).toBe(true);
+    });
+  });
+
+  describe('SCSS directives are never selector-bearing (false)', () => {
+    // Their params contain a dot (module path, mixin call, expression), so the
+    // class-token regex matches — but they never define a class.
+    test('@include reading a namespaced mixin', () => {
+      expect(firstAtRule('@include fonts.body-accent-xs;')).toBe(false);
+    });
+
+    test('@use with a module path', () => {
+      expect(firstAtRule('@use "styles/mixins/_fonts.scss" as fonts;')).toBe(
+        false
+      );
+    });
+
+    test('@forward with a module path', () => {
+      expect(firstAtRule('@forward "src/list.scss";')).toBe(false);
+    });
+
+    test('@mixin definition', () => {
+      expect(firstAtRule('@mixin body-accent-xs() { color: red; }')).toBe(
+        false
+      );
+    });
+
+    test('@extend referencing a class', () => {
+      expect(firstAtRule('@extend .button;')).toBe(false);
+    });
+
+    test('@if guarding a nested rule', () => {
+      expect(firstAtRule('@if $x == 1 { .a { color: red; } }')).toBe(false);
+    });
+
+    test('@each iterating a list', () => {
+      expect(
+        firstAtRule('@each $name in a.b, c.d { .x { color: red; } }')
+      ).toBe(false);
+    });
+
+    test('block-form @at-root has empty params (class is in a nested rule)', () => {
+      // `@at-root { .x { … } }` carries no selector in params; the `.x` rule is
+      // a normal nested node the rule walk handles, so the at-rule is not
+      // selector-bearing.
+      expect(firstAtRule('@at-root { .x { color: red; } }')).toBe(false);
+    });
   });
 
   describe('standard condition/identifier at-rules (false)', () => {

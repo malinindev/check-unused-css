@@ -1,0 +1,43 @@
+@use "styles/mixins/_fonts.scss" as fonts;
+@use "styles/mixins/_a11y.scss" as a11y;
+@forward "styles/tokens";
+
+// A local mixin definition. Its name (`card-typography`) must NOT be mistaken
+// for a class, and neither must the namespaced calls below.
+@mixin card-typography() {
+  font-weight: 600;
+}
+
+.card {
+  // Namespaced @include — params carry a dot (`fonts.body-accent`) that must
+  // not be read as a class.
+  @include fonts.body-accent;
+  @include card-typography;
+  display: flex;
+}
+
+.card-title {
+  @include fonts.title3;
+  margin: 0;
+}
+
+.visually-hidden {
+  @include a11y.visually-hidden;
+}
+
+// @each wrapping a real rule: `$variants` and the dotted list must not leak,
+// but the nested `.badge` class is real and used.
+@each $name in primary.dark, secondary.light {
+  .badge {
+    padding: 4px;
+  }
+}
+
+// @at-root promoting a rule to the top level. `.promoted` is a REAL class
+// (its selector lives in the at-rule params, not a nested rule node) and is
+// used in the component.
+.wrapper {
+  @at-root .promoted {
+    color: red;
+  }
+}

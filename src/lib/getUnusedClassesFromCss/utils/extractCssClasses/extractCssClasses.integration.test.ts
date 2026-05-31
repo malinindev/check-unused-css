@@ -227,4 +227,57 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       );
     });
   });
+
+  describe('SCSS directives never leak their params as classes', () => {
+    // Regression: `@include fonts.body-accent-xs;` and `@use "…/_fonts.scss"`
+    // carry a dot in their params, which a class-token check alone misread as a
+    // class. The directive names are now recognized, so only real classes show.
+    test('@use + @include namespaced mixins yield no phantom class', () => {
+      const css = `
+        @use "styles/mixins/_fonts.scss" as fonts;
+        @use "styles/mixins/_a11y.scss" as a11y;
+
+        .tooltip-content {
+          @include fonts.body-accent-xs;
+          position: absolute;
+        }
+
+        .visually-hidden {
+          @include a11y.visually-hidden;
+        }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['tooltip-content', 'visually-hidden'])
+      );
+    });
+
+    test('@mixin definition body contributes no class from its name', () => {
+      const css = `
+        @mixin body-accent-xs() {
+          font-size: 12px;
+        }
+
+        .real { @include body-accent-xs; }
+      `;
+
+      expect(extractSorted(css)).toEqual(sorted(['real']));
+    });
+
+    test('@at-root .promoted is a real class (selector held in params)', () => {
+      const css = `
+        .wrapper {
+          @at-root .promoted { color: red; }
+        }
+
+        @at-root {
+          .blockForm { color: blue; }
+        }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['wrapper', 'promoted', 'blockForm'])
+      );
+    });
+  });
 });
