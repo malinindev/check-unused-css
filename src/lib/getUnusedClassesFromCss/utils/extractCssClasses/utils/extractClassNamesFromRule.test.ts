@@ -161,20 +161,36 @@ describe('extractClassNamesFromRule', () => {
   });
 
   describe('should handle malformed selectors gracefully', () => {
-    test('returns empty array for invalid selectors', () => {
+    // Non-strict parsing tolerates truncated attribute/pseudo selectors and
+    // recovers the recognizable class names rather than dropping the whole
+    // rule. For an unused-CSS analyzer, extracting `class` (and thus marking it
+    // used) is safer than silently losing the definition.
+    test('extracts the recoverable class from a truncated attribute selector', () => {
       const rule = createMockRule('.class[invalid');
       const result = extractClassNamesFromRule(rule);
-      expect(result).toEqual([]);
+      expect(result).toEqual(['class']);
     });
 
-    test('returns empty array for unclosed brackets', () => {
+    test('extracts recoverable classes from an unclosed pseudo-argument', () => {
       const rule = createMockRule('.class:not(.other');
       const result = extractClassNamesFromRule(rule);
-      expect(result).toEqual([]);
+      expect(result).toEqual(['class', 'other']);
     });
 
     test('returns empty array for malformed pseudo-selectors', () => {
       const rule = createMockRule('.class::');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual([]);
+    });
+
+    test('returns empty array for an empty selector', () => {
+      const rule = createMockRule('');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual([]);
+    });
+
+    test('returns empty array for a whitespace-only selector', () => {
+      const rule = createMockRule('   ');
       const result = extractClassNamesFromRule(rule);
       expect(result).toEqual([]);
     });
@@ -301,6 +317,35 @@ describe('extractClassNamesFromRule', () => {
       const rule = createMockRule('&Suffix');
       const result = extractClassNamesFromRule(rule);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('should handle double-dash modifier classes', () => {
+    test('extracts a standalone double-dash class', () => {
+      const rule = createMockRule('.--selected');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['--selected']);
+    });
+
+    test('extracts both classes from a compound double-dash selector', () => {
+      const rule = createMockRule('.root.--variant');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['root', '--variant']);
+    });
+
+    test('extracts double-dash classes from a :not() argument', () => {
+      const rule = createMockRule('.--actionable:not(.--selected)');
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['--actionable', '--selected']);
+    });
+
+    test('resolves a nested double-dash modifier joined to the parent', () => {
+      const rule = createMockRule('&.--reversed', {
+        type: 'rule',
+        selector: '.root',
+      });
+      const result = extractClassNamesFromRule(rule);
+      expect(result).toEqual(['--reversed']);
     });
   });
 });

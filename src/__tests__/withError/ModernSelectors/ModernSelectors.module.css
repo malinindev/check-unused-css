@@ -1,0 +1,37 @@
+.root {
+	display: inline-flex;
+
+	&.--reversed {
+		flex-direction: row-reverse;
+	}
+
+	&.--error {
+		color: red;
+	}
+}
+
+.root.--variant {
+	&-faded {
+		background: #eee;
+	}
+
+	&-outline {
+		background: none;
+	}
+}
+
+@responsive .item[style*="--grid-area"] {
+	display: block;
+}
+
+@responsive .--hidden {
+	display: none;
+
+	&.--visibility {
+		visibility: hidden;
+	}
+}
+
+.actuallyUnused {
+	color: blue;
+}
