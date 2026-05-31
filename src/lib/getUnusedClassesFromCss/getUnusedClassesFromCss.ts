@@ -66,10 +66,8 @@ export const getUnusedClassesFromCss = async ({
       continue;
     }
 
-    // If the whole module object is passed to a function, we cannot know which
-    // classes that function applies — mark the module ignored (suppress unused
-    // AND non-existent checks) and surface a warning instead of false unused
-    // reports. A single hand-off in any importing file ignores the module.
+    // The whole module passed to a function → we can't tell which classes it
+    // uses, so ignore the module (one hand-off in any file is enough).
     const passedSite = detectModulePassedToFunction(
       sourceContent,
       importingFileData.importName,
@@ -137,10 +135,8 @@ export const getUnusedClassesFromCss = async ({
     usedClasses.add(className);
   }
 
-  // A used member of an ampersand-suffix concatenation family rescues its
-  // ancestor classes (e.g. a used `--orientation-horizontal` keeps the parent
-  // `--orientation` from being reported unused). Runs after every "used"
-  // signal — static, literal, and dynamic coverage — has been merged in.
+  // A used child keeps its ampersand-family parent from looking unused. Runs
+  // after every "used" signal (static, literal, dynamic coverage) is merged in.
   rescueUsedAncestors(usedClasses, ancestry);
 
   const unusedClasses: string[] = [];

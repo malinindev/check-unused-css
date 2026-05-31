@@ -85,11 +85,10 @@ export const getParentClassName = (rule: Rule): string | null => {
 };
 
 /**
- * Matches a *suffix* ampersand: an `&` immediately followed by an identifier
- * character, i.e. SCSS suffix concatenation (`&-horizontal`, `&Black`,
- * `&__element`). It deliberately does NOT match `&.x` (compound), `& .x`
- * (descendant), or `&:hover` (pseudo). Non-global so `.test()` is stateless;
- * the `g` flag is added locally where a replace-all is needed.
+ * A suffix `&`: an `&` directly followed by an identifier char — SCSS
+ * concatenation like `&-horizontal`, `&Black`, `&__element`. Does not match
+ * `&.x`, `& .x`, or `&:hover`. Non-global so `.test()` is stateless; callers
+ * add the `g` flag when replacing.
  */
 export const SUFFIX_AMPERSAND_REGEX = /&(?=[A-Za-z0-9_-])/;
 

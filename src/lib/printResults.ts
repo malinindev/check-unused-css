@@ -90,11 +90,8 @@ export const printResults = (
   }
 
   if (ignoredModuleResults.length > 0) {
-    // A module whose whole object is handed to a function cannot be analyzed:
-    // we cannot tell which classes that function applies. Surface a distinct
-    // warning (separate from the dynamic-usage one) naming the source file and
-    // the reason, rather than emitting false unused / non-existent reports.
-    // Under --no-dynamic this undeterminable case is escalated to an error.
+    // Modules handed whole to a function can't be analyzed; warn (naming the
+    // file) instead of reporting false positives. --no-dynamic makes it an error.
     const color = noDynamic ? COLORS.red : COLORS.yellow;
     const label = noDynamic ? 'Error' : 'Warning';
     const emit = noDynamic ? console.error : console.warn;

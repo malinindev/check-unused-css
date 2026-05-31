@@ -29,11 +29,8 @@ export const getNonExistentClassesFromCss = async ({
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClasses = extractCssClasses(cssContent);
 
-  // If ANY importing file passes the whole module object to a function, the
-  // module is unanalyzable and is ignored as a whole — matching the unused
-  // path (which returns `ignoredPassedToFunction` for the module) and the
-  // single ignore warning. Suppress the non-existent check for every importer,
-  // not just the one that handed the module off.
+  // If any importer passes the whole module to a function, ignore the module
+  // entirely (matching the unused path), not just that one file.
   for (const importingFileData of importingFilesData) {
     const sourceContent = getContentOfFiles({
       files: [importingFileData.file],

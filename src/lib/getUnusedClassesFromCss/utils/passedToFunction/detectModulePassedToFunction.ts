@@ -9,43 +9,22 @@ export type PassedToFunctionSite = {
 };
 
 /**
- * Detect whether the whole imported CSS-module object (`importName`, e.g. `s`)
- * is passed as a *direct argument* to any function call in the source — the
- * case `responsiveClassNames(s, "--x", v)`, where a helper builds class keys
- * internally and the analyzer cannot see which classes are applied.
+ * Find where the imported module object (`importName`) is passed straight into
+ * a function call, e.g. `responsiveClassNames(s, "--x", v)`. The helper builds
+ * class names internally, so we can't tell which classes it uses — the caller
+ * uses this to ignore the module instead of reporting false positives.
  *
- * Returns the location of the first such call site, or `null` if none.
+ * Triggers when `importName` is a bare argument of any call, including the
+ * nested `classNames(s.root, responsiveClassNames(s, …))` form. Does NOT
+ * trigger on `s.root` (a property, not the whole object), plain reads
+ * (`s.foo`), or `s` wrapped in something else (`fn([s])`, `{ ...s }`, `new
+ * Wrapper(s)`).
  *
- * The trigger fires whenever a bare `Identifier` matching `importName` is a
- * direct element of *some* `CallExpression`'s `arguments`. That includes the
- * common composed form `classNames(s.root, responsiveClassNames(s, …))`, where
- * the whole object reaches the inner `responsiveClassNames` call — the object
- * still escapes into a function we cannot analyze, so the conservative,
- * zero-false-positive choice is to ignore the module.
+ * Like the other AST passes here, it matches by name without scope resolution.
+ * A shadowing local named `s` could trigger too, but that only ignores a module
+ * (never a false finding) and doesn't happen with real module bindings.
  *
- * Deliberately NOT triggered by:
- *  - `fn(s.root, …)` — the argument is a `MemberExpression`, not the bare
- *    object; a property is already a concrete, observable class reference;
- *  - direct reads `s.foo` / `s["foo"]` / `` s[`foo-${x}`] `` — not call args;
- *  - `fn([s])`, `fn({ styles: s })` — `s` is wrapped in an array/object
- *    literal, not a direct call argument (out of scope; the object is not
- *    handed to the function as-is);
- *  - non-call uses: spread `{...s}`, `const x = s`, `return s`, JSX `prop={s}`;
- *  - `new Wrapper(s)` — a `NewExpression`, not a `CallExpression`.
- *
- * A source the parser cannot handle throws (via `contentToAst`), surfacing as
- * an INTERNAL error naming the offending file — the project's policy for
- * unparseable input.
- *
- * Like the other source-AST passes in this codebase (`extractUsedClasses`,
- * `extractClassAccesses`), this matches the import binding by name and does not
- * perform full scope resolution. A local variable or parameter that shadows the
- * import name and is itself passed to a function would therefore also trigger.
- * That is intentionally conservative: a spurious match only ever *ignores* a
- * module (suppressing reports), never produces a false unused/non-existent
- * finding — consistent with this feature's zero-false-positive priority. CSS
- * module bindings (`s`, `styles`) are module-scoped and not shadowed in
- * practice, so this has no observed effect on real codebases.
+ * Returns the first call site, or `null`. Throws on unparseable input.
  */
 export const detectModulePassedToFunction = (
   sourceContent: string,

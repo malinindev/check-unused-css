@@ -9,19 +9,13 @@ import {
 } from './utils/resolveAmpersandSelector.js';
 
 /**
- * A child class name → its immediate parent class name, recorded only for SCSS
- * ampersand *suffix* concatenation (`.--orientation { &-horizontal {} }` →
- * `--orientation-horizontal → --orientation`; `.button { &Black {} }` →
- * `buttonBlack → button`). Multi-level nesting yields one hop per level; the
- * full chain is recovered by walking the map transitively.
+ * Maps a child class to its immediate parent, for SCSS suffix concatenation
+ * only: `.--orientation { &-horizontal {} }` → `--orientation-horizontal →
+ * --orientation`, `.button { &Black {} }` → `buttonBlack → button`. Multi-level
+ * nesting stores one hop per level; walk the map to get the full chain.
  *
- * Intentionally NOT recorded:
- *  - descendant nesting (`& .child`) — `child` is unrelated to the parent,
- *  - compound modifiers (`&.--reversed`) — resolves to the standalone class
- *    `--reversed`, a separate class on the same element, not a concatenation,
- *  - any class whose resolved name is not the parent name plus a suffix — this
- *    keeps the relationship derived from the real concatenation rather than
- *    loose name-prefix matching.
+ * Descendant nesting (`& .child`) and compound modifiers (`&.--reversed`) are
+ * not concatenation, so they are not recorded.
  */
 export type ClassAncestry = Map<string, string>;
 
@@ -52,11 +46,9 @@ export const extractCssClassAncestry = (cssContent: string): ClassAncestry => {
       return;
     }
 
-    // Process each comma-separated selector independently so a sibling in the
-    // same selector list is not mistaken for a concatenation child. In
-    // `.button { &Black, .buttonLegacy { … } }` only the `&Black` segment is a
-    // suffix concatenation of the parent; `.buttonLegacy` must not be linked
-    // even though it shares the `button` prefix.
+    // Handle each selector in the list separately, so a sibling like
+    // `.buttonLegacy` in `.button { &Black, .buttonLegacy {} }` isn't taken for
+    // a child just because it shares the `button` prefix.
     for (const segment of rule.selector.split(',')) {
       if (!SUFFIX_AMPERSAND_REGEX.test(segment)) {
         continue;
@@ -64,9 +56,8 @@ export const extractCssClassAncestry = (cssContent: string): ClassAncestry => {
 
       const resolved = resolveAmpersandSelector(segment, parentClassName);
       for (const className of extractClassNamesFromSelector(resolved)) {
-        // The concatenation child is the parent name plus a non-empty suffix
-        // (excludes the parent itself and `&.--modifier` compounds, which
-        // resolve to a standalone class that does not extend the parent).
+        // A real child is the parent name plus a suffix (excludes the parent
+        // itself and `&.--modifier` compounds that don't extend it).
         if (
           className !== parentClassName &&
           className.startsWith(parentClassName)
