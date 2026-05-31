@@ -39,6 +39,120 @@ describe('isSelectorBearingAtRule', () => {
         true
       );
     });
+
+    test('@at-root with a class selector in its params', () => {
+      // `@at-root .promoted { … }` holds the class in params (no nested rule),
+      // so it must be recognized as selector-bearing.
+      expect(firstAtRule('@at-root .promoted { color: red; }')).toBe(true);
+    });
+
+    test('unknown custom at-rule with a class selector', () => {
+      // Anything not on the denylist with a class token in params is treated as
+      // selector-bearing — the safe default for an unused-CSS checker.
+      expect(firstAtRule('@foobar .custom { color: red; }')).toBe(true);
+    });
+
+    test('uppercase custom at-rule name is still selector-bearing', () => {
+      expect(firstAtRule('@AT-ROOT .upper { color: red; }')).toBe(true);
+    });
+  });
+
+  describe('SCSS directives are never selector-bearing (false)', () => {
+    // Each case feeds params that DO contain a class token, so the result is
+    // pinned to the name denylist rather than to the class-token guard — drop
+    // the directive from the list and the test fails.
+    test('@include reading a namespaced mixin', () => {
+      expect(firstAtRule('@include fonts.body-accent-xs;')).toBe(false);
+    });
+
+    test('@use with a module path', () => {
+      expect(firstAtRule('@use "styles/mixins/_fonts.scss" as fonts;')).toBe(
+        false
+      );
+    });
+
+    test('@forward with a module path', () => {
+      expect(firstAtRule('@forward "src/list.scss";')).toBe(false);
+    });
+
+    test('@mixin definition with a dotted default value', () => {
+      expect(firstAtRule('@mixin m($x: a.b) { color: red; }')).toBe(false);
+    });
+
+    test('@function with a dotted default value', () => {
+      expect(firstAtRule('@function f($x: a.b) { @return $x; }')).toBe(false);
+    });
+
+    test('@return a dotted expression', () => {
+      expect(firstAtRule('@return map.get($m, .a);')).toBe(false);
+    });
+
+    test('@extend referencing a class', () => {
+      expect(firstAtRule('@extend .button;')).toBe(false);
+    });
+
+    test('@if with a dotted condition', () => {
+      expect(firstAtRule('@if $x == a.b { .a { color: red; } }')).toBe(false);
+    });
+
+    test('@else with a dotted condition', () => {
+      expect(firstAtRule('@else if $x == a.b { .a { color: red; } }')).toBe(
+        false
+      );
+    });
+
+    test('@each iterating a dotted list', () => {
+      expect(
+        firstAtRule('@each $name in a.b, c.d { .x { color: red; } }')
+      ).toBe(false);
+    });
+
+    test('@for with a dotted bound', () => {
+      expect(firstAtRule('@for $i from 1 through a.b { .x {} }')).toBe(false);
+    });
+
+    test('@while with a dotted condition', () => {
+      expect(firstAtRule('@while $i < a.b { .x {} }')).toBe(false);
+    });
+
+    test('@content passing a dotted argument', () => {
+      expect(firstAtRule('@content(a.b);')).toBe(false);
+    });
+
+    test('@debug with a dotted message', () => {
+      expect(firstAtRule('@debug "a.b";')).toBe(false);
+    });
+
+    test('@warn with a dotted message', () => {
+      expect(firstAtRule('@warn "a.b";')).toBe(false);
+    });
+
+    test('@error with a dotted message', () => {
+      expect(firstAtRule('@error "a.b";')).toBe(false);
+    });
+
+    test('block-form @at-root has empty params (class is in a nested rule)', () => {
+      // `@at-root { .x { … } }` carries no selector in params; the `.x` rule is
+      // a normal nested node the rule walk handles, so the at-rule is not
+      // selector-bearing.
+      expect(firstAtRule('@at-root { .x { color: red; } }')).toBe(false);
+    });
+  });
+
+  describe('CSS-Modules / PostCSS at-rules are never selector-bearing (false)', () => {
+    // @custom-selector and @apply carry class tokens in params but reference,
+    // never define, classes — pinned by the name denylist.
+    test('@custom-selector defining an alias from class tokens', () => {
+      expect(firstAtRule('@custom-selector :--heading .h1, .h2;')).toBe(false);
+    });
+
+    test('@apply pulling in a dotted utility', () => {
+      expect(firstAtRule('.x { @apply .text-center; }')).toBe(false);
+    });
+
+    test('@value statement', () => {
+      expect(firstAtRule('@value primary from "./colors.css";')).toBe(false);
+    });
   });
 
   describe('standard condition/identifier at-rules (false)', () => {
@@ -65,11 +179,26 @@ describe('isSelectorBearingAtRule', () => {
     test('@layer is never selector-bearing', () => {
       expect(firstAtRule('@layer base { .x {} }')).toBe(false);
     });
+
+    test('@scope with class tokens in its prelude is denylisted', () => {
+      // `.card`/`.content` here scope the block; they are references, not a
+      // class definition in the at-rule's params. The inner `.inner` rule is
+      // caught by the normal rule walk.
+      expect(
+        firstAtRule('@scope (.card) to (.content) { .inner { color: red; } }')
+      ).toBe(false);
+    });
   });
 
   describe('params without a class token (false)', () => {
     test('custom at-rule used purely as a condition wrapper', () => {
       expect(firstAtRule('@responsive (min-width: 1px) { color: red; }')).toBe(
+        false
+      );
+    });
+
+    test('unknown custom at-rule used as a condition wrapper', () => {
+      expect(firstAtRule('@foobar (min-width: 1px) { color: red; }')).toBe(
         false
       );
     });

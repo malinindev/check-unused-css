@@ -6,31 +6,76 @@ import type { AtRule } from 'postcss';
 const CLASS_TOKEN_PATTERN = /\.[-_a-zA-Z]/;
 
 /**
- * Standard at-rules whose `params` are NOT a selector. Some take a condition
- * (`@media (min-width: …)`, `@supports (display: grid)`, `@container`), some an
- * identifier/keyframe-name (`@keyframes spin`, `@layer base`), some nothing or a
- * URL (`@font-face`, `@page`, `@property`, `@import`, `@charset`). A class token
- * appearing inside their params (e.g. a selector list under `@scope (.a) to (.b)`)
- * is part of a condition, not a class definition, so we never treat these as
- * selector-bearing. Custom CSS-Modules `@value` is excluded for the same reason.
+ * Known CSS and SCSS at-rules whose `params` are never a class-defining
+ * selector — so we classify an at-rule as selector-bearing only when its name
+ * is NOT here (a custom at-rule like `@responsive .item { … }`).
+ *
+ * A blocklist of names is more robust than inspecting params: many of these
+ * carry a dot for an unrelated reason (the module path in `@use "…/_fonts.scss"`,
+ * the namespaced call in `@include fonts.body`, a decimal in `@media (… 1.5rem)`),
+ * which a class-token check alone would misread as a class. Their params are
+ * conditions, identifiers, URLs, module paths, mixin calls or expressions; any
+ * real selector lives in a nested rule the normal rule walk already visits.
+ *
+ * Deliberately absent: `@responsive` (design systems use it with a class
+ * selector; Tailwind's param-less form yields no class anyway) and `@at-root`
+ * (`@at-root .foo { … }` holds a real class in its params, with no nested rule
+ * node for the rule walk to catch).
  */
 const NON_SELECTOR_AT_RULES = new Set([
+  // Standard CSS
   'media',
   'supports',
   'container',
   'layer',
   'scope',
   'keyframes',
+  '-webkit-keyframes',
+  '-moz-keyframes',
+  '-o-keyframes',
+  '-ms-keyframes',
   'font-face',
+  'font-feature-values',
+  'font-palette-values',
   'page',
   'property',
   'counter-style',
-  'font-feature-values',
+  'color-profile',
+  'position-try',
+  'view-transition',
+  'starting-style',
+  'document',
+  '-moz-document',
   'import',
   'charset',
   'namespace',
-  'document',
+  'nest',
+  // SCSS / Sass
+  'use',
+  'forward',
+  'mixin',
+  'include',
+  'function',
+  'return',
+  'if',
+  'else',
+  'each',
+  'for',
+  'while',
+  'content',
+  'extend',
+  'debug',
+  'warn',
+  'error',
+  // CSS Modules / PostCSS plugins
   'value',
+  'custom-media',
+  'custom-selector',
+  'custom-property',
+  'apply',
+  'tailwind',
+  'screen',
+  'variants',
 ]);
 
 /**

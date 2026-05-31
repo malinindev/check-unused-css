@@ -227,4 +227,118 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       );
     });
   });
+
+  describe('SCSS directives never leak their params as classes', () => {
+    // Regression: `@include fonts.body-accent-xs;` and `@use "…/_fonts.scss"`
+    // carry a dot in their params, which a class-token check alone misread as a
+    // class. The directive names are now recognized, so only real classes show.
+    test('@use + @include namespaced mixins yield no phantom class', () => {
+      const css = `
+        @use "styles/mixins/_fonts.scss" as fonts;
+        @use "styles/mixins/_a11y.scss" as a11y;
+
+        .tooltip-content {
+          @include fonts.body-accent-xs;
+          position: absolute;
+        }
+
+        .visually-hidden {
+          @include a11y.visually-hidden;
+        }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['tooltip-content', 'visually-hidden'])
+      );
+    });
+
+    test('@mixin definition body contributes no class from its name', () => {
+      const css = `
+        @mixin body-accent-xs() {
+          font-size: 12px;
+        }
+
+        .real { @include body-accent-xs; }
+      `;
+
+      expect(extractSorted(css)).toEqual(sorted(['real']));
+    });
+
+    test('@apply pulls in no class; only the host rule class is kept', () => {
+      // Load-bearing: if `apply` is dropped from the denylist (or the at-rule
+      // walk regresses), the dotted utilities would leak as phantom classes.
+      expect(extractSorted('.x { @apply .text-center; }')).toEqual(
+        sorted(['x'])
+      );
+      expect(extractSorted('.x { @apply .a .b; }')).toEqual(sorted(['x']));
+    });
+
+    test('@custom-selector params are not extracted as classes', () => {
+      // Documents that a @custom-selector alias never surfaces its referenced
+      // classes at the extraction level (the selector parser already declines
+      // the `:--heading .h1, .h2` params; the denylist is belt-and-suspenders).
+      expect(extractSorted('@custom-selector :--heading .h1, .h2;')).toEqual(
+        []
+      );
+    });
+
+    test('@at-root .promoted is a real class (selector held in params)', () => {
+      const css = `
+        .wrapper {
+          @at-root .promoted { color: red; }
+        }
+
+        @at-root {
+          .blockForm { color: blue; }
+        }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['wrapper', 'promoted', 'blockForm'])
+      );
+    });
+
+    test('@at-root with a (with:/without:) query still yields its class', () => {
+      // The query group precedes the real selector; it must be stripped so the
+      // class is seen, not swallowed by the selector parser.
+      const css = `
+        .a { @at-root (without: media) .escaped { color: red; } }
+        .b { @at-root (with: rule) .scoped { color: blue; } }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['a', 'b', 'escaped', 'scoped'])
+      );
+    });
+
+    test('@at-root query: multi-selector, "media all", and odd spacing', () => {
+      const css = `
+        @at-root (without: media) .qa, .qb { color: red; }
+        @at-root (without: media all) .allq { color: red; }
+        @at-root (  WITH : rule  ) .spaced { color: red; }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['qa', 'qb', 'allq', 'spaced'])
+      );
+    });
+
+    test('@at-root query with no selector keeps only the nested class', () => {
+      // `(without: media)` then a block of rules — the query yields no class,
+      // the nested `.inner` is a normal rule the walk handles.
+      const css = '@at-root (without: media) { .inner { color: red; } }';
+
+      expect(extractSorted(css)).toEqual(sorted(['inner']));
+    });
+
+    test('uppercase directive names are matched case-insensitively', () => {
+      // `@AT-ROOT` is selector-bearing; `@MEDIA` is denylisted regardless of case.
+      const css = `
+        @AT-ROOT .upper { color: red; }
+        @MEDIA (min-width: 1px) { .inMedia { color: red; } }
+      `;
+
+      expect(extractSorted(css)).toEqual(sorted(['upper', 'inMedia']));
+    });
+  });
 });

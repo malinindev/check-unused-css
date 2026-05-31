@@ -1,0 +1,23 @@
+@use "styles/mixins/_fonts.scss" as fonts;
+
+@mixin button-typography() {
+  letter-spacing: 0.02em;
+}
+
+.button {
+  // These @include params (`fonts.body-accent-xs`, `button-typography`) and the
+  // @use module path must never surface as unused "classes".
+  @include fonts.body-accent-xs;
+  @include button-typography;
+  cursor: pointer;
+}
+
+.label {
+  @include fonts.title4;
+}
+
+// A genuinely unused class — defined here, never referenced in the component.
+// This MUST be reported, proving the directive fix doesn't suppress real findings.
+.orphan {
+  color: gray;
+}
