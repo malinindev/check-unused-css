@@ -99,5 +99,21 @@ describe('false positives — whole CSS module passed to a function (Problem 2)'
       );
       expect(result.exitCode).toBe(1);
     });
+
+    test('TwoFilesOnePassesWhole: a hand-off in one importer ignores the module for ALL importers', () => {
+      const result = run('TwoFilesOnePassesWhole');
+
+      // Handoff.tsx passes the whole module → the module is ignored as a whole.
+      // Reader.tsx references a missing class, but because the module is
+      // ignored it must NOT be reported as non-existent (whole-module skip,
+      // matching the unused path).
+      expect(result.stdout).not.toMatch(reportedLine('ghostMissing'));
+      expect(result.stderr).not.toMatch(
+        /Found .* classes used in source files but non-existent/
+      );
+      expect(result.stderr).toMatch(/Warning:.*passed to a function/i);
+      // No genuine findings remain, so the run is clean.
+      expect(result.exitCode).toBe(0);
+    });
   });
 });

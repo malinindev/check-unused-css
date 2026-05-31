@@ -36,6 +36,16 @@ export type PassedToFunctionSite = {
  * A source the parser cannot handle throws (via `contentToAst`), surfacing as
  * an INTERNAL error naming the offending file — the project's policy for
  * unparseable input.
+ *
+ * Like the other source-AST passes in this codebase (`extractUsedClasses`,
+ * `extractClassAccesses`), this matches the import binding by name and does not
+ * perform full scope resolution. A local variable or parameter that shadows the
+ * import name and is itself passed to a function would therefore also trigger.
+ * That is intentionally conservative: a spurious match only ever *ignores* a
+ * module (suppressing reports), never produces a false unused/non-existent
+ * finding — consistent with this feature's zero-false-positive priority. CSS
+ * module bindings (`s`, `styles`) are module-scoped and not shadowed in
+ * practice, so this has no observed effect on real codebases.
  */
 export const detectModulePassedToFunction = (
   sourceContent: string,

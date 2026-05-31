@@ -94,6 +94,20 @@ describe('extractCssClassAncestry', () => {
       // sanity: the genuine child is still linked
       expect(ancestry.get('--orientation-horizontal')).toBe('--orientation');
     });
+
+    test('a prefix-sharing sibling in the SAME selector list as a suffix-& is not linked', () => {
+      // `.buttonLegacy` is a separate selector in the list, not produced by
+      // `&Black`; it must not be recorded as a child even though it shares the
+      // `button` prefix (otherwise using it would wrongly rescue `.button`).
+      const css = `
+        .button {
+          &Black, .buttonLegacy { color: black; }
+        }
+      `;
+      const ancestry = extractCssClassAncestry(css);
+      expect(ancestry.get('buttonBlack')).toBe('button');
+      expect(ancestry.has('buttonLegacy')).toBe(false);
+    });
   });
 
   describe('composed classes are excluded', () => {

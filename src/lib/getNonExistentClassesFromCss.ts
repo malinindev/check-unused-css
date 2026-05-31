@@ -29,9 +29,11 @@ export const getNonExistentClassesFromCss = async ({
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClasses = extractCssClasses(cssContent);
 
-  const nonExistentClasses: NonExistentClassUsage[] = [];
-
-  // Process each importing file separately to get precise location info
+  // If ANY importing file passes the whole module object to a function, the
+  // module is unanalyzable and is ignored as a whole — matching the unused
+  // path (which returns `ignoredPassedToFunction` for the module) and the
+  // single ignore warning. Suppress the non-existent check for every importer,
+  // not just the one that handed the module off.
   for (const importingFileData of importingFilesData) {
     const sourceContent = getContentOfFiles({
       files: [importingFileData.file],
@@ -43,9 +45,6 @@ export const getNonExistentClassesFromCss = async ({
       continue;
     }
 
-    // If the whole module object is passed to a function, the class set this
-    // file actually references cannot be determined, so skip it (the unused
-    // path emits the single ignore warning for the module).
     if (
       detectModulePassedToFunction(
         sourceContent,
@@ -53,6 +52,21 @@ export const getNonExistentClassesFromCss = async ({
         importingFileData.file
       )
     ) {
+      return null;
+    }
+  }
+
+  const nonExistentClasses: NonExistentClassUsage[] = [];
+
+  // Process each importing file separately to get precise location info
+  for (const importingFileData of importingFilesData) {
+    const sourceContent = getContentOfFiles({
+      files: [importingFileData.file],
+      srcDir,
+    });
+
+    const { isFileIgnored } = parseIgnoreComments(sourceContent);
+    if (isFileIgnored) {
       continue;
     }
 

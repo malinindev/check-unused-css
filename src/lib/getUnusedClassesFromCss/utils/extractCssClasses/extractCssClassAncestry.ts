@@ -1,9 +1,10 @@
 import postcssScss from 'postcss-scss';
 import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
-import { extractClassNamesFromRule } from './utils/extractClassNamesFromRule.js';
+import { extractClassNamesFromSelector } from './utils/extractClassNamesFromRule.js';
 import { extractComposedClasses } from './utils/extractComposedClasses.js';
 import {
   getParentClassName,
+  resolveAmpersandSelector,
   SUFFIX_AMPERSAND_REGEX,
 } from './utils/resolveAmpersandSelector.js';
 
@@ -51,15 +52,27 @@ export const extractCssClassAncestry = (cssContent: string): ClassAncestry => {
       return;
     }
 
-    for (const className of extractClassNamesFromRule(rule)) {
-      // A genuine suffix concatenation is the parent name plus a non-empty
-      // suffix. This excludes the parent itself and any class that does not
-      // structurally extend the parent (e.g. a `&.--reversed` modifier).
-      if (
-        className !== parentClassName &&
-        className.startsWith(parentClassName)
-      ) {
-        ancestry.set(className, parentClassName);
+    // Process each comma-separated selector independently so a sibling in the
+    // same selector list is not mistaken for a concatenation child. In
+    // `.button { &Black, .buttonLegacy { … } }` only the `&Black` segment is a
+    // suffix concatenation of the parent; `.buttonLegacy` must not be linked
+    // even though it shares the `button` prefix.
+    for (const segment of rule.selector.split(',')) {
+      if (!SUFFIX_AMPERSAND_REGEX.test(segment)) {
+        continue;
+      }
+
+      const resolved = resolveAmpersandSelector(segment, parentClassName);
+      for (const className of extractClassNamesFromSelector(resolved)) {
+        // The concatenation child is the parent name plus a non-empty suffix
+        // (excludes the parent itself and `&.--modifier` compounds, which
+        // resolve to a standalone class that does not extend the parent).
+        if (
+          className !== parentClassName &&
+          className.startsWith(parentClassName)
+        ) {
+          ancestry.set(className, parentClassName);
+        }
       }
     }
   });
