@@ -14,6 +14,8 @@ export const ScssDirectives = () => (
       styles.badge,
       styles.wrapper,
       styles.promoted,
+      styles.host,
+      styles.scoped,
     ].join(' ')}
   />
 );

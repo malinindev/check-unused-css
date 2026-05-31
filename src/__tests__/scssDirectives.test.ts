@@ -60,6 +60,14 @@ describe('SCSS directives are not class definitions (no false positives)', () =>
     expect(result.stdout).not.toMatch(reportedLine('promoted'));
     expect(result.exitCode).toBe(0);
   });
+
+  test('recognizes a class promoted by @at-root with a (with:) query', () => {
+    // `@at-root (with: rule) .scoped` — the query group must be stripped so the
+    // class is seen end-to-end; neither a "non-existent" nor an "unused" finding
+    // may appear for `.scoped`.
+    expect(result.stdout).not.toMatch(reportedLine('scoped'));
+    expect(result.exitCode).toBe(0);
+  });
 });
 
 describe('SCSS directives do not suppress genuine unused classes', () => {

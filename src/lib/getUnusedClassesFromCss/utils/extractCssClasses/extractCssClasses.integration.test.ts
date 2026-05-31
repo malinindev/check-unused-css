@@ -264,6 +264,24 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       expect(extractSorted(css)).toEqual(sorted(['real']));
     });
 
+    test('@apply pulls in no class; only the host rule class is kept', () => {
+      // Load-bearing: if `apply` is dropped from the denylist (or the at-rule
+      // walk regresses), the dotted utilities would leak as phantom classes.
+      expect(extractSorted('.x { @apply .text-center; }')).toEqual(
+        sorted(['x'])
+      );
+      expect(extractSorted('.x { @apply .a .b; }')).toEqual(sorted(['x']));
+    });
+
+    test('@custom-selector params are not extracted as classes', () => {
+      // Documents that a @custom-selector alias never surfaces its referenced
+      // classes at the extraction level (the selector parser already declines
+      // the `:--heading .h1, .h2` params; the denylist is belt-and-suspenders).
+      expect(extractSorted('@custom-selector :--heading .h1, .h2;')).toEqual(
+        []
+      );
+    });
+
     test('@at-root .promoted is a real class (selector held in params)', () => {
       const css = `
         .wrapper {
@@ -278,6 +296,49 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       expect(extractSorted(css)).toEqual(
         sorted(['wrapper', 'promoted', 'blockForm'])
       );
+    });
+
+    test('@at-root with a (with:/without:) query still yields its class', () => {
+      // The query group precedes the real selector; it must be stripped so the
+      // class is seen, not swallowed by the selector parser.
+      const css = `
+        .a { @at-root (without: media) .escaped { color: red; } }
+        .b { @at-root (with: rule) .scoped { color: blue; } }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['a', 'b', 'escaped', 'scoped'])
+      );
+    });
+
+    test('@at-root query: multi-selector, "media all", and odd spacing', () => {
+      const css = `
+        @at-root (without: media) .qa, .qb { color: red; }
+        @at-root (without: media all) .allq { color: red; }
+        @at-root (  WITH : rule  ) .spaced { color: red; }
+      `;
+
+      expect(extractSorted(css)).toEqual(
+        sorted(['qa', 'qb', 'allq', 'spaced'])
+      );
+    });
+
+    test('@at-root query with no selector keeps only the nested class', () => {
+      // `(without: media)` then a block of rules — the query yields no class,
+      // the nested `.inner` is a normal rule the walk handles.
+      const css = '@at-root (without: media) { .inner { color: red; } }';
+
+      expect(extractSorted(css)).toEqual(sorted(['inner']));
+    });
+
+    test('uppercase directive names are matched case-insensitively', () => {
+      // `@AT-ROOT` is selector-bearing; `@MEDIA` is denylisted regardless of case.
+      const css = `
+        @AT-ROOT .upper { color: red; }
+        @MEDIA (min-width: 1px) { .inMedia { color: red; } }
+      `;
+
+      expect(extractSorted(css)).toEqual(sorted(['upper', 'inMedia']));
     });
   });
 });

@@ -46,6 +46,14 @@ export const extractClassNamesFromRule = (rule: Rule): string[] => {
 };
 
 /**
+ * `@at-root (with: rule) .foo` / `(without: media) .foo` prefix the selector
+ * with a query group the selector parser can't read. Strip it so the real
+ * selector (`.foo`) is parsed; queries don't nest parens, so `[^)]*` suffices.
+ */
+const stripAtRootQuery = (params: string): string =>
+  params.replace(/^\s*\(\s*(?:with|without)\s*:[^)]*\)\s*/i, '');
+
+/**
  * Extract class names from a selector-bearing custom at-rule, e.g.
  * `@responsive .item[style*="…"] { … }`. PostCSS parses such an at-rule with
  * the selector held in `params` (and declarations directly inside the at-rule,
@@ -55,4 +63,8 @@ export const extractClassNamesFromRule = (rule: Rule): string[] => {
  * condition); a params string with no class token yields an empty array.
  */
 export const extractClassNamesFromAtRule = (atRule: AtRule): string[] =>
-  extractClassNamesFromSelector(atRule.params);
+  extractClassNamesFromSelector(
+    atRule.name.toLowerCase() === 'at-root'
+      ? stripAtRootQuery(atRule.params)
+      : atRule.params
+  );

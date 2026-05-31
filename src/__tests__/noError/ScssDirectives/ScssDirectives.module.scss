@@ -41,3 +41,11 @@
     color: red;
   }
 }
+
+// @at-root with a (with:/without:) query: the query group precedes the real
+// selector. `.scoped` is a genuine class and is used in the component.
+.host {
+  @at-root (with: rule) .scoped {
+    color: green;
+  }
+}
