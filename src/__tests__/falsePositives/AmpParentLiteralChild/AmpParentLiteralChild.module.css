@@ -1,0 +1,11 @@
+.--variant {
+  font-weight: bold;
+
+  &-faded {
+    opacity: 0.5;
+  }
+
+  &-outline {
+    border: 1px solid;
+  }
+}

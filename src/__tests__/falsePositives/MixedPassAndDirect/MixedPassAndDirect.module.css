@@ -1,0 +1,11 @@
+.root {
+  display: block;
+}
+
+.--x {
+  color: red;
+}
+
+.wouldBeUnused {
+  color: blue;
+}

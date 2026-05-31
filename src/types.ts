@@ -28,6 +28,17 @@ export type DynamicClassResult = {
   status: 'withDynamicImports';
 };
 
+export type ModuleIgnoredResult = {
+  file: string;
+  status: 'ignoredPassedToFunction';
+  /** The importing source file that passed the whole module to a function. */
+  sourceFile: string;
+  /** The import binding that was passed (e.g. `s`). */
+  importName: string;
+  line: number;
+  column: number;
+};
+
 export type NonExistentClassUsage = {
   className: string;
   file: string;
@@ -44,7 +55,8 @@ export type NonExistentClassResult = {
 export type UnusedClassResult =
   | UnusedClassResultWithClasses
   | UnusedClassResultNoClasses
-  | DynamicClassResult;
+  | DynamicClassResult
+  | ModuleIgnoredResult;
 
 export type CssAnalysisResult = UnusedClassResult | NonExistentClassResult;
 

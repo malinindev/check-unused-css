@@ -162,6 +162,49 @@ describe('printResults', () => {
     });
   });
 
+  describe('when a module is ignored because it was passed to a function', () => {
+    test('prints a distinct yellow warning naming the source file and reason', () => {
+      const results: CssAnalysisResult[] = [
+        {
+          file: 'components/View/View.module.css',
+          status: 'ignoredPassedToFunction',
+          sourceFile: 'components/View/View.tsx',
+          importName: 's',
+          line: 42,
+          column: 10,
+        },
+      ];
+
+      printResults(results);
+
+      // Distinct yellow warning header (not the dynamic-usage one).
+      const warnCalls = consoleWarnSpy.mock.calls.map((args) =>
+        String(args[0] ?? '')
+      );
+      expect(
+        warnCalls.some(
+          (s) =>
+            s.includes(COLORS.yellow) &&
+            /passed to a function/i.test(s) &&
+            !/Dynamic class usage detected/.test(s)
+        )
+      ).toBe(true);
+
+      // Names the source file and the module somewhere in the output.
+      const allOutput = [
+        ...consoleWarnSpy.mock.calls,
+        ...consoleLogSpy.mock.calls,
+      ]
+        .map((args) => String(args[0] ?? ''))
+        .join('\n');
+      expect(allOutput).toContain('View.tsx');
+      expect(allOutput).toContain('View.module.css');
+
+      // Not surfaced as a red error (it is a warning).
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when unimported files found', () => {
     test('prints information about unimported files', () => {
       const results: CssAnalysisResult[] = [

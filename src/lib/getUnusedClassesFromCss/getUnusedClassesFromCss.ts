@@ -10,9 +10,15 @@ import {
   type ClassAccess,
   extractClassAccesses,
 } from './utils/coverage/index.js';
-import { extractCssClassesWithLocations } from './utils/extractCssClasses/index.js';
+import {
+  type ClassAncestry,
+  extractCssClassAncestry,
+  extractCssClassesWithLocations,
+} from './utils/extractCssClasses/index.js';
+import { rescueUsedAncestors } from './utils/rescueUsedAncestors.js';
 import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule/index.js';
+import { detectModulePassedToFunction } from './utils/passedToFunction/detectModulePassedToFunction.js';
 
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
@@ -26,6 +32,7 @@ export const getUnusedClassesFromCss = async ({
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClassesWithLocations = extractCssClassesWithLocations(cssContent);
   const cssClasses = cssClassesWithLocations.map((info) => info.className);
+  const ancestry: ClassAncestry = extractCssClassAncestry(cssContent);
 
   if (cssClasses.length === 0) {
     return null;
@@ -57,6 +64,24 @@ export const getUnusedClassesFromCss = async ({
         usedClasses.add(className);
       }
       continue;
+    }
+
+    // The whole module passed to a function → we can't tell which classes it
+    // uses, so ignore the module (one hand-off in any file is enough).
+    const passedSite = detectModulePassedToFunction(
+      sourceContent,
+      importingFileData.importName,
+      importingFileData.file
+    );
+    if (passedSite) {
+      return {
+        file: cssFile,
+        status: 'ignoredPassedToFunction',
+        sourceFile: importingFileData.file,
+        importName: importingFileData.importName,
+        line: passedSite.line,
+        column: passedSite.column,
+      };
     }
 
     // Static usages (importName.foo / importName['foo']) are collected via a
@@ -109,6 +134,10 @@ export const getUnusedClassesFromCss = async ({
   for (const className of coveredClasses) {
     usedClasses.add(className);
   }
+
+  // A used child keeps its ampersand-family parent from looking unused. Runs
+  // after every "used" signal (static, literal, dynamic coverage) is merged in.
+  rescueUsedAncestors(usedClasses, ancestry);
 
   const unusedClasses: string[] = [];
   for (const className of cssClasses) {

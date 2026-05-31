@@ -8,6 +8,7 @@ import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssCla
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
+import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -27,6 +28,30 @@ export const getNonExistentClassesFromCss = async ({
 
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClasses = extractCssClasses(cssContent);
+
+  // If any importer passes the whole module to a function, ignore the module
+  // entirely (matching the unused path), not just that one file.
+  for (const importingFileData of importingFilesData) {
+    const sourceContent = getContentOfFiles({
+      files: [importingFileData.file],
+      srcDir,
+    });
+
+    const { isFileIgnored } = parseIgnoreComments(sourceContent);
+    if (isFileIgnored) {
+      continue;
+    }
+
+    if (
+      detectModulePassedToFunction(
+        sourceContent,
+        importingFileData.importName,
+        importingFileData.file
+      )
+    ) {
+      return null;
+    }
+  }
 
   const nonExistentClasses: NonExistentClassUsage[] = [];
 

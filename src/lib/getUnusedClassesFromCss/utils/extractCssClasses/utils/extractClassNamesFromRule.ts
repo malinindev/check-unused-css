@@ -23,7 +23,7 @@ const parseSelector: Parser = createParser({ strict: false });
  * into the class names it defines. Returns an empty array if the selector
  * cannot be parsed at all.
  */
-const extractClassNamesFromSelector = (selector: string): string[] => {
+export const extractClassNamesFromSelector = (selector: string): string[] => {
   try {
     const processedSelector = clearGlobalSelectors(selector);
     const parsed = parseSelector(processedSelector);

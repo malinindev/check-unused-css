@@ -1,0 +1,15 @@
+.--size {
+  font-size: 1rem;
+
+  &-small {
+    font-size: 0.75rem;
+  }
+
+  &-large {
+    font-size: 1.5rem;
+  }
+}
+
+.used {
+  color: green;
+}

@@ -1,0 +1,11 @@
+.root {
+  display: block;
+}
+
+.icon {
+  width: 1rem;
+}
+
+.orphan {
+  color: red;
+}

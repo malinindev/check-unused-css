@@ -84,6 +84,14 @@ export const getParentClassName = (rule: Rule): string | null => {
   return getLastClassName(parentRule.selector);
 };
 
+/**
+ * A suffix `&`: an `&` directly followed by an identifier char — SCSS
+ * concatenation like `&-horizontal`, `&Black`, `&__element`. Does not match
+ * `&.x`, `& .x`, or `&:hover`. Non-global so `.test()` is stateless; callers
+ * add the `g` flag when replacing.
+ */
+export const SUFFIX_AMPERSAND_REGEX = /&(?=[A-Za-z0-9_-])/;
+
 export const resolveAmpersandSelector = (
   selector: string,
   parentClassName: string | null
@@ -92,5 +100,8 @@ export const resolveAmpersandSelector = (
     return selector;
   }
 
-  return selector.replace(/&(?=[A-Za-z0-9_-])/g, `.${parentClassName}`);
+  return selector.replace(
+    new RegExp(SUFFIX_AMPERSAND_REGEX, 'g'),
+    `.${parentClassName}`
+  );
 };

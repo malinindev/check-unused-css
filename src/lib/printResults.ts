@@ -2,6 +2,7 @@ import { COLORS } from '../consts.js';
 import type {
   CssAnalysisResult,
   DynamicClassResult,
+  ModuleIgnoredResult,
   NonExistentClassResult,
   UnusedClassResultNoClasses,
   UnusedClassResultWithClasses,
@@ -30,6 +31,11 @@ export const printResults = (
   const nonExistentClassResults = results.filter(
     (result): result is NonExistentClassResult =>
       result.status === 'nonExistentClasses'
+  );
+
+  const ignoredModuleResults = results.filter(
+    (result): result is ModuleIgnoredResult =>
+      result.status === 'ignoredPassedToFunction'
   );
 
   if (resultsWithDynamicUsage.length > 0) {
@@ -80,6 +86,30 @@ export const printResults = (
 
         console.log('');
       }
+    }
+  }
+
+  if (ignoredModuleResults.length > 0) {
+    // Modules handed whole to a function can't be analyzed; warn (naming the
+    // file) instead of reporting false positives. --no-dynamic makes it an error.
+    const color = noDynamic ? COLORS.red : COLORS.yellow;
+    const label = noDynamic ? 'Error' : 'Warning';
+    const emit = noDynamic ? console.error : console.warn;
+
+    emit(
+      `${color}${label}: ${ignoredModuleResults.length} CSS module(s) ignored — the whole module object is passed to a function.${COLORS.reset}`
+    );
+    emit(
+      `${color}Cannot determine class usage when the module object is consumed by a function.${COLORS.reset}\n`
+    );
+
+    for (const result of ignoredModuleResults) {
+      console.log(
+        `  ${COLORS.cyan}${result.sourceFile}:${result.line}:${result.column}${COLORS.reset} - ` +
+          `${color}\`${result.importName}\` (whole module) passed to a function${COLORS.reset}`
+      );
+      console.log(`  ${COLORS.cyan}module: ${result.file}${COLORS.reset}`);
+      console.log('');
     }
   }
 
