@@ -4,7 +4,6 @@ import {
   extractClassNamesFromAtRule,
   extractClassNamesFromRule,
 } from './utils/extractClassNamesFromRule.js';
-import { extractComposedClasses } from './utils/extractComposedClasses.js';
 import { isSelectorBearingAtRule } from './utils/isSelectorBearingAtRule.js';
 
 export type CssClassInfo = {
@@ -52,11 +51,6 @@ export const extractCssClasses = (cssContent: string): string[] => {
       classNames.add(className);
     }
   });
-
-  const composedClasses = extractComposedClasses(root);
-  for (const composedClassName of composedClasses) {
-    classNames.delete(composedClassName);
-  }
 
   return Array.from(classNames);
 };
@@ -116,11 +110,6 @@ export const extractCssClassesWithLocations = (
       }
     }
   });
-
-  const composedClasses = extractComposedClasses(root);
-  for (const composedClassName of composedClasses) {
-    classInfoMap.delete(composedClassName);
-  }
 
   return Array.from(classInfoMap.values());
 };

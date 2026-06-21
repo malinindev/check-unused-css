@@ -1,7 +1,6 @@
 import postcssScss from 'postcss-scss';
 import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import { extractClassNamesFromSelector } from './utils/extractClassNamesFromRule.js';
-import { extractComposedClasses } from './utils/extractComposedClasses.js';
 import {
   getParentClassName,
   resolveAmpersandSelector,
@@ -67,13 +66,6 @@ export const extractCssClassAncestry = (cssContent: string): ClassAncestry => {
       }
     }
   });
-
-  // A class removed because it is `composes:`-d from elsewhere is not a real
-  // family member here, so it must not be able to rescue a parent.
-  const composedClasses = extractComposedClasses(root);
-  for (const composedClassName of composedClasses) {
-    ancestry.delete(composedClassName);
-  }
 
   return ancestry;
 };

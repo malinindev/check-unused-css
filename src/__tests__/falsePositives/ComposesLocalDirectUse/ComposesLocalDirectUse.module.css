@@ -1,0 +1,8 @@
+.definedClass {
+  color: red;
+}
+
+.composingClass {
+  composes: definedClass;
+  font-size: 14px;
+}

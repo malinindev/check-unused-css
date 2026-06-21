@@ -12,13 +12,14 @@ import {
 } from './utils/coverage/index.js';
 import {
   type ClassAncestry,
+  extractComposedClassesFromContent,
   extractCssClassAncestry,
   extractCssClassesWithLocations,
 } from './utils/extractCssClasses/index.js';
-import { rescueUsedAncestors } from './utils/rescueUsedAncestors.js';
 import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule/index.js';
 import { detectModulePassedToFunction } from './utils/passedToFunction/detectModulePassedToFunction.js';
+import { rescueUsedAncestors } from './utils/rescueUsedAncestors.js';
 
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
@@ -38,6 +39,10 @@ export const getUnusedClassesFromCss = async ({
     return null;
   }
 
+  // A class used only via `composes:` (never read in code) still counts as
+  // used — seed it so it isn't reported as unused.
+  const composedClasses = extractComposedClassesFromContent(cssContent);
+
   const importingFilesData = await findFilesImportingCssModule(cssFile, srcDir);
 
   if (importingFilesData.length === 0) {
@@ -47,7 +52,7 @@ export const getUnusedClassesFromCss = async ({
     };
   }
 
-  const usedClasses = new Set<string>();
+  const usedClasses = new Set<string>(composedClasses);
   const allAccesses: ClassAccess[] = [];
 
   for (const importingFileData of importingFilesData) {

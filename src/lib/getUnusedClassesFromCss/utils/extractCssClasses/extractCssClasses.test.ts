@@ -9,15 +9,10 @@ import {
 } from 'bun:test';
 import { extractCssClasses } from './extractCssClasses.js';
 import * as extractClassNamesFromRuleModule from './utils/extractClassNamesFromRule.js';
-import * as extractComposedClassesModule from './utils/extractComposedClasses.js';
 
 describe('extractCssClasses', () => {
   let extractClassNamesFromRuleSpy: Mock<
     (typeof extractClassNamesFromRuleModule)['extractClassNamesFromRule']
-  >;
-
-  let extractComposedClassesSpy: Mock<
-    (typeof extractComposedClassesModule)['extractComposedClasses']
   >;
 
   beforeEach(() => {
@@ -25,29 +20,21 @@ describe('extractCssClasses', () => {
       extractClassNamesFromRuleModule,
       'extractClassNamesFromRule'
     ).mockReturnValue([]);
-
-    extractComposedClassesSpy = spyOn(
-      extractComposedClassesModule,
-      'extractComposedClasses'
-    ).mockReturnValue([]);
   });
 
   afterEach(() => {
     extractClassNamesFromRuleSpy.mockRestore();
-    extractComposedClassesSpy.mockRestore();
   });
 
   describe('should extract class names from CSS content', () => {
     test('extracts class names from single rule', () => {
       extractClassNamesFromRuleSpy.mockReturnValue(['container']);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = '.container { color: blue; }';
       const result = extractCssClasses(css);
 
       expect(result).toEqual(['container']);
       expect(extractClassNamesFromRuleSpy).toHaveBeenCalledTimes(1);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
 
     test('extracts class names from multiple rules', () => {
@@ -55,8 +42,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['container'])
         .mockReturnValueOnce(['button'])
         .mockReturnValueOnce(['text']);
-
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         .container { color: blue; }
@@ -67,7 +52,6 @@ describe('extractCssClasses', () => {
 
       expect(result).toEqual(['container', 'button', 'text']);
       expect(extractClassNamesFromRuleSpy).toHaveBeenCalledTimes(3);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
 
     test('extracts multiple class names from single rule', () => {
@@ -76,7 +60,6 @@ describe('extractCssClasses', () => {
         'active',
         'large',
       ]);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = '.container.active.large { color: blue; }';
       const result = extractCssClasses(css);
@@ -86,19 +69,14 @@ describe('extractCssClasses', () => {
     });
 
     test('handles empty CSS content', () => {
-      extractComposedClassesSpy.mockReturnValue([]);
-
       const css = '';
       const result = extractCssClasses(css);
 
       expect(result).toEqual([]);
       expect(extractClassNamesFromRuleSpy).not.toHaveBeenCalled();
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
 
     test('handles CSS without class rules', () => {
-      extractComposedClassesSpy.mockReturnValue([]);
-
       const css = `
         body { margin: 0; }
         h1 { font-size: 24px; }
@@ -108,7 +86,6 @@ describe('extractCssClasses', () => {
 
       expect(result).toEqual([]);
       expect(extractClassNamesFromRuleSpy).toHaveBeenCalledTimes(3);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -118,8 +95,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['container'])
         .mockReturnValueOnce(['container', 'button'])
         .mockReturnValueOnce(['button']);
-
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         .container { color: blue; }
@@ -138,7 +113,6 @@ describe('extractCssClasses', () => {
         'container',
         'button',
       ]);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = '.container { color: blue; }';
       const result = extractCssClasses(css);
@@ -154,8 +128,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['c', 'd', 'e'])
         .mockReturnValueOnce(['a', 'e']);
 
-      extractComposedClassesSpy.mockReturnValue([]);
-
       const css = `
         .a.b.c { color: blue; }
         .b.c.d { padding: 10px; }
@@ -169,14 +141,15 @@ describe('extractCssClasses', () => {
     });
   });
 
-  describe('should handle composed classes', () => {
-    test('removes composed classes from final result', () => {
+  describe('should keep locally-defined composed classes (issue #83)', () => {
+    // A class referenced by `composes:` that is also defined in this file is a
+    // real class — it must stay in the defined set so a direct read of it
+    // resolves. (Whether it is "unused" is decided later, not here.)
+    test('keeps a composed target that is defined in the file', () => {
       extractClassNamesFromRuleSpy
         .mockReturnValueOnce(['baseButton'])
         .mockReturnValueOnce(['primaryButton'])
         .mockReturnValueOnce(['secondaryButton']);
-
-      extractComposedClassesSpy.mockReturnValue(['baseButton']);
 
       const css = `
         .baseButton { padding: 10px; }
@@ -185,17 +158,19 @@ describe('extractCssClasses', () => {
       `;
       const result = extractCssClasses(css);
 
-      expect(result).toEqual(['primaryButton', 'secondaryButton']);
+      expect(result).toEqual([
+        'baseButton',
+        'primaryButton',
+        'secondaryButton',
+      ]);
       expect(extractClassNamesFromRuleSpy).toHaveBeenCalledTimes(3);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('removes multiple composed classes', () => {
+    test('keeps multiple composed targets that are defined in the file', () => {
       extractClassNamesFromRuleSpy
         .mockReturnValueOnce(['base', 'theme'])
         .mockReturnValueOnce(['button'])
         .mockReturnValueOnce(['input']);
-      extractComposedClassesSpy.mockReturnValue(['base', 'theme']);
 
       const css = `
         .base { margin: 0; }
@@ -205,40 +180,23 @@ describe('extractCssClasses', () => {
       `;
       const result = extractCssClasses(css);
 
-      expect(result).toEqual(['button', 'input']);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(['base', 'theme', 'button', 'input']);
     });
 
-    test('handles case where composed class is not in extracted classes', () => {
+    test('an external composes target is not invented as a defined class', () => {
       extractClassNamesFromRuleSpy
         .mockReturnValueOnce(['button'])
         .mockReturnValueOnce(['input']);
-      extractComposedClassesSpy.mockReturnValue(['nonExistentClass']);
 
+      // `external` lives in another module; it has no rule here, so it is never
+      // a defined class — and the `from`/path tokens must not leak either.
       const css = `
-        .button { padding: 10px; }
+        .button { composes: external from './other.module.css'; padding: 10px; }
         .input { margin: 5px; }
       `;
       const result = extractCssClasses(css);
 
       expect(result).toEqual(['button', 'input']);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
-    });
-
-    test('handles empty composed classes', () => {
-      extractClassNamesFromRuleSpy
-        .mockReturnValueOnce(['button'])
-        .mockReturnValueOnce(['input']);
-      extractComposedClassesSpy.mockReturnValue([]);
-
-      const css = `
-        .button { padding: 10px; }
-        .input { margin: 5px; }
-      `;
-      const result = extractCssClasses(css);
-
-      expect(result).toEqual(['button', 'input']);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -247,7 +205,6 @@ describe('extractCssClasses', () => {
       extractClassNamesFromRuleSpy
         .mockReturnValueOnce(['container'])
         .mockReturnValueOnce(['mobile']);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         .container { width: 100%; }
@@ -267,7 +224,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce([]) // from rule
         .mockReturnValueOnce([]) // to rule
         .mockReturnValueOnce(['animated']); // .animated rule
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         @keyframes fadeIn {
@@ -287,7 +243,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['container'])
         .mockReturnValueOnce(['dark'])
         .mockReturnValueOnce(['light']);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         .container { width: 100%; }
@@ -308,7 +263,6 @@ describe('extractCssClasses', () => {
   describe('should handle edge cases', () => {
     test('handles CSS with comments', () => {
       extractClassNamesFromRuleSpy.mockReturnValueOnce(['button']);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         /* This is a comment */
@@ -325,7 +279,6 @@ describe('extractCssClasses', () => {
 
     test('handles CSS with invalid syntax gracefully', () => {
       extractClassNamesFromRuleSpy.mockReturnValue([]);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       // PostCSS should handle this gracefully
       const css = '.incomplete-rule {';
@@ -339,7 +292,6 @@ describe('extractCssClasses', () => {
         const callIndex = extractClassNamesFromRuleSpy.mock.calls.length - 1;
         return mockCalls[callIndex] || [];
       });
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = Array.from(
         { length: 1000 },
@@ -353,8 +305,6 @@ describe('extractCssClasses', () => {
     });
 
     test('handles CSS with no rules but with at-rules', () => {
-      extractComposedClassesSpy.mockReturnValue([]);
-
       const css = `
         @import url('styles.css');
         @charset "UTF-8";
@@ -373,7 +323,6 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['z', 'a'])
         .mockReturnValueOnce(['m', 'b'])
         .mockReturnValueOnce(['x', 'c']);
-      extractComposedClassesSpy.mockReturnValue([]);
 
       const css = `
         .z.a { color: blue; }
@@ -391,8 +340,9 @@ describe('extractCssClasses', () => {
         .mockReturnValueOnce(['primary'])
         .mockReturnValueOnce(['secondary'])
         .mockReturnValueOnce(['large', 'size']);
-      extractComposedClassesSpy.mockReturnValue(['base', 'component']);
 
+      // `base`/`component` are defined locally and composed into others; they
+      // remain in the defined set (issue #83 — they are not stripped out).
       const css = `
         .base.component { padding: 10px; border: 1px solid; }
         .primary { composes: base component; background: blue; }
@@ -401,9 +351,15 @@ describe('extractCssClasses', () => {
       `;
       const result = extractCssClasses(css);
 
-      expect(result).toEqual(['primary', 'secondary', 'large', 'size']);
+      expect(result).toEqual([
+        'base',
+        'component',
+        'primary',
+        'secondary',
+        'large',
+        'size',
+      ]);
       expect(extractClassNamesFromRuleSpy).toHaveBeenCalledTimes(4);
-      expect(extractComposedClassesSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
