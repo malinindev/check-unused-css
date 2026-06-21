@@ -1,0 +1,12 @@
+.base {
+  padding: 8px;
+}
+
+.button {
+  composes: base;
+  color: blue;
+}
+
+.orphan {
+  color: green;
+}

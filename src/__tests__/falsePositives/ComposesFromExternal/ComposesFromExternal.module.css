@@ -1,0 +1,5 @@
+.card {
+  composes: base from './shared.module.css';
+  composes: highlight from global;
+  border: 1px solid;
+}

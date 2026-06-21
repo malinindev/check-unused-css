@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import postcss from 'postcss';
-import { extractComposedClasses } from './extractComposedClasses.js';
+import {
+  extractComposedClasses,
+  extractComposedClassesFromContent,
+} from './extractComposedClasses.js';
 
 const createPostCSSRoot = (css: string): postcss.Root => postcss.parse(css);
 
@@ -380,6 +383,80 @@ describe('extractComposedClasses', () => {
         'base-component_v2',
         'modifier--active',
       ]);
+    });
+  });
+
+  describe('should exclude external composes targets (from clause)', () => {
+    test('ignores a target composed from another module', () => {
+      const css = `
+        .card {
+          composes: base from './shared.module.css';
+        }
+      `;
+      const root = createPostCSSRoot(css);
+      expect(extractComposedClasses(root)).toEqual([]);
+    });
+
+    test('ignores a target composed from global', () => {
+      const css = `
+        .card {
+          composes: highlight from global;
+        }
+      `;
+      const root = createPostCSSRoot(css);
+      expect(extractComposedClasses(root)).toEqual([]);
+    });
+
+    test('a from clause excludes every preceding target in that declaration', () => {
+      const css = `
+        .card {
+          composes: a b from './shared.module.css';
+        }
+      `;
+      const root = createPostCSSRoot(css);
+      expect(extractComposedClasses(root)).toEqual([]);
+    });
+
+    test('keeps local targets while excluding external ones across declarations', () => {
+      const css = `
+        .card {
+          composes: localBase;
+          composes: external from './shared.module.css';
+        }
+      `;
+      const root = createPostCSSRoot(css);
+      expect(extractComposedClasses(root)).toEqual(['localBase']);
+    });
+
+    test('a class literally named "from-…" stays local (from is a token, not a substring)', () => {
+      const css = `
+        .card {
+          composes: fromLeft transform;
+        }
+      `;
+      const root = createPostCSSRoot(css);
+      expect(extractComposedClasses(root)).toEqual(['fromLeft', 'transform']);
+    });
+  });
+
+  describe('extractComposedClassesFromContent (content wrapper)', () => {
+    test('parses raw CSS text and returns local composed targets', () => {
+      const css = `
+        .button {
+          composes: base;
+        }
+      `;
+      expect(extractComposedClassesFromContent(css)).toEqual(['base']);
+    });
+
+    test('tolerates SCSS syntax', () => {
+      const css = `
+        .button {
+          composes: base;
+          &:hover { color: red; }
+        }
+      `;
+      expect(extractComposedClassesFromContent(css)).toEqual(['base']);
     });
   });
 });
