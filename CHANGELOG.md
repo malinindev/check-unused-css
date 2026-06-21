@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.5.1
+
+### Patch Changes
+
+- 04c507c: Fix a false "non-existent" report for a local class that is also used via `composes:` (#83). A class defined in the same file and referenced as `composes: localClass` was dropped from the defined set, so reading `styles.localClass` looked like a missing class. Such targets are now kept and counted as used; `composes: x from '…'` / `from global` are still treated as external.
+
 ## 0.5.0
 
 ### Minor Changes
