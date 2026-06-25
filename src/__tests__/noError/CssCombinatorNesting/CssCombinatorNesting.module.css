@@ -1,0 +1,13 @@
+.wrapper {
+  & > .item {
+    color: red;
+  }
+
+  & + .sibling {
+    color: blue;
+  }
+
+  & ~ .general {
+    color: green;
+  }
+}

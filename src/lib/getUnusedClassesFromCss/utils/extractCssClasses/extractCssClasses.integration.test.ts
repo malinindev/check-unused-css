@@ -341,4 +341,66 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       expect(extractSorted(css)).toEqual(sorted(['upper', 'inMedia']));
     });
   });
+
+  describe('nested selectors starting with a combinator', () => {
+    test('child combinator (>) at the start of a nested selector', () => {
+      expect(extractSorted('.wrapper { > .item { color: red; } }')).toEqual(
+        sorted(['wrapper', 'item'])
+      );
+    });
+
+    test('adjacent sibling combinator (+) at the start', () => {
+      expect(extractSorted('.wrapper { + .sibling { color: red; } }')).toEqual(
+        sorted(['wrapper', 'sibling'])
+      );
+    });
+
+    test('general sibling combinator (~) at the start', () => {
+      expect(extractSorted('.wrapper { ~ .general { color: red; } }')).toEqual(
+        sorted(['wrapper', 'general'])
+      );
+    });
+
+    test('combinator with no space before the class', () => {
+      expect(extractSorted('.wrapper { >.item { color: red; } }')).toEqual(
+        sorted(['wrapper', 'item'])
+      );
+    });
+
+    test('explicit & before the combinator', () => {
+      expect(extractSorted('.wrapper { & > .item { color: red; } }')).toEqual(
+        sorted(['wrapper', 'item'])
+      );
+    });
+
+    test('deep nesting where every level starts with a combinator', () => {
+      expect(extractSorted('.a { > .b { > .c { color: red; } } }')).toEqual(
+        sorted(['a', 'b', 'c'])
+      );
+    });
+
+    test('leading combinator followed by a descendant chain', () => {
+      expect(
+        extractSorted('.wrapper { > .item .child { color: red; } }')
+      ).toEqual(sorted(['wrapper', 'item', 'child']));
+    });
+
+    test('selector list where members start with a combinator', () => {
+      expect(
+        extractSorted('.wrapper { > .item, + .other { color: red; } }')
+      ).toEqual(sorted(['wrapper', 'item', 'other']));
+    });
+
+    test('compound class after the leading combinator', () => {
+      expect(
+        extractSorted('.wrapper { > .item.active { color: red; } }')
+      ).toEqual(sorted(['wrapper', 'item', 'active']));
+    });
+
+    test('no regression: combinator in the middle still works', () => {
+      expect(extractSorted('.wrapper > .item { color: red; }')).toEqual(
+        sorted(['wrapper', 'item'])
+      );
+    });
+  });
 });
