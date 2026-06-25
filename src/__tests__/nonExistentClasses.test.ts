@@ -81,6 +81,26 @@ describe('Non-existent CSS classes detection', () => {
     expect(result.stdout).toMatch(/No unused CSS classes found/);
   });
 
+  test('does not report false positive non-existent classes for SCSS nested selectors starting with a combinator', () => {
+    const result = runCheckUnusedCss(
+      'src/__tests__/noError/ScssCombinatorNesting'
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).not.toMatch(/non-existent CSS classes/);
+    expect(result.stdout).toMatch(/No unused CSS classes found/);
+  });
+
+  test('does not report false positive non-existent classes for native CSS nesting with a combinator', () => {
+    const result = runCheckUnusedCss(
+      'src/__tests__/noError/CssCombinatorNesting'
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).not.toMatch(/non-existent CSS classes/);
+    expect(result.stdout).toMatch(/No unused CSS classes found/);
+  });
+
   test('skips non-existent class detection when dynamic usage is present', () => {
     const result = runCheckUnusedCss('src/__tests__/noDynamic/WithDynamic');
 

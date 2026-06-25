@@ -1,3 +1,5 @@
+import { stripLeadingCombinators } from './stripLeadingCombinators.js';
+
 const removeGlobalSelectors = (selector: string): string => {
   let result = '';
   let i = 0;
@@ -32,6 +34,11 @@ export const clearGlobalSelectors = (selector: string): string => {
   processed = processed.replace(/&/g, '');
 
   processed = processed.replace(/\s+/g, ' ').trim();
+
+  // Removing `&` can expose a bare leading combinator (`& > .item` -> `> .item`),
+  // and nested rules may already start with one; strip it so the parser accepts
+  // the remaining compound.
+  processed = stripLeadingCombinators(processed);
 
   if (!processed || processed === ' ') {
     return '';

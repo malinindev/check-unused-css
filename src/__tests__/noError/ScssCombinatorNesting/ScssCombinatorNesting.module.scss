@@ -1,0 +1,24 @@
+.wrapper {
+  > .item {
+    color: red;
+  }
+
+  + .sibling {
+    color: blue;
+  }
+
+  ~ .general {
+    color: green;
+  }
+
+  & > .ampersandChild {
+    color: orange;
+  }
+}
+
+.list {
+  > .first,
+  + .second {
+    color: red;
+  }
+}
