@@ -26,7 +26,7 @@ const removeGlobalSelectors = (selector: string): string => {
   return result;
 };
 
-/* Removes :global() selectors and & references since css-selector-parser doesn't support them */
+/* Removes :global() selectors, & references, and leading combinators since css-selector-parser doesn't support them */
 export const clearGlobalSelectors = (selector: string): string => {
   let processed = selector;
 

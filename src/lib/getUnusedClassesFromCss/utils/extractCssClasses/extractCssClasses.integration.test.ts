@@ -342,62 +342,62 @@ describe('extractCssClasses (integration, real pipeline)', () => {
     });
   });
 
-  describe('nested selectors starting with a combinator (US5)', () => {
-    test('N20: child combinator (>) at the start of a nested selector', () => {
+  describe('nested selectors starting with a combinator', () => {
+    test('child combinator (>) at the start of a nested selector', () => {
       expect(extractSorted('.wrapper { > .item { color: red; } }')).toEqual(
         sorted(['wrapper', 'item'])
       );
     });
 
-    test('N21: adjacent sibling combinator (+) at the start', () => {
+    test('adjacent sibling combinator (+) at the start', () => {
       expect(extractSorted('.wrapper { + .sibling { color: red; } }')).toEqual(
         sorted(['wrapper', 'sibling'])
       );
     });
 
-    test('N22: general sibling combinator (~) at the start', () => {
+    test('general sibling combinator (~) at the start', () => {
       expect(extractSorted('.wrapper { ~ .general { color: red; } }')).toEqual(
         sorted(['wrapper', 'general'])
       );
     });
 
-    test('N23: combinator with no space before the class', () => {
+    test('combinator with no space before the class', () => {
       expect(extractSorted('.wrapper { >.item { color: red; } }')).toEqual(
         sorted(['wrapper', 'item'])
       );
     });
 
-    test('N24: explicit & before the combinator', () => {
+    test('explicit & before the combinator', () => {
       expect(extractSorted('.wrapper { & > .item { color: red; } }')).toEqual(
         sorted(['wrapper', 'item'])
       );
     });
 
-    test('N25: deep nesting where every level starts with a combinator', () => {
+    test('deep nesting where every level starts with a combinator', () => {
       expect(extractSorted('.a { > .b { > .c { color: red; } } }')).toEqual(
         sorted(['a', 'b', 'c'])
       );
     });
 
-    test('N26: leading combinator followed by a descendant chain', () => {
+    test('leading combinator followed by a descendant chain', () => {
       expect(
         extractSorted('.wrapper { > .item .child { color: red; } }')
       ).toEqual(sorted(['wrapper', 'item', 'child']));
     });
 
-    test('N27: selector list where members start with a combinator', () => {
+    test('selector list where members start with a combinator', () => {
       expect(
         extractSorted('.wrapper { > .item, + .other { color: red; } }')
       ).toEqual(sorted(['wrapper', 'item', 'other']));
     });
 
-    test('N28: compound class after the leading combinator', () => {
+    test('compound class after the leading combinator', () => {
       expect(
         extractSorted('.wrapper { > .item.active { color: red; } }')
       ).toEqual(sorted(['wrapper', 'item', 'active']));
     });
 
-    test('C20 (no regression): combinator in the middle still works', () => {
+    test('no regression: combinator in the middle still works', () => {
       expect(extractSorted('.wrapper > .item { color: red; }')).toEqual(
         sorted(['wrapper', 'item'])
       );

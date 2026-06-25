@@ -44,6 +44,29 @@ describe('stripLeadingCombinators', () => {
     test('member without a leading combinator stays as-is within a list', () => {
       expect(stripLeadingCombinators('.item, > .other')).toBe('.item, .other');
     });
+
+    test('a comma inside a functional pseudo-class is not a member boundary', () => {
+      // The comma in `:not(.x, .y)` lives inside parens, so it is not a
+      // top-level list separator; the member never restarts and nothing inside
+      // is rewritten.
+      expect(stripLeadingCombinators('.item:not(.x, .y)')).toBe(
+        '.item:not(.x, .y)'
+      );
+    });
+
+    test('preserves commas and whitespace inside an attribute value', () => {
+      // A comma inside a quoted attribute value (`rgb(0,0,0)`) must stay
+      // byte-for-byte; the scan only acts on top-level member starts.
+      expect(stripLeadingCombinators('.item[style*="rgb(0,0,0)"]')).toBe(
+        '.item[style*="rgb(0,0,0)"]'
+      );
+    });
+
+    test('strips the leading combinator but keeps a following attribute value intact', () => {
+      expect(stripLeadingCombinators('> .item[data-x="p,q"]')).toBe(
+        '.item[data-x="p,q"]'
+      );
+    });
   });
 
   describe('should handle edge cases', () => {
