@@ -1,22 +1,11 @@
 import type { AstRule, AstSelector } from 'css-selector-parser';
 import type { Container, Document, Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
-import { parseSelector } from './selectorParser.js';
+import { isGlobalSwitchItem, parseSelector } from './selectorParser.js';
 
-const ruleHasGlobalSwitch = (rule: AstRule): boolean => {
-  for (const item of rule.items) {
-    // A bare `:global` (no argument) is the scope switch; `:global(.foo)` (with
-    // argument) is the function form and does NOT switch nested rules to global.
-    if (
-      item.type === 'PseudoClass' &&
-      item.name === 'global' &&
-      !item.argument
-    ) {
-      return true;
-    }
-  }
-  return rule.nestedRule ? ruleHasGlobalSwitch(rule.nestedRule) : false;
-};
+const ruleHasGlobalSwitch = (rule: AstRule): boolean =>
+  rule.items.some(isGlobalSwitchItem) ||
+  (rule.nestedRule ? ruleHasGlobalSwitch(rule.nestedRule) : false);
 
 /**
  * Does this selector string contain a bare `:global` scope SWITCH at any point?
@@ -24,6 +13,12 @@ const ruleHasGlobalSwitch = (rule: AstRule): boolean => {
  * an ancestor defines global (not local) classes.
  */
 const selectorHasGlobalSwitch = (selector: string): boolean => {
+  // Cheap reject for the common case (no `:global` at all) — avoids a parser
+  // allocation on every ancestor of every rule in `:global`-free stylesheets.
+  if (!selector.includes(':global')) {
+    return false;
+  }
+
   let parsed: AstSelector;
   try {
     parsed = parseSelector(clearGlobalSelectors(selector));

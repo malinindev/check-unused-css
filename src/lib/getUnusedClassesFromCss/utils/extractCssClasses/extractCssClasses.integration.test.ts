@@ -348,13 +348,13 @@ describe('extractCssClasses (integration, real pipeline)', () => {
     // must NOT be extracted as local. The function form `:global(.foo)` is
     // unaffected (already handled) and is covered by separate regression cases.
 
-    test('G1: class inside a `:global {}` block is not extracted', () => {
+    test('class inside a `:global {}` block is not extracted', () => {
       expect(extractSorted(':global { .globalThing { color: red; } }')).toEqual(
         []
       );
     });
 
-    test('G2: local class outside the block is kept; global one is dropped', () => {
+    test('local class outside the block is kept; global one is dropped', () => {
       expect(
         extractSorted(
           '.localUsed { color: blue; } :global { .globalThing { color: red; } }'
@@ -362,41 +362,41 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual(sorted(['localUsed']));
     });
 
-    test('G3: multiple classes inside a `:global {}` block are all dropped', () => {
+    test('multiple classes inside a `:global {}` block are all dropped', () => {
       expect(
         extractSorted(':global { .a { color: red; } .b { color: blue; } }')
       ).toEqual([]);
     });
 
-    test('G4: deep nesting inside a `:global {}` block stays global', () => {
+    test('deep nesting inside a `:global {}` block stays global', () => {
       expect(extractSorted(':global { .a { .b { color: red; } } }')).toEqual(
         []
       );
     });
 
-    test('G5: bare `:global .scoped` switch keeps no class', () => {
+    test('bare `:global .scoped` switch keeps no class', () => {
       expect(extractSorted(':global .scoped { color: red; }')).toEqual([]);
     });
 
-    test('G6: nested rule under a `:global .scoped` switch stays global', () => {
+    test('nested rule under a `:global .scoped` switch stays global', () => {
       expect(
         extractSorted(':global .scoped { .deep { color: red; } }')
       ).toEqual([]);
     });
 
-    test('G7: local class left of a bare `:global` switch is kept', () => {
+    test('local class left of a bare `:global` switch is kept', () => {
       expect(extractSorted('.local :global .after { color: red; }')).toEqual(
         sorted(['local'])
       );
     });
 
-    test('G8: a local block containing a `:global {}` block keeps only the local class', () => {
+    test('a local block containing a `:global {}` block keeps only the local class', () => {
       expect(
         extractSorted('.local { :global { .globalThing { color: red; } } }')
       ).toEqual(sorted(['local']));
     });
 
-    test('G9 (no regression): function form `:global(.foo)` still strips only the global part', () => {
+    test('no regression: function form `:global(.foo)` still strips only the global part', () => {
       // `:global(.foo) .bar` → `.foo` global, `.bar` local (stays local even
       // when expressed as a nested block).
       expect(extractSorted(':global(.foo) .bar { color: red; }')).toEqual(
@@ -407,7 +407,7 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       );
     });
 
-    test('G10: sibling local rule after a `:global {}` block is still extracted', () => {
+    test('sibling local rule after a `:global {}` block is still extracted', () => {
       expect(
         extractSorted(
           ':global { .g { color: red; } } .localAfter { color: blue; }'
@@ -415,7 +415,7 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual(sorted(['localAfter']));
     });
 
-    test('G11: class under an at-rule inside a `:global {}` block stays global', () => {
+    test('class under an at-rule inside a `:global {}` block stays global', () => {
       // The class is nested under `@media`, whose parent is `:global`; the
       // ancestor walk must step through the at-rule to see the switch.
       expect(
@@ -425,7 +425,7 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual([]);
     });
 
-    test('G12: at-rule inside a `:global .scoped` switch stays global', () => {
+    test('at-rule inside a `:global .scoped` switch stays global', () => {
       expect(
         extractSorted(
           ':global .scoped { @media screen { .deep { color: red; } } }'
@@ -433,7 +433,7 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual([]);
     });
 
-    test('G13 (no regression): a class under an at-rule with no `:global` is local', () => {
+    test('no regression: a class under an at-rule with no `:global` is local', () => {
       expect(
         extractSorted('@media screen { .localInMedia { color: red; } }')
       ).toEqual(sorted(['localInMedia']));

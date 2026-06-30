@@ -1,4 +1,7 @@
+import type { AstRule } from 'css-selector-parser';
 import { createParser, type Parser } from 'css-selector-parser';
+
+type AstRuleItem = AstRule['items'][number];
 
 /**
  * Shared `css-selector-parser` instance for class extraction.
@@ -19,3 +22,12 @@ export const parseSelector: Parser = createParser({
   strict: false,
   syntax: { baseSyntax: 'progressive', pseudoClasses: { unknown: 'accept' } },
 });
+
+/**
+ * The single definition of a CSS-Modules scope SWITCH: a bare `:global` (no
+ * argument). Everything to its right — in the same selector and in nested rules
+ * — is global. The function form `:global(.foo)` carries an argument and is NOT
+ * a switch (`:global(.foo) .bar` keeps `.bar` local).
+ */
+export const isGlobalSwitchItem = (item: AstRuleItem): boolean =>
+  item.type === 'PseudoClass' && item.name === 'global' && !item.argument;

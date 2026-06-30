@@ -1,4 +1,5 @@
 import type { AstRule, AstSelector } from 'css-selector-parser';
+import { isGlobalSwitchItem } from './selectorParser.js';
 
 export const findClassNamesInSelector = (selector: AstSelector): string[] => {
   if (!selector.rules.length) {
@@ -9,16 +10,11 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
 
   const extractClassNamesFromRule = (rule: AstRule): void => {
     for (const item of rule.items) {
-      // A bare `:global` (no argument) is a CSS-Modules scope SWITCH: every
-      // compound to its right — in this selector and in its nested rules — is
-      // global, so stop collecting this branch. The function form
-      // `:global(.foo)` carries an argument and is left alone (its inner class
-      // is global, not collected, but `.foo .bar` keeps `.bar` local).
-      if (
-        item.type === 'PseudoClass' &&
-        item.name === 'global' &&
-        !item.argument
-      ) {
+      // A bare `:global` switch makes every compound to its right — in this
+      // selector and in its nested rules — global, so stop collecting this
+      // branch. (The function form `:global(.foo)` is not a switch; its inner
+      // class is simply not collected, while `:global(.foo) .bar` keeps `.bar`.)
+      if (isGlobalSwitchItem(item)) {
         return;
       }
 
