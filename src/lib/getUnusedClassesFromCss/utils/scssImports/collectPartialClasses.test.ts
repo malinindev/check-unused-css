@@ -84,4 +84,14 @@ describe('collectPartialClasses', () => {
 
     expect([...collectPartialClasses(module)]).toEqual(['deep']);
   });
+
+  test('a malformed partial does not throw and still collects valid ones', () => {
+    // `_broken.scss` has an unclosed block, which makes postcss-scss throw.
+    // The walk must swallow that and still return `.ok` from the valid partial.
+    write('_broken.scss', '.bad { color: red;');
+    write('_good.scss', '.ok {}');
+    const module = write('M.module.scss', `@use 'broken';\n@use 'good';`);
+
+    expect([...collectPartialClasses(module)]).toEqual(['ok']);
+  });
 });

@@ -50,8 +50,9 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
 
   enqueueImportsFrom(cssContent, path.dirname(cssFilePath));
 
-  while (queue.length > 0) {
-    const partialPath = queue.shift();
+  // Index-based walk (not `queue.shift()`) keeps traversal O(n) on large graphs.
+  for (let i = 0; i < queue.length; i++) {
+    const partialPath = queue[i];
     if (!partialPath) {
       continue;
     }
@@ -63,7 +64,15 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
       continue;
     }
 
-    for (const className of extractCssClasses(partialContent)) {
+    // A single malformed partial must not break the run — `extractCssClasses`
+    // parses with postcss-scss and can throw on unsupported syntax.
+    let partialClassNames: string[];
+    try {
+      partialClassNames = extractCssClasses(partialContent);
+    } catch {
+      partialClassNames = [];
+    }
+    for (const className of partialClassNames) {
       classNames.add(className);
     }
 

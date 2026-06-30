@@ -32,9 +32,13 @@ export const getNonExistentClassesFromCss = async ({
 
   // Classes are real if they are defined in this file OR pulled into it via
   // `@use`/`@forward`/`@import` (those emit the partial's rules into the
-  // module's compiled CSS), so both sets count as existing (issue #90).
+  // module's compiled CSS), so both sets count as existing (issue #90). A Set
+  // keeps the per-usage lookup below O(1).
   const partialClasses = collectPartialClasses(path.join(srcDir, cssFile));
-  const cssClasses = [...extractCssClasses(cssContent), ...partialClasses];
+  const cssClasses = new Set<string>([
+    ...extractCssClasses(cssContent),
+    ...partialClasses,
+  ]);
 
   // If any importer passes the whole module to a function, ignore the module
   // entirely (matching the unused path), not just that one file.
@@ -93,7 +97,7 @@ export const getNonExistentClassesFromCss = async ({
 
     // Find classes that are used in code but don't exist in CSS
     for (const usedClass of usedClassesWithLocations) {
-      if (!cssClasses.includes(usedClass.className)) {
+      if (!cssClasses.has(usedClass.className)) {
         nonExistentClasses.push({
           className: usedClass.className,
           file: importingFileData.file,
