@@ -16,6 +16,12 @@
       color: green;
     }
   }
+
+  @media (min-width: 600px) {
+    .globalInMedia {
+      color: orange;
+    }
+  }
 }
 
 :global .switchGlobal {

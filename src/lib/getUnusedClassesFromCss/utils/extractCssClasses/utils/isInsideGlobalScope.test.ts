@@ -57,4 +57,27 @@ describe('isInsideGlobalScope', () => {
     const rule = ruleBySelector('.local { :global { .g {} } }', '.local');
     expect(isInsideGlobalScope(rule)).toBe(false);
   });
+
+  test('a rule nested under an at-rule inside a `:global {}` block is in global scope', () => {
+    // The `.g` rule's direct parent is the `@media` at-rule, not `:global`, so
+    // the ancestor walk must step through the at-rule to find the switch.
+    const rule = ruleBySelector(
+      ':global { @media (min-width: 1px) { .g {} } }',
+      '.g'
+    );
+    expect(isInsideGlobalScope(rule)).toBe(true);
+  });
+
+  test('a rule under an at-rule inside a `:global .scoped` switch is in global scope', () => {
+    const rule = ruleBySelector(
+      ':global .scoped { @media screen { .deep {} } }',
+      '.deep'
+    );
+    expect(isInsideGlobalScope(rule)).toBe(true);
+  });
+
+  test('a rule under an at-rule but NOT inside any `:global` switch is not in global scope', () => {
+    const rule = ruleBySelector('@media screen { .local {} }', '.local');
+    expect(isInsideGlobalScope(rule)).toBe(false);
+  });
 });

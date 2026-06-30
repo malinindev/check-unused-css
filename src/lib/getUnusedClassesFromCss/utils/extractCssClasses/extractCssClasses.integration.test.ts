@@ -414,6 +414,30 @@ describe('extractCssClasses (integration, real pipeline)', () => {
         )
       ).toEqual(sorted(['localAfter']));
     });
+
+    test('G11: class under an at-rule inside a `:global {}` block stays global', () => {
+      // The class is nested under `@media`, whose parent is `:global`; the
+      // ancestor walk must step through the at-rule to see the switch.
+      expect(
+        extractSorted(
+          ':global { @media (min-width: 1px) { .g { color: red; } } }'
+        )
+      ).toEqual([]);
+    });
+
+    test('G12: at-rule inside a `:global .scoped` switch stays global', () => {
+      expect(
+        extractSorted(
+          ':global .scoped { @media screen { .deep { color: red; } } }'
+        )
+      ).toEqual([]);
+    });
+
+    test('G13 (no regression): a class under an at-rule with no `:global` is local', () => {
+      expect(
+        extractSorted('@media screen { .localInMedia { color: red; } }')
+      ).toEqual(sorted(['localInMedia']));
+    });
   });
 
   describe('nested selectors starting with a combinator', () => {

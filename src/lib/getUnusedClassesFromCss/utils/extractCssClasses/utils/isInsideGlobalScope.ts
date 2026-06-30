@@ -1,5 +1,5 @@
 import type { AstRule, AstSelector } from 'css-selector-parser';
-import type { Rule } from 'postcss';
+import type { Container, Document, Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
 import { parseSelector } from './selectorParser.js';
 
@@ -40,12 +40,20 @@ const selectorHasGlobalSwitch = (selector: string): boolean => {
  * SCSS nesting concatenates the child selector to the right of the switch, so
  * the child is global too. The function form `:global(.foo) { .bar {} }` does
  * NOT count — `.bar` stays local — which `selectorHasGlobalSwitch` reflects.
+ *
+ * At-rules between the switch and the class (`:global { @media … { .g {} } }`)
+ * are walked through, not stopped at: only `rule` ancestors carry a selector to
+ * test, but a non-`rule` ancestor must not end the walk or the `.g` above would
+ * be missed.
  */
 export const isInsideGlobalScope = (rule: Rule): boolean => {
-  let parent = rule.parent;
+  let parent: Container | Document | undefined = rule.parent;
 
-  while (parent && parent.type === 'rule') {
-    if (selectorHasGlobalSwitch((parent as Rule).selector)) {
+  while (parent) {
+    if (
+      parent.type === 'rule' &&
+      selectorHasGlobalSwitch((parent as Rule).selector)
+    ) {
       return true;
     }
     parent = parent.parent;

@@ -87,6 +87,7 @@ describe('Component with errors', () => {
     expect(result.stdout).not.toMatch(/\.globalThing/);
     expect(result.stdout).not.toMatch(/\.anotherGlobal/);
     expect(result.stdout).not.toMatch(/\.nestedGlobal/);
+    expect(result.stdout).not.toMatch(/\.globalInMedia/);
     expect(result.stdout).not.toMatch(/\.switchGlobal/);
 
     // The used local class is not reported either.
