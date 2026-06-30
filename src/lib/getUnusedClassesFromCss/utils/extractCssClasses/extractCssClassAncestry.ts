@@ -1,6 +1,7 @@
 import postcssScss from 'postcss-scss';
 import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import { extractClassNamesFromSelector } from './utils/extractClassNamesFromRule.js';
+import { isInsideGlobalScope } from './utils/isInsideGlobalScope.js';
 import {
   getParentClassName,
   resolveAmpersandSelector,
@@ -31,6 +32,11 @@ export const extractCssClassAncestry = (cssContent: string): ClassAncestry => {
 
   root.walkRules((rule) => {
     if (rule.source?.start && ignoredLines.has(rule.source.start.line)) {
+      return;
+    }
+
+    // A `:global` block makes its children global; they have no local ancestry.
+    if (isInsideGlobalScope(rule)) {
       return;
     }
 

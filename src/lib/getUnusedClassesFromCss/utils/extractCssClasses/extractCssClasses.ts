@@ -4,6 +4,7 @@ import {
   extractClassNamesFromAtRule,
   extractClassNamesFromRule,
 } from './utils/extractClassNamesFromRule.js';
+import { isInsideGlobalScope } from './utils/isInsideGlobalScope.js';
 import { isSelectorBearingAtRule } from './utils/isSelectorBearingAtRule.js';
 
 export type CssClassInfo = {
@@ -25,6 +26,11 @@ export const extractCssClasses = (cssContent: string): string[] => {
 
   root.walkRules((rule) => {
     if (rule.source?.start && ignoredLines.has(rule.source.start.line)) {
+      return;
+    }
+
+    // Classes inside a bare `:global { … }` block/switch are global, not local.
+    if (isInsideGlobalScope(rule)) {
       return;
     }
 
@@ -70,6 +76,11 @@ export const extractCssClassesWithLocations = (
 
   root.walkRules((rule) => {
     if (rule.source?.start && ignoredLines.has(rule.source.start.line)) {
+      return;
+    }
+
+    // Classes inside a bare `:global { … }` block/switch are global, not local.
+    if (isInsideGlobalScope(rule)) {
       return;
     }
 

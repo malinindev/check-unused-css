@@ -1,0 +1,25 @@
+.localUsed {
+  color: blue;
+}
+
+:global {
+  .globalThing {
+    color: red;
+  }
+
+  .anotherGlobal {
+    .nestedGlobal {
+      color: green;
+    }
+  }
+
+  @media (min-width: 600px) {
+    .globalInMedia {
+      color: orange;
+    }
+  }
+}
+
+:global .switchGlobal {
+  color: pink;
+}

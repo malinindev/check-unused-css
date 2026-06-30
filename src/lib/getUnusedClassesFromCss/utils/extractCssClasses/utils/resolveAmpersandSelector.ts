@@ -1,15 +1,7 @@
-import {
-  type AstRule,
-  type AstSelector,
-  createParser,
-  type Parser,
-} from 'css-selector-parser';
+import type { AstRule, AstSelector } from 'css-selector-parser';
 import type { Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
-
-// Non-strict mode so double-dash modifier classes (`.--variant`) parse; see the
-// matching note in extractClassNamesFromRule.ts.
-const parseSelector: Parser = createParser({ strict: false });
+import { parseSelector } from './selectorParser.js';
 
 const getParentRule = (rule: Rule): Rule | null => {
   const { parent } = rule;
