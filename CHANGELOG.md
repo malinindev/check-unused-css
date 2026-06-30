@@ -1,5 +1,13 @@
 # check-unused-css
 
+## 0.5.3
+
+### Patch Changes
+
+- cfab8d9: Stop reporting classes inside a bare `:global { ... }` block (or `:global .switch` form) as unused (#91). The bare `:global` switch makes nested classes global, so they are no longer flagged. The function form `:global(.foo)` is unchanged.
+- c0d5fd6: Fix a crash on plain `.ts` files (#89). Angle-bracket syntax like `<string[]>[]` and `<T>(x) => x` is only valid when JSX is off, but the parser always ran with JSX on, so these files failed to parse. JSX is now disabled for `.ts`/`.mts`/`.cts` files.
+- 098fa60: Recognize classes pulled into a SCSS module via `@use`, `@forward` and the legacy `@import` (#90). Those directives emit the partial's rules into the module's compiled CSS, so the classes are real. They are no longer reported as non-existent, and a shared partial's classes are never reported as unused for the importing module. Partial paths are resolved transitively with cycle protection.
+
 ## 0.5.2
 
 ### Patch Changes
