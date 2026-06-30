@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import type { AstSelector, Parser } from 'css-selector-parser';
 import { createParser } from 'css-selector-parser';
 import { findClassNamesInSelector } from './findClassNamesInSelector.js';
+import { parseSelector as globalAwareParser } from './selectorParser.js';
 
 const parseSelector: Parser = createParser();
 
@@ -321,6 +322,28 @@ describe('findClassNamesInSelector', () => {
         'modal-content',
         'modal-body',
       ]);
+    });
+  });
+
+  describe('should stop collecting at a bare :global switch', () => {
+    // These use the global-aware parser; a bare `:global` switch turns every
+    // compound to its right into the global scope, so those classes must not be
+    // collected.
+    test('drops classes to the right of a bare :global switch', () => {
+      const selector = globalAwareParser('.local :global .after');
+      expect(findClassNamesInSelector(selector)).toEqual(['local']);
+    });
+
+    test('drops everything when :global leads the selector', () => {
+      const selector = globalAwareParser(':global .scoped');
+      expect(findClassNamesInSelector(selector)).toEqual([]);
+    });
+
+    test('keeps a class trailing the function form :global(.foo)', () => {
+      // The function form carries an argument and is NOT a switch, so `.bar`
+      // stays local; the inner `.foo` is global and is not collected.
+      const selector = globalAwareParser(':global(.foo) .bar');
+      expect(findClassNamesInSelector(selector)).toEqual(['bar']);
     });
   });
 });

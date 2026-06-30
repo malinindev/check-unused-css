@@ -342,6 +342,80 @@ describe('extractCssClasses (integration, real pipeline)', () => {
     });
   });
 
+  describe(':global block and switch forms scope classes globally (issue #91)', () => {
+    // Bare `:global` (no parens) is a scope switch: everything to its right —
+    // in the same selector AND in nested rules — is global, so those classes
+    // must NOT be extracted as local. The function form `:global(.foo)` is
+    // unaffected (already handled) and is covered by separate regression cases.
+
+    test('G1: class inside a `:global {}` block is not extracted', () => {
+      expect(extractSorted(':global { .globalThing { color: red; } }')).toEqual(
+        []
+      );
+    });
+
+    test('G2: local class outside the block is kept; global one is dropped', () => {
+      expect(
+        extractSorted(
+          '.localUsed { color: blue; } :global { .globalThing { color: red; } }'
+        )
+      ).toEqual(sorted(['localUsed']));
+    });
+
+    test('G3: multiple classes inside a `:global {}` block are all dropped', () => {
+      expect(
+        extractSorted(':global { .a { color: red; } .b { color: blue; } }')
+      ).toEqual([]);
+    });
+
+    test('G4: deep nesting inside a `:global {}` block stays global', () => {
+      expect(extractSorted(':global { .a { .b { color: red; } } }')).toEqual(
+        []
+      );
+    });
+
+    test('G5: bare `:global .scoped` switch keeps no class', () => {
+      expect(extractSorted(':global .scoped { color: red; }')).toEqual([]);
+    });
+
+    test('G6: nested rule under a `:global .scoped` switch stays global', () => {
+      expect(
+        extractSorted(':global .scoped { .deep { color: red; } }')
+      ).toEqual([]);
+    });
+
+    test('G7: local class left of a bare `:global` switch is kept', () => {
+      expect(extractSorted('.local :global .after { color: red; }')).toEqual(
+        sorted(['local'])
+      );
+    });
+
+    test('G8: a local block containing a `:global {}` block keeps only the local class', () => {
+      expect(
+        extractSorted('.local { :global { .globalThing { color: red; } } }')
+      ).toEqual(sorted(['local']));
+    });
+
+    test('G9 (no regression): function form `:global(.foo)` still strips only the global part', () => {
+      // `:global(.foo) .bar` → `.foo` global, `.bar` local (stays local even
+      // when expressed as a nested block).
+      expect(extractSorted(':global(.foo) .bar { color: red; }')).toEqual(
+        sorted(['bar'])
+      );
+      expect(extractSorted(':global(.foo) { .bar { color: red; } }')).toEqual(
+        sorted(['bar'])
+      );
+    });
+
+    test('G10: sibling local rule after a `:global {}` block is still extracted', () => {
+      expect(
+        extractSorted(
+          ':global { .g { color: red; } } .localAfter { color: blue; }'
+        )
+      ).toEqual(sorted(['localAfter']));
+    });
+  });
+
   describe('nested selectors starting with a combinator', () => {
     test('child combinator (>) at the start of a nested selector', () => {
       expect(extractSorted('.wrapper { > .item { color: red; } }')).toEqual(

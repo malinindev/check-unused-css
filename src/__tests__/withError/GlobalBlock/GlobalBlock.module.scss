@@ -1,0 +1,23 @@
+.usedClass {
+  color: blue;
+}
+
+.unusedClass {
+  color: black;
+}
+
+:global {
+  .globalThing {
+    color: red;
+  }
+
+  .anotherGlobal {
+    .nestedGlobal {
+      color: green;
+    }
+  }
+}
+
+:global .switchGlobal {
+  color: pink;
+}

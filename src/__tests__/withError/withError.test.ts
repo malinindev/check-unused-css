@@ -74,6 +74,25 @@ describe('Component with errors', () => {
     expect(result.stdout).not.toMatch(/^\s+\.usedClass2$/m);
   });
 
+  test('reports a local unused class but not classes inside a :global block (issue #91)', () => {
+    const result = runCheckUnusedCss('src/__tests__/withError/GlobalBlock');
+
+    expect(result.exitCode).toBe(1);
+
+    // The genuinely unused local class is reported.
+    expect(result.stdout).toMatch(/:\d+:\d+ - \.unusedClass$/m);
+
+    // Classes living inside a bare `:global` block/switch are global and must
+    // never be reported as unused.
+    expect(result.stdout).not.toMatch(/\.globalThing/);
+    expect(result.stdout).not.toMatch(/\.anotherGlobal/);
+    expect(result.stdout).not.toMatch(/\.nestedGlobal/);
+    expect(result.stdout).not.toMatch(/\.switchGlobal/);
+
+    // The used local class is not reported either.
+    expect(result.stdout).not.toMatch(/^\s+\.usedClass$/m);
+  });
+
   test('shows error for unused class in complex selectors', () => {
     const result = runCheckUnusedCss('src/__tests__/withError/Complex');
 

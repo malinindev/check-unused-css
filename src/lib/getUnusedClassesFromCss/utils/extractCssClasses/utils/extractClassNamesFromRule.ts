@@ -1,4 +1,3 @@
-import { createParser, type Parser } from 'css-selector-parser';
 import type { AtRule, Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
 import { findClassNamesInSelector } from './findClassNamesInSelector.js';
@@ -6,17 +5,7 @@ import {
   getParentClassName,
   resolveAmpersandSelector,
 } from './resolveAmpersandSelector.js';
-
-/**
- * Non-strict mode lets the parser accept identifiers that start with two
- * hyphens (e.g. `.--reversed`, `.root.--variant`) — a common CSS-Modules
- * modifier convention that strict mode rejects, which would otherwise make the
- * `catch` below silently drop the whole rule. Non-strict mode is also more
- * tolerant of truncated selectors, extracting the recognizable class names
- * instead of discarding the rule; for an unused-CSS analyzer, erring toward
- * "this class is used" is safer than losing a definition.
- */
-const parseSelector: Parser = createParser({ strict: false });
+import { parseSelector } from './selectorParser.js';
 
 /**
  * Resolve a raw selector string (already ampersand-resolved against its parent)
