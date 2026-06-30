@@ -1,0 +1,8 @@
+// Loaded with an explicit namespace (`as colors`). The namespace only governs
+// access to this partial's variables/mixins/functions — its top-level CSS
+// rules are still emitted, so `.highlight` is a real class.
+$accent: #c00;
+
+.highlight {
+  background: yellow;
+}

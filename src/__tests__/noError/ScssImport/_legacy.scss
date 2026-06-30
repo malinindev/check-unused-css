@@ -1,0 +1,5 @@
+// Pulled in via the deprecated `@import`, which inlines the whole file, so
+// `.legacy-box` ends up in the compiled CSS of the importing module.
+.legacy-box {
+  border: 1px solid;
+}

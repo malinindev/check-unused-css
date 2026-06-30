@@ -1,0 +1,10 @@
+// `.used` is referenced by the module's component. `.unused-in-partial` is not
+// referenced anywhere, but it belongs to a shared partial that other modules
+// may consume — so it must NOT be reported as unused for the importing module.
+.used {
+  color: red;
+}
+
+.unused-in-partial {
+  color: gray;
+}

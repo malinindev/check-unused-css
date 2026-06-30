@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type {
   NonExistentClassResult,
   NonExistentClassUsage,
@@ -9,6 +10,7 @@ import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils
 import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
+import { collectPartialClasses } from './getUnusedClassesFromCss/utils/scssImports/index.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -27,7 +29,12 @@ export const getNonExistentClassesFromCss = async ({
   }
 
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
-  const cssClasses = extractCssClasses(cssContent);
+
+  // Classes are real if they are defined in this file OR pulled into it via
+  // `@use`/`@forward`/`@import` (those emit the partial's rules into the
+  // module's compiled CSS), so both sets count as existing (issue #90).
+  const partialClasses = collectPartialClasses(path.join(srcDir, cssFile));
+  const cssClasses = [...extractCssClasses(cssContent), ...partialClasses];
 
   // If any importer passes the whole module to a function, ignore the module
   // entirely (matching the unused path), not just that one file.

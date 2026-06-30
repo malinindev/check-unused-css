@@ -1,0 +1,7 @@
+// Legacy `@import` allows cycles (unlike `@use`). `_ping` and `_pong` import
+// each other; the resolver must terminate and still collect every class.
+@import 'pong';
+
+.ping {
+  color: red;
+}

@@ -1,0 +1,5 @@
+// Provides `.shared`, which the component uses. This partial exists to confirm
+// that pulling its classes in does not mask a genuinely unused LOCAL class.
+.shared {
+  color: green;
+}

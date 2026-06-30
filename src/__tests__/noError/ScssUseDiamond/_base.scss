@@ -1,0 +1,5 @@
+// Shared leaf reached through two different paths (`_left.scss` and
+// `_right.scss`). The resolver must visit it once and not loop.
+.base-class {
+  color: black;
+}

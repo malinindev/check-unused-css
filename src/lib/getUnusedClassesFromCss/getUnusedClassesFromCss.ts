@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type {
   DynamicClassUsage,
   UnusedClassResult,
@@ -20,6 +21,7 @@ import { extractUsedClasses } from './utils/extractUsedClasses.js';
 import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule/index.js';
 import { detectModulePassedToFunction } from './utils/passedToFunction/detectModulePassedToFunction.js';
 import { rescueUsedAncestors } from './utils/rescueUsedAncestors.js';
+import { collectPartialClasses } from './utils/scssImports/index.js';
 
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
@@ -52,7 +54,14 @@ export const getUnusedClassesFromCss = async ({
     };
   }
 
-  const usedClasses = new Set<string>(composedClasses);
+  // Classes pulled in via `@use`/`@forward`/`@import` belong to a shared
+  // partial this module does not own, so a local class that merely shares a
+  // name with one of them must not be reported as unused. Classes that exist
+  // ONLY in a partial are never candidates here — they are not in `cssClasses`,
+  // which is extracted from this file alone (issue #90).
+  const partialClasses = collectPartialClasses(path.join(srcDir, cssFile));
+
+  const usedClasses = new Set<string>([...composedClasses, ...partialClasses]);
   const allAccesses: ClassAccess[] = [];
 
   for (const importingFileData of importingFilesData) {

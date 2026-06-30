@@ -1,0 +1,9 @@
+// A partial pulled in via `@use`. Its top-level rules ARE emitted into the
+// compiled CSS of the module that loads it, so `.box` is a real, usable class.
+.box {
+  color: red;
+}
+
+.panel {
+  padding: 8px;
+}

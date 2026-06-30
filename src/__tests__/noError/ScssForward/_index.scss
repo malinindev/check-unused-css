@@ -1,0 +1,3 @@
+// `@forward` re-exports the forwarded module AND emits its CSS into whatever
+// loads this index, so `.button` / `.button-primary` reach the module below.
+@forward 'buttons';
