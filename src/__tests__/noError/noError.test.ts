@@ -50,6 +50,7 @@ describe('Components without errors', () => {
     'ScssAmpersandConcat',
     'PlainJsx',
     'MixedTsxJsx',
+    'TsTypeAssertions',
   ])('exits with code 0 when no unused classes found for component %s', (folderName) => {
     const result = runCheckUnusedCss(`src/__tests__/noError/${folderName}`);
 

@@ -16,6 +16,7 @@ describe('Component with errors', () => {
     ['AliasWithReferences', 'AliasWithReferences.module.css'],
     ['AliasNoBaseUrl', 'AliasNoBaseUrl.module.css'],
     ['ScssAmpersandConcat', 'ScssAmpersandConcat.module.scss'],
+    ['TsTypeAssertions', 'TsTypeAssertions.module.scss'],
   ])('finds errors in %s component', (componentName, cssFilePath) => {
     const result = runCheckUnusedCss(
       `src/__tests__/withError/${componentName}`
