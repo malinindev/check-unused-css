@@ -59,6 +59,11 @@ describe('extractScssImportPaths', () => {
     ).toEqual([]);
   });
 
+  test('ignores plain CSS @import case-insensitively (.CSS / HTTP://)', () => {
+    expect(extractScssImportPaths(`@import 'reset.CSS';`)).toEqual([]);
+    expect(extractScssImportPaths(`@import 'HTTP://x.example/a';`)).toEqual([]);
+  });
+
   test('ignores plain CSS @import: trailing media query', () => {
     expect(
       extractScssImportPaths(

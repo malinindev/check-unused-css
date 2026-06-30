@@ -61,15 +61,24 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
     try {
       partialContent = fs.readFileSync(partialPath, 'utf-8');
     } catch {
+      // The path resolved to an entry that can't be read (e.g. a race, or a
+      // permission issue). Skip it silently — a genuinely missing partial is a
+      // normal case (it never resolves and is never queued here).
       continue;
     }
 
     // A single malformed partial must not break the run — `extractCssClasses`
-    // parses with postcss-scss and can throw on unsupported syntax.
+    // parses with postcss-scss and can throw on unsupported syntax. Warn (as
+    // the selector parser does elsewhere) so the anomaly is visible, then move
+    // on rather than aborting the whole analysis.
     let partialClassNames: string[];
     try {
       partialClassNames = extractCssClasses(partialContent);
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `check-unused-css: failed to parse imported partial "${partialPath}" (${message}) — skipping it.`
+      );
       partialClassNames = [];
     }
     for (const className of partialClassNames) {

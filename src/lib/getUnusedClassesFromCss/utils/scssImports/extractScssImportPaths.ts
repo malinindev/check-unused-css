@@ -39,11 +39,13 @@ const isSassImportSpec = (segment: string): string | null => {
     return null;
   }
 
-  // Sass does not inline CSS-extension or remote URLs.
+  // Sass does not inline CSS-extension or remote URLs. Compare case-insensitively
+  // so `reset.CSS` / `HTTP://…` are treated the same as their lowercase forms.
+  const lower = spec.toLowerCase();
   if (
-    spec.endsWith('.css') ||
-    spec.startsWith('http://') ||
-    spec.startsWith('https://')
+    lower.endsWith('.css') ||
+    lower.startsWith('http://') ||
+    lower.startsWith('https://')
   ) {
     return null;
   }

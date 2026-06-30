@@ -94,4 +94,15 @@ describe('collectPartialClasses', () => {
 
     expect([...collectPartialClasses(module)]).toEqual(['ok']);
   });
+
+  test('a class that exists only in a malformed partial is NOT reported as existing', () => {
+    // Guards the inverse of the silent skip: a class the broken partial happened
+    // to declare before the parse error must not leak into the result, or the
+    // consumer would stop flagging a genuinely non-existent use of it.
+    write('_broken.scss', '.bad { color: red;');
+    const module = write('M.module.scss', `@use 'broken';`);
+
+    expect(collectPartialClasses(module).has('bad')).toBe(false);
+    expect(collectPartialClasses(module).size).toBe(0);
+  });
 });
