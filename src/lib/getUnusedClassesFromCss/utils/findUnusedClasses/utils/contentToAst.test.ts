@@ -97,6 +97,112 @@ describe('contentToAst', () => {
     });
   });
 
+  describe('should parse .ts-only TypeScript syntax (no JSX)', () => {
+    test('parses angle-bracket type assertion in a .ts file', () => {
+      const content = 'export const empty = <string[]>[];';
+      const ast = contentToAst(content, 'Foo.ts');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe(AST_NODE_TYPES.ExportNamedDeclaration);
+    });
+
+    test('parses generic arrow function in a .ts file', () => {
+      const content = 'export const identity = <T>(x: T): T => x;';
+      const ast = contentToAst(content, 'Foo.ts');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe(AST_NODE_TYPES.ExportNamedDeclaration);
+    });
+
+    test('parses the exact issue #89 reproduction in a .ts file', () => {
+      const content = `
+        import styles from './Foo.module.scss';
+
+        export const cls = styles.a;
+
+        export const empty = <string[]>[];
+        export const identity = <T>(x: T): T => x;
+      `;
+      const ast = contentToAst(content, 'Foo.ts');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(4);
+      expect(ast.body[0]?.type).toBe(AST_NODE_TYPES.ImportDeclaration);
+    });
+
+    test('parses .ts-only syntax for .mts files', () => {
+      const content = 'export const empty = <string[]>[];';
+      const ast = contentToAst(content, 'Foo.mts');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+
+    test('parses .ts-only syntax for .cts files', () => {
+      const content = 'export const empty = <string[]>[];';
+      const ast = contentToAst(content, 'Foo.cts');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+
+    test('parses .ts-only syntax for uppercase extensions (case-insensitive FS)', () => {
+      const content = 'export const empty = <string[]>[];';
+
+      expect(contentToAst(content, 'Foo.TS').body).toHaveLength(1);
+      expect(contentToAst(content, 'Foo.MTS').body).toHaveLength(1);
+      expect(contentToAst(content, 'Foo.CTS').body).toHaveLength(1);
+    });
+
+    test('rejects JSX in a .ts file (JSX is disabled there)', () => {
+      const content = 'export const C = () => <div>Hi</div>;';
+
+      expect(() => contentToAst(content, 'Foo.ts')).toThrow(
+        'Failed to parse source content'
+      );
+    });
+  });
+
+  describe('should parse JSX-bearing files (jsx enabled)', () => {
+    test('parses JSX in a .tsx file', () => {
+      const content =
+        'export const C = () => <div className={styles.test}>Hi</div>;';
+      const ast = contentToAst(content, 'Foo.tsx');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+
+    test('parses JSX in a .jsx file', () => {
+      const content =
+        'export const C = () => <div className={styles.test}>Hi</div>;';
+      const ast = contentToAst(content, 'Foo.jsx');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+
+    test('parses JSX in a .js file', () => {
+      const content =
+        'export const C = () => <div className={styles.test}>Hi</div>;';
+      const ast = contentToAst(content, 'Foo.js');
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+
+    test('parses JSX when no file path is provided', () => {
+      const content =
+        'export const C = () => <div className={styles.test}>Hi</div>;';
+      const ast = contentToAst(content);
+
+      expect(ast.type).toBe(AST_NODE_TYPES.Program);
+      expect(ast.body).toHaveLength(1);
+    });
+  });
+
   describe('should handle edge cases', () => {
     test('parses empty content', () => {
       const content = '';
