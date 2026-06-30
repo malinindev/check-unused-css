@@ -15,14 +15,21 @@ import { resolveScssImport } from './resolveScssImport.js';
  * cycles (legal with `@import`) and diamonds via a visited set. The module's
  * own file is seeded as visited so its classes are not double-counted here —
  * they are already extracted by the caller.
+ *
+ * A resolved partial may itself be a `.css` file: Sass loads `code.css` for a
+ * bare `@use 'code'` / `@import 'code'` and inlines its rules, so collecting
+ * those classes is correct. (A trailing-`.css` spec like `@import 'code.css'`
+ * is a plain, non-inlined CSS import and is already filtered out upstream.)
  */
 const SASS_EXTENSIONS = new Set(['.scss', '.sass']);
 
 export const collectPartialClasses = (cssFilePath: string): Set<string> => {
   const classNames = new Set<string>();
 
-  // Only Sass modules carry `@use`/`@forward`/`@import` that inline a partial's
-  // rules. Plain `.css` modules cannot, so skip the read+parse entirely.
+  // Skip when the ENTRY module is a plain `.css` file: it cannot carry
+  // `@use`/`@forward`, and a Sass `@import` does not inline inside plain CSS,
+  // so there is nothing to pull in. (This guards the entry only — `.css`
+  // partials reached from a Sass module are still collected during the walk.)
   if (!SASS_EXTENSIONS.has(path.extname(cssFilePath).toLowerCase())) {
     return classNames;
   }

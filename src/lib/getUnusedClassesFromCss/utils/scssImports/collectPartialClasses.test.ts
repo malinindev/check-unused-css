@@ -53,6 +53,16 @@ describe('collectPartialClasses', () => {
     expect([...collectPartialClasses(module)].sort()).toEqual(['ping', 'pong']);
   });
 
+  test('collects classes from a .css partial loaded by a bare @use spec', () => {
+    // Sass loads `code.css` for a bare `@use 'code'` and inlines its rules, so
+    // the class is real. (A `.css` spec WITH the extension is a plain CSS
+    // import and is filtered out before reaching here.)
+    write('code.css', '.code {}');
+    const module = write('M.module.scss', `@use 'code';`);
+
+    expect([...collectPartialClasses(module)]).toEqual(['code']);
+  });
+
   test('visits a diamond leaf exactly once', () => {
     write('_base.scss', '.base {}');
     write('_left.scss', `@forward 'base';`);
