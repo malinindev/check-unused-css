@@ -1,0 +1,5 @@
+// Provides `.shared` to the importing module. `.ghost` is intentionally NOT
+// defined here (nor in the module) so it must still be flagged non-existent.
+.shared {
+  color: green;
+}

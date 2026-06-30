@@ -1,0 +1,7 @@
+// The referenced partial does not exist on disk. The resolver must not throw —
+// it simply contributes no extra classes. All real classes are local here.
+@use 'missing';
+
+.only {
+  color: teal;
+}

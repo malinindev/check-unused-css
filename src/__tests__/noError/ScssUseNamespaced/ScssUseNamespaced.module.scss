@@ -1,0 +1,6 @@
+@use 'colors' as colors;
+
+.title {
+  color: colors.$accent;
+  font-weight: 600;
+}

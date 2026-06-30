@@ -1,0 +1,8 @@
+// A leaf partial. Reached transitively through a `@forward` in `_index.scss`.
+.button {
+  cursor: pointer;
+}
+
+.button-primary {
+  background: blue;
+}
