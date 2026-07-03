@@ -1,5 +1,11 @@
 # check-unused-css
 
+## 0.5.5
+
+### Patch Changes
+
+- 7434c8b: Recognize `:local(...)` classes nested inside a bare `:global {}` block, like `:global { :local(.small) {} }` (#101). Such classes are no longer reported as non-existent.
+
 ## 0.5.4
 
 ### Patch Changes
