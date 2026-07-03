@@ -346,4 +346,33 @@ describe('findClassNamesInSelector', () => {
       expect(findClassNamesInSelector(selector)).toEqual(['bar']);
     });
   });
+
+  describe('should collect classes inside the :local(...) function form (issue #97)', () => {
+    // The function form `:local(.foo)` parses its argument as a String; those
+    // inner classes are explicitly local and must be collected.
+    test('collects a single class inside :local(...)', () => {
+      const selector = globalAwareParser(':local(.active)');
+      expect(findClassNamesInSelector(selector)).toEqual(['active']);
+    });
+
+    test('collects a compound class inside :local(...)', () => {
+      const selector = globalAwareParser(':local(.root.active)');
+      expect(findClassNamesInSelector(selector)).toEqual(['root', 'active']);
+    });
+
+    test('collects a descendant selector inside :local(...)', () => {
+      const selector = globalAwareParser(':local(.a .b)');
+      expect(findClassNamesInSelector(selector)).toEqual(['a', 'b']);
+    });
+
+    test('keeps a class trailing the :local(...) form', () => {
+      const selector = globalAwareParser(':local(.a) .b');
+      expect(findClassNamesInSelector(selector)).toEqual(['a', 'b']);
+    });
+
+    test('collects a double-dash modifier inside :local(...)', () => {
+      const selector = globalAwareParser(':local(.--reversed)');
+      expect(findClassNamesInSelector(selector)).toEqual(['--reversed']);
+    });
+  });
 });

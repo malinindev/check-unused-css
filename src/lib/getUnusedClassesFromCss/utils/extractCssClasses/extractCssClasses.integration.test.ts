@@ -572,4 +572,86 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       );
     });
   });
+
+  describe(':local(...) function form scopes classes locally (issue #97)', () => {
+    // The function form `:local(.foo)` explicitly marks its inner classes as
+    // local; they must be extracted. This mirrors `:global(.foo)`, whose inner
+    // classes are global and are dropped.
+
+    test('single class inside :local(...) is extracted', () => {
+      expect(extractSorted(':local(.active) { color: red; }')).toEqual(
+        sorted(['active'])
+      );
+    });
+
+    test('multiple compound classes inside :local(...) are extracted', () => {
+      expect(extractSorted(':local(.root.active) { color: red; }')).toEqual(
+        sorted(['root', 'active'])
+      );
+    });
+
+    test('descendant selector inside :local(...) is extracted', () => {
+      expect(extractSorted(':local(.a .b) { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('combinator inside :local(...) is extracted', () => {
+      expect(extractSorted(':local(.a > .b) { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('class trailing the :local(...) form stays local', () => {
+      expect(extractSorted(':local(.a) .b { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('class preceding the :local(...) form stays local', () => {
+      expect(extractSorted('.a :local(.b) { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('double-dash modifier inside :local(...) is extracted', () => {
+      expect(extractSorted(':local(.--reversed) { color: red; }')).toEqual(
+        sorted(['--reversed'])
+      );
+    });
+
+    test('a global class nested inside :local(...) is dropped', () => {
+      // `clearGlobalSelectors` strips the inner `:global(.g)` textually before
+      // parsing, leaving `:local(.a )`, so only the local `.a` survives.
+      expect(extractSorted(':local(.a :global(.g)) { color: red; }')).toEqual(
+        sorted(['a'])
+      );
+    });
+
+    test('bare `:local .active` switch form is extracted', () => {
+      // Already worked before the fix; guards against regression.
+      expect(extractSorted(':local .active { color: red; }')).toEqual(
+        sorted(['active'])
+      );
+    });
+
+    test('nested rules under a :local(...) parent are extracted', () => {
+      expect(
+        extractSorted(':local(.parent) { &.active { .child { color: red; } } }')
+      ).toEqual(sorted(['parent', 'active', 'child']));
+    });
+
+    test('selector list of :local(...) members is extracted', () => {
+      expect(extractSorted(':local(.a), :local(.b) { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('SCSS suffix concat under a :local(...) parent is extracted', () => {
+      // `&Black` joins to the local parent `button`, producing `buttonBlack`.
+      expect(
+        extractSorted(':local(.button) { &Black { color: red; } }')
+      ).toEqual(sorted(['button', 'buttonBlack']));
+    });
+  });
 });

@@ -1,0 +1,11 @@
+:local(.active) {
+  color: red;
+}
+
+:local(.root.selected) {
+  color: blue;
+}
+
+:local(.parent .child) {
+  color: green;
+}
