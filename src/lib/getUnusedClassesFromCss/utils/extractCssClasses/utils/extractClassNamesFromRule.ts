@@ -1,6 +1,10 @@
+import type { AstSelector } from 'css-selector-parser';
 import type { AtRule, Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
-import { findClassNamesInSelector } from './findClassNamesInSelector.js';
+import {
+  findClassNamesInSelector,
+  findLocalRescopedClassNames,
+} from './findClassNamesInSelector.js';
 import {
   getParentClassName,
   resolveAmpersandSelector,
@@ -8,30 +12,63 @@ import {
 import { parseSelector } from './selectorParser.js';
 
 /**
- * Resolve a raw selector string (already ampersand-resolved against its parent)
- * into the class names it defines. Returns an empty array if the selector
- * cannot be parsed at all.
+ * Parse a raw selector string (already ampersand-resolved against its parent)
+ * and reduce it to class names with `collect`. Returns an empty array if the
+ * selector cannot be parsed at all.
  */
-export const extractClassNamesFromSelector = (selector: string): string[] => {
+const extractWith = (
+  selector: string,
+  collect: (parsed: AstSelector) => string[]
+): string[] => {
   try {
     const processedSelector = clearGlobalSelectors(selector);
     const parsed = parseSelector(processedSelector);
 
     if (Array.isArray(parsed)) {
-      return parsed.flatMap(findClassNamesInSelector);
+      return parsed.flatMap(collect);
     }
 
-    return findClassNamesInSelector(parsed);
+    return collect(parsed);
   } catch {
     return [];
   }
 };
+
+/**
+ * Resolve a raw selector string into the class names it defines. Returns an
+ * empty array if the selector cannot be parsed at all.
+ */
+export const extractClassNamesFromSelector = (selector: string): string[] =>
+  extractWith(selector, findClassNamesInSelector);
+
+/**
+ * Resolve a raw selector string into ONLY the classes it re-scopes to local via
+ * a `:local(...)` function form. For rules whose inherited scope is global
+ * (inside a bare `:global` block): plain classes there are global, but a
+ * `:local(.foo)` form flips `.foo` back to local (issue #101).
+ */
+export const extractLocalRescopedClassNamesFromSelector = (
+  selector: string
+): string[] => extractWith(selector, findLocalRescopedClassNames);
 
 export const extractClassNamesFromRule = (rule: Rule): string[] => {
   const parentClassName = getParentClassName(rule);
   const resolved = resolveAmpersandSelector(rule.selector, parentClassName);
 
   return extractClassNamesFromSelector(resolved);
+};
+
+/**
+ * Like {@link extractClassNamesFromRule} but for a rule whose inherited scope is
+ * global: only `:local(...)`-re-scoped classes are returned (issue #101).
+ */
+export const extractLocalRescopedClassNamesFromRule = (
+  rule: Rule
+): string[] => {
+  const parentClassName = getParentClassName(rule);
+  const resolved = resolveAmpersandSelector(rule.selector, parentClassName);
+
+  return extractLocalRescopedClassNamesFromSelector(resolved);
 };
 
 /**

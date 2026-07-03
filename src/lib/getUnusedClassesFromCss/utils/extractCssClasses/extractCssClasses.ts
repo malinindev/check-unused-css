@@ -1,16 +1,37 @@
+import type { Rule } from 'postcss';
 import postcssScss from 'postcss-scss';
 import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import {
   extractClassNamesFromAtRule,
   extractClassNamesFromRule,
+  extractLocalRescopedClassNamesFromRule,
 } from './utils/extractClassNamesFromRule.js';
-import { isInsideGlobalScope } from './utils/isInsideGlobalScope.js';
+import {
+  isInsideGlobalScope,
+  selectorHasLocalSwitch,
+} from './utils/isInsideGlobalScope.js';
 import { isSelectorBearingAtRule } from './utils/isSelectorBearingAtRule.js';
 
 export type CssClassInfo = {
   className: string;
   line: number;
   column: number;
+};
+
+/**
+ * The local class names a single rule defines, honoring CSS-Modules scope.
+ *
+ * A rule inside a bare `:global` block is global, so only classes flipped back
+ * to local count: either the whole rule via a bare `:local` switch on its own
+ * selector (`:local .x`), or an individual `:local(.foo)` function form. A rule
+ * in local scope defines every class its selector names, as usual (issue #101).
+ */
+const resolveRuleClassNames = (rule: Rule): string[] => {
+  if (isInsideGlobalScope(rule) && !selectorHasLocalSwitch(rule.selector)) {
+    return extractLocalRescopedClassNamesFromRule(rule);
+  }
+
+  return extractClassNamesFromRule(rule);
 };
 
 export const extractCssClasses = (cssContent: string): string[] => {
@@ -29,12 +50,7 @@ export const extractCssClasses = (cssContent: string): string[] => {
       return;
     }
 
-    // Classes inside a bare `:global { … }` block/switch are global, not local.
-    if (isInsideGlobalScope(rule)) {
-      return;
-    }
-
-    const ruleClassNames = extractClassNamesFromRule(rule);
+    const ruleClassNames = resolveRuleClassNames(rule);
     for (const className of ruleClassNames) {
       classNames.add(className);
     }
@@ -79,12 +95,7 @@ export const extractCssClassesWithLocations = (
       return;
     }
 
-    // Classes inside a bare `:global { … }` block/switch are global, not local.
-    if (isInsideGlobalScope(rule)) {
-      return;
-    }
-
-    const ruleClassNames = extractClassNamesFromRule(rule);
+    const ruleClassNames = resolveRuleClassNames(rule);
     for (const className of ruleClassNames) {
       // Only keep the first occurrence of each class
       if (!classInfoMap.has(className) && rule.source?.start) {

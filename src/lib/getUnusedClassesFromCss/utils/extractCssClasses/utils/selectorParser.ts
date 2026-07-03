@@ -33,3 +33,13 @@ export const parseSelector: Parser = createParser({
  */
 export const isGlobalSwitchItem = (item: AstRuleItem): boolean =>
   item.type === 'PseudoClass' && item.name === 'global' && !item.argument;
+
+/**
+ * The mirror of {@link isGlobalSwitchItem}: a bare `:local` (no argument) is a
+ * scope SWITCH back to local. Nested inside a `:global` block it re-scopes every
+ * compound to its right — in this selector and its nested rules — as local
+ * (issue #101). The function form `:local(.foo)` carries an argument and is NOT
+ * a switch; its inner class is collected directly by `findClassNamesInSelector`.
+ */
+export const isLocalSwitchItem = (item: AstRuleItem): boolean =>
+  item.type === 'PseudoClass' && item.name === 'local' && !item.argument;

@@ -654,4 +654,103 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual(sorted(['button', 'buttonBlack']));
     });
   });
+
+  describe(':local re-scoping inside a :global block (issue #101)', () => {
+    // A bare `:global {}` block scopes descendants globally, but a `:local(...)`
+    // function form (or a bare `:local` switch) nested inside it flips scope back
+    // to local. Those local classes must be extracted even though an ancestor
+    // opened a global block. Plain classes inside `:global` stay global.
+
+    test('single :local(...) inside a :global block is extracted', () => {
+      expect(
+        extractSorted(':global { :local(.small) { color: red; } }')
+      ).toEqual(sorted(['small']));
+    });
+
+    test('empty-bodied :local(...) inside a :global block is extracted', () => {
+      // The exact form from the issue report.
+      expect(extractSorted(':global { :local(.small) {} }')).toEqual(
+        sorted(['small'])
+      );
+    });
+
+    test('compound :local(...) inside a :global block is extracted', () => {
+      expect(
+        extractSorted(':global { :local(.root.active) { color: red; } }')
+      ).toEqual(sorted(['root', 'active']));
+    });
+
+    test('a plain class beside the :local(...) rule stays global', () => {
+      // `.g` is a plain class in global scope (dropped); `:local(.l)` re-scopes.
+      expect(
+        extractSorted(
+          ':global { .g { color: red; } :local(.l) { color: blue; } }'
+        )
+      ).toEqual(sorted(['l']));
+    });
+
+    test('a bare `:local` switch inside a :global block re-scopes descendants', () => {
+      expect(
+        extractSorted(':global { :local { .small { color: red; } } }')
+      ).toEqual(sorted(['small']));
+    });
+
+    test('a bare `:local .scoped` switch inside a :global block is local', () => {
+      expect(
+        extractSorted(':global { :local .scoped { color: red; } }')
+      ).toEqual(sorted(['scoped']));
+    });
+
+    test('nested rule under a bare `:local` switch inside :global stays local', () => {
+      expect(
+        extractSorted(':global { :local { .a { .b { color: red; } } } }')
+      ).toEqual(sorted(['a', 'b']));
+    });
+
+    test(':local(...) inside a `:global .scoped` switch is extracted', () => {
+      expect(
+        extractSorted(':global .scoped { :local(.deep) { color: red; } }')
+      ).toEqual(sorted(['deep']));
+    });
+
+    test(':local(...) under an at-rule inside a :global block is extracted', () => {
+      expect(
+        extractSorted(
+          ':global { @media (min-width: 1px) { :local(.m) { color: red; } } }'
+        )
+      ).toEqual(sorted(['m']));
+    });
+
+    test('a plain class nested one level under :local(...) inside :global stays global', () => {
+      // The `:local(.a)` FUNCTION form scopes only `.a`; it is not a bare switch,
+      // so its nested plain `.b` inherits the enclosing `:global` scope → global.
+      expect(
+        extractSorted(':global { :local(.a) { .b { color: red; } } }')
+      ).toEqual(sorted(['a']));
+    });
+
+    test('a nested :local(...) under a plain class inside :global is extracted', () => {
+      expect(
+        extractSorted(':global { .a { :local(.b) { color: red; } } }')
+      ).toEqual(sorted(['b']));
+    });
+
+    test('local class outside a :global block is unaffected by an inner :local', () => {
+      expect(
+        extractSorted('.outer { color: green; } :global { :local(.x) {} }')
+      ).toEqual(sorted(['outer', 'x']));
+    });
+
+    test('no regression: plain classes inside :global are still dropped', () => {
+      expect(
+        extractSorted(':global { .a { color: red; } .b { color: blue; } }')
+      ).toEqual([]);
+    });
+
+    test('double-dash modifier via :local(...) inside :global is extracted', () => {
+      expect(
+        extractSorted(':global { :local(.--variant) { color: red; } }')
+      ).toEqual(sorted(['--variant']));
+    });
+  });
 });

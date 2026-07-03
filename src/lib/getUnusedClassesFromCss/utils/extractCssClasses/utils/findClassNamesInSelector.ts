@@ -16,6 +16,57 @@ export const findClassNamesInLocalArgument = (argument: string): string[] => {
   }
 };
 
+/**
+ * Collect ONLY the classes explicitly re-scoped to local via a `:local(...)`
+ * function form. Used for rules whose inherited scope is global (they sit inside
+ * a bare `:global` block): plain classes there are global and must be dropped,
+ * but a `:local(.foo)` form flips `.foo` back to local (issue #101).
+ *
+ * A bare `:local` switch is NOT handled here — it flips the whole rule back to
+ * local scope, which `isInsideGlobalScope` already reflects, so such rules go
+ * through the normal `findClassNamesInSelector` path instead.
+ */
+export const findLocalRescopedClassNames = (
+  selector: AstSelector
+): string[] => {
+  if (!selector.rules.length) {
+    return [];
+  }
+
+  const classNames: string[] = [];
+
+  const collectFromRule = (rule: AstRule): void => {
+    for (const item of rule.items) {
+      if (
+        item.type === 'PseudoClass' &&
+        item.name === 'local' &&
+        item.argument &&
+        item.argument.type === 'String'
+      ) {
+        classNames.push(...findClassNamesInLocalArgument(item.argument.value));
+      } else if (
+        item.type === 'PseudoClass' &&
+        item.argument &&
+        item.argument.type === 'Selector'
+      ) {
+        // Recurse into pseudo-class selector arguments (e.g. `:not(:local(.x))`)
+        // so a nested :local form is still found.
+        classNames.push(...findLocalRescopedClassNames(item.argument));
+      }
+    }
+
+    if (rule.nestedRule) {
+      collectFromRule(rule.nestedRule);
+    }
+  };
+
+  for (const rule of selector.rules) {
+    collectFromRule(rule);
+  }
+
+  return classNames;
+};
+
 export const findClassNamesInSelector = (selector: AstSelector): string[] => {
   if (!selector.rules.length) {
     return [];

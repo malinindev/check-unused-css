@@ -15,6 +15,7 @@ describe('Components without errors', () => {
     'GlobalClasses',
     'GlobalBlock',
     'LocalClasses',
+    'LocalInGlobalBlock',
     'Animations',
     'Complex',
     'Media',
