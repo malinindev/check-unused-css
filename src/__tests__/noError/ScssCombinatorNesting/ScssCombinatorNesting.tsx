@@ -10,5 +10,10 @@ export const ScssCombinatorNesting: React.FC = () => (
       <span className={styles.first} />
       <span className={styles.second} />
     </div>
+    <div className={styles.target}>
+      <span className={styles.skipLink} />
+      <span className={styles.prevSibling} />
+      <span className={styles.parentEl} />
+    </div>
   </div>
 );

@@ -5,5 +5,8 @@ export const CssCombinatorNesting: React.FC = () => (
     <span className={styles.item} />
     <span className={styles.sibling} />
     <span className={styles.general} />
+    <div className={styles.target}>
+      <span className={styles.skipLink} />
+    </div>
   </div>
 );
