@@ -68,6 +68,77 @@ describe('extractCssClasses (integration, real pipeline)', () => {
     });
   });
 
+  describe('combinator before a trailing & (issue #96)', () => {
+    // A nested selector where a combinator sits directly before the trailing
+    // `&` — `.skipLink + &` means "this element, when preceded by a sibling
+    // `.skipLink`". Removing `&` for parsing used to leave a dangling trailing
+    // combinator (`.skipLink +`), which the selector parser rejects, dropping
+    // every class in the rule. The sibling class must still be extracted.
+    test('B1: adjacent sibling before & (.skipLink + &)', () => {
+      expect(
+        extractSorted('.target { .skipLink + & { color: blue; } }')
+      ).toEqual(sorted(['target', 'skipLink']));
+    });
+
+    test('B2: general sibling before & (.sib ~ &)', () => {
+      expect(extractSorted('.target { .sib ~ & { color: blue; } }')).toEqual(
+        sorted(['target', 'sib'])
+      );
+    });
+
+    test('B3: child combinator before & (.parent > &)', () => {
+      expect(extractSorted('.target { .parent > & { color: blue; } }')).toEqual(
+        sorted(['target', 'parent'])
+      );
+    });
+
+    test('B4: combinator with no space before & (.sib+&)', () => {
+      expect(extractSorted('.target { .sib+& { color: blue; } }')).toEqual(
+        sorted(['target', 'sib'])
+      );
+    });
+
+    test('B5: combinators on both sides of & (.a + & + .b)', () => {
+      expect(extractSorted('.target { .a + & + .b { color: blue; } }')).toEqual(
+        sorted(['target', 'a', 'b'])
+      );
+    });
+
+    test('B6: trailing & inside a selector list (.a + &, .b ~ &)', () => {
+      expect(
+        extractSorted('.target { .a + &, .b ~ & { color: blue; } }')
+      ).toEqual(sorted(['target', 'a', 'b']));
+    });
+
+    test('B7: sibling-before-& nested two levels deep', () => {
+      expect(extractSorted('.a { .b + & { .c + & { color: red; } } }')).toEqual(
+        sorted(['a', 'b', 'c'])
+      );
+    });
+
+    test('B8 (no regression): combinator before & followed by a descendant', () => {
+      // Here `&` is not trailing (`.foo + & .bar`), which already worked; guard
+      // it so the fix does not regress the mid-selector case.
+      expect(
+        extractSorted('.target { .foo + & .bar { color: red; } }')
+      ).toEqual(sorted(['target', 'foo', 'bar']));
+    });
+
+    test('B9 (no regression): leading combinator before a class still works', () => {
+      expect(extractSorted('.target { & + .after { color: red; } }')).toEqual(
+        sorted(['target', 'after'])
+      );
+    });
+
+    test('B10: an escaped quote in the sibling attribute value before &', () => {
+      // The escaped `"` inside the attribute value must not confuse the dangling
+      // combinator strip; `.item` is still recovered from `.item[…] + &`.
+      expect(
+        extractSorted('.target { .item[title="a\\"b"] + & { color: red; } }')
+      ).toEqual(sorted(['target', 'item']));
+    });
+  });
+
   describe('selector-bearing custom at-rules (US3)', () => {
     test('A1: @responsive selector with attribute matcher', () => {
       expect(

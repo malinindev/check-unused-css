@@ -22,3 +22,19 @@
     color: red;
   }
 }
+
+// A combinator directly before a trailing `&` (issue #96): the leading class is
+// real and must not be reported as non-existent.
+.target {
+  .skipLink + & {
+    color: blue;
+  }
+
+  .prevSibling ~ & {
+    color: green;
+  }
+
+  .parentEl > & {
+    color: red;
+  }
+}

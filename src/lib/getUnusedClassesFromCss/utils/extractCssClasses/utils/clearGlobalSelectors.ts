@@ -1,4 +1,4 @@
-import { stripLeadingCombinators } from './stripLeadingCombinators.js';
+import { stripDanglingCombinators } from './stripDanglingCombinators.js';
 
 const removeGlobalSelectors = (selector: string): string => {
   let result = '';
@@ -35,10 +35,12 @@ export const clearGlobalSelectors = (selector: string): string => {
 
   processed = processed.replace(/\s+/g, ' ').trim();
 
-  // Removing `&` can expose a bare leading combinator (`& > .item` -> `> .item`),
-  // and nested rules may already start with one; strip it so the parser accepts
-  // the remaining compound.
-  processed = stripLeadingCombinators(processed);
+  // Removing `&` can orphan a combinator that referred to it — a leading one
+  // (`& > .item` -> `> .item`), a trailing one (`.skipLink + &` -> `.skipLink +`,
+  // issue #96), or two around it (`.a + & + .b` -> `.a + + .b`). Any of these
+  // makes the parser reject the whole selector; strip the orphans so the real
+  // compounds survive.
+  processed = stripDanglingCombinators(processed);
 
   if (!processed || processed === ' ') {
     return '';
