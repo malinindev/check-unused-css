@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.5.4
+
+### Patch Changes
+
+- 31ade53: Recognize classes defined with the `:local(...)` function form, like `:local(.active) { }` (#97). Such classes are no longer reported as non-existent.
+- a3a1341: Fix false "non-existent" reports for classes in nested selectors with a combinator next to `&`, like `.skipLink + &` (#96). Such classes are now recognized.
+
 ## 0.5.3
 
 ### Patch Changes
