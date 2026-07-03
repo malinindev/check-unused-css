@@ -270,4 +270,22 @@ describe('getParentClassName', () => {
       expect(getParentClassName(rule)).toBe('b');
     });
   });
+
+  describe('should treat a :local(...) parent as a plain class (issue #97)', () => {
+    test('resolves the class inside :local(.button)', () => {
+      const rule = createMockRule('&Black', {
+        type: 'rule',
+        selector: ':local(.button)',
+      });
+      expect(getParentClassName(rule)).toBe('button');
+    });
+
+    test('resolves the last class of a compound inside :local(...)', () => {
+      const rule = createMockRule('&-faded', {
+        type: 'rule',
+        selector: ':local(.root.--variant)',
+      });
+      expect(getParentClassName(rule)).toBe('--variant');
+    });
+  });
 });

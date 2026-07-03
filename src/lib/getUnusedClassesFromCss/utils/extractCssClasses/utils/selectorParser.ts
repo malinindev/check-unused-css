@@ -16,7 +16,9 @@ type AstRuleItem = AstRule['items'][number];
  *   pseudo-class) from throwing, so `:global` parses into a `PseudoClass` node
  *   that `findClassNamesInSelector` reads to mark the rest of the compound as
  *   global. The function form `:global(.foo)` parses with a String argument and
- *   its inner class is intentionally not collected.
+ *   its inner class is intentionally not collected, while the `:local(.foo)`
+ *   function form has its String argument re-parsed so the inner class IS
+ *   collected (issue #97) — both handled in `findClassNamesInSelector`.
  */
 export const parseSelector: Parser = createParser({
   strict: false,

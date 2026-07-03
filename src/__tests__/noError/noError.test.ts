@@ -14,6 +14,7 @@ describe('Components without errors', () => {
     'PlainSass',
     'GlobalClasses',
     'GlobalBlock',
+    'LocalClasses',
     'Animations',
     'Complex',
     'Media',

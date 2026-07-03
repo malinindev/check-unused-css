@@ -1,6 +1,7 @@
 import type { AstRule, AstSelector } from 'css-selector-parser';
 import type { Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
+import { findClassNamesInLocalArgument } from './findClassNamesInSelector.js';
 import { parseSelector } from './selectorParser.js';
 
 const getParentRule = (rule: Rule): Rule | null => {
@@ -14,13 +15,26 @@ const getParentRule = (rule: Rule): Rule | null => {
 /**
  * Return the last direct class name of a parsed compound (the right-most
  * `ClassName` in its `items`), ignoring classes that live inside attribute
- * values or pseudo-class arguments (e.g. `[style*=".foo"]`, `:not(.fake)`).
+ * values or non-`:local` pseudo-class arguments (e.g. `[style*=".foo"]`,
+ * `:not(.fake)`). The CSS-Modules `:local(...)` function form is treated as a
+ * plain local class (issue #97), so `:local(.button)` yields `button` — letting
+ * it act as the parent of SCSS suffix concatenation like `&Black`.
  */
 const getLastClassNameOfRule = (rule: AstRule): string | null => {
   let lastClassName: string | null = null;
   for (const item of rule.items) {
     if (item.type === 'ClassName') {
       lastClassName = item.name;
+    } else if (
+      item.type === 'PseudoClass' &&
+      item.name === 'local' &&
+      item.argument &&
+      item.argument.type === 'String'
+    ) {
+      const localClasses = findClassNamesInLocalArgument(item.argument.value);
+      if (localClasses.length) {
+        lastClassName = localClasses[localClasses.length - 1] ?? lastClassName;
+      }
     }
   }
   return lastClassName;
