@@ -9,29 +9,43 @@ import { parseSelector } from './selectorParser.js';
 
 /**
  * Resolve a raw selector string (already ampersand-resolved against its parent)
- * into the class names it defines. Returns an empty array if the selector
+ * into the class names it defines. `initialScope` is the scope the selector
+ * starts in, inherited from its ancestors — `true` (global) for a rule inside a
+ * bare `:global {}` block (issue #101). Returns an empty array if the selector
  * cannot be parsed at all.
  */
-export const extractClassNamesFromSelector = (selector: string): string[] => {
+export const extractClassNamesFromSelector = (
+  selector: string,
+  initialScope = false
+): string[] => {
   try {
     const processedSelector = clearGlobalSelectors(selector);
     const parsed = parseSelector(processedSelector);
 
     if (Array.isArray(parsed)) {
-      return parsed.flatMap(findClassNamesInSelector);
+      return parsed.flatMap((s) => findClassNamesInSelector(s, initialScope));
     }
 
-    return findClassNamesInSelector(parsed);
+    return findClassNamesInSelector(parsed, initialScope);
   } catch {
     return [];
   }
 };
 
-export const extractClassNamesFromRule = (rule: Rule): string[] => {
+/**
+ * Resolve a rule into the local class names it defines. `initialScope` is the
+ * scope inherited from the rule's ancestors — `true` when it sits inside a bare
+ * `:global {}` block, so its plain classes are global and only ones a `:local`
+ * switch/`:local(...)` form flips back count (issue #101).
+ */
+export const extractClassNamesFromRule = (
+  rule: Rule,
+  initialScope = false
+): string[] => {
   const parentClassName = getParentClassName(rule);
   const resolved = resolveAmpersandSelector(rule.selector, parentClassName);
 
-  return extractClassNamesFromSelector(resolved);
+  return extractClassNamesFromSelector(resolved, initialScope);
 };
 
 /**

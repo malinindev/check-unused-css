@@ -347,6 +347,30 @@ describe('findClassNamesInSelector', () => {
     });
   });
 
+  describe('toggles scope on both bare switches (nearest wins)', () => {
+    // A bare `:local` after a bare `:global` in the same chain resumes
+    // collecting; the last switch wins (Copilot review on PR #102).
+    test('resumes collecting after a `:local` following a `:global`', () => {
+      const selector = globalAwareParser(':global :local .x');
+      expect(findClassNamesInSelector(selector)).toEqual(['x']);
+    });
+
+    test('drops the middle global compound, keeps the trailing local one', () => {
+      const selector = globalAwareParser(':global .g :local .x');
+      expect(findClassNamesInSelector(selector)).toEqual(['x']);
+    });
+
+    test('a `:global` following a `:local` drops the rest', () => {
+      const selector = globalAwareParser(':local :global .x');
+      expect(findClassNamesInSelector(selector)).toEqual([]);
+    });
+
+    test('collects every compound after a `:local` switch', () => {
+      const selector = globalAwareParser(':global :local .a .b');
+      expect(findClassNamesInSelector(selector)).toEqual(['a', 'b']);
+    });
+  });
+
   describe('should collect classes inside the :local(...) function form (issue #97)', () => {
     // The function form `:local(.foo)` parses its argument as a String; those
     // inner classes are explicitly local and must be collected.
@@ -374,5 +398,63 @@ describe('findClassNamesInSelector', () => {
       const selector = globalAwareParser(':local(.--reversed)');
       expect(findClassNamesInSelector(selector)).toEqual(['--reversed']);
     });
+  });
+});
+
+describe('with an inherited global initialScope (issue #101)', () => {
+  // A rule inside a bare `:global {}` block starts extraction in global scope:
+  // plain classes are global and dropped, but a `:local(...)` form or a bare
+  // `:local` switch flips (part of) the selector back to local.
+
+  test('collects the inner class of a :local(...) function form', () => {
+    const selector = globalAwareParser(':local(.small)');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['small']);
+  });
+
+  test('collects every compound inside :local(...)', () => {
+    const selector = globalAwareParser(':local(.root.active)');
+    expect(findClassNamesInSelector(selector, true)).toEqual([
+      'root',
+      'active',
+    ]);
+  });
+
+  test('drops a plain class that is not re-scoped to local', () => {
+    const selector = globalAwareParser('.plain');
+    expect(findClassNamesInSelector(selector, true)).toEqual([]);
+  });
+
+  test('keeps only the :local(...) part of a mixed selector', () => {
+    // `.plain` is global here; only `.kept` is re-scoped to local.
+    const selector = globalAwareParser('.plain :local(.kept)');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['kept']);
+  });
+
+  test('ignores a :global(...) function form', () => {
+    const selector = globalAwareParser(':global(.g) :local(.l)');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['l']);
+  });
+
+  test('finds a :local(...) nested inside a pseudo-class argument', () => {
+    const selector = globalAwareParser(':not(:local(.x))');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
+  });
+
+  test('a bare `:local` switch flips the rest of the selector back to local', () => {
+    // `.g` stays global (dropped); `.x` after the bare `:local` switch is local.
+    const selector = globalAwareParser('.g :local .x');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
+  });
+
+  test('a bare `:local` inside a pseudo-class argument re-scopes it', () => {
+    // The current global scope is carried into `:not(...)`; the bare `:local`
+    // inside flips it, so `.x` is collected (Copilot review on PR #102).
+    const selector = globalAwareParser(':not(:local .x)');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
+  });
+
+  test('returns nothing for an all-global selector', () => {
+    const selector = globalAwareParser('div > .a .b');
+    expect(findClassNamesInSelector(selector, true)).toEqual([]);
   });
 });

@@ -1,3 +1,4 @@
+import type { Rule } from 'postcss';
 import postcssScss from 'postcss-scss';
 import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import {
@@ -12,6 +13,18 @@ export type CssClassInfo = {
   line: number;
   column: number;
 };
+
+/**
+ * The local class names a single rule defines, honoring CSS-Modules scope.
+ *
+ * The rule's inherited scope (global when it sits inside a bare `:global {}`
+ * block) is passed as the extraction's starting scope; bare `:global`/`:local`
+ * switches within the rule's own selector then toggle it per compound, so a
+ * plain class stays global while a `:local` switch or `:local(...)` form flips
+ * back to local (issue #101).
+ */
+const resolveRuleClassNames = (rule: Rule): string[] =>
+  extractClassNamesFromRule(rule, isInsideGlobalScope(rule));
 
 export const extractCssClasses = (cssContent: string): string[] => {
   const { isFileIgnored, ignoredLines } = parseIgnoreComments(cssContent);
@@ -29,12 +42,7 @@ export const extractCssClasses = (cssContent: string): string[] => {
       return;
     }
 
-    // Classes inside a bare `:global { … }` block/switch are global, not local.
-    if (isInsideGlobalScope(rule)) {
-      return;
-    }
-
-    const ruleClassNames = extractClassNamesFromRule(rule);
+    const ruleClassNames = resolveRuleClassNames(rule);
     for (const className of ruleClassNames) {
       classNames.add(className);
     }
@@ -79,12 +87,7 @@ export const extractCssClassesWithLocations = (
       return;
     }
 
-    // Classes inside a bare `:global { … }` block/switch are global, not local.
-    if (isInsideGlobalScope(rule)) {
-      return;
-    }
-
-    const ruleClassNames = extractClassNamesFromRule(rule);
+    const ruleClassNames = resolveRuleClassNames(rule);
     for (const className of ruleClassNames) {
       // Only keep the first occurrence of each class
       if (!classInfoMap.has(className) && rule.source?.start) {

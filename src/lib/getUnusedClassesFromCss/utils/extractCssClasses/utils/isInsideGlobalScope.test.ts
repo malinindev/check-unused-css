@@ -80,4 +80,28 @@ describe('isInsideGlobalScope', () => {
     const rule = ruleBySelector('@media screen { .local {} }', '.local');
     expect(isInsideGlobalScope(rule)).toBe(false);
   });
+
+  describe('a bare `:local` switch flips scope back (issue #101)', () => {
+    test('a bare `:local {}` block inside `:global {}` is not global', () => {
+      const rule = ruleBySelector(':global { :local { .x {} } }', '.x');
+      expect(isInsideGlobalScope(rule)).toBe(false);
+    });
+
+    test('the nearest switch wins: `:local` closer than `:global`', () => {
+      const rule = ruleBySelector(':global { :local { .a { .b {} } } }', '.b');
+      expect(isInsideGlobalScope(rule)).toBe(false);
+    });
+
+    test('the nearest switch wins: `:global` closer than `:local`', () => {
+      const rule = ruleBySelector(':local { :global { .a { .b {} } } }', '.b');
+      expect(isInsideGlobalScope(rule)).toBe(true);
+    });
+
+    test('a `:local(...)` FUNCTION form ancestor does not flip scope', () => {
+      // `:local(.a)` scopes only `.a`; its plain descendant `.b` inherits the
+      // enclosing `:global` scope.
+      const rule = ruleBySelector(':global { :local(.a) { .b {} } }', '.b');
+      expect(isInsideGlobalScope(rule)).toBe(true);
+    });
+  });
 });

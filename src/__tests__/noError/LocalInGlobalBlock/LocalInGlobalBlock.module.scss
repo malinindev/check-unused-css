@@ -1,0 +1,23 @@
+// A `:local(...)` form nested inside a bare `:global {}` block re-scopes its
+// classes back to local, so they are real module classes (issue #101).
+:global {
+  :local(.small) {
+    color: red;
+  }
+
+  :local(.medium.active) {
+    color: blue;
+  }
+
+  // A bare `:local` switch inside the global block also re-scopes descendants.
+  :local {
+    .large {
+      color: green;
+    }
+  }
+
+  // Plain classes here stay global and are intentionally NOT module classes.
+  .globalOnly {
+    color: black;
+  }
+}
