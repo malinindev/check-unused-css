@@ -24,6 +24,21 @@ describe('stripDanglingCombinators', () => {
         '.item, .other'
       );
     });
+
+    test('drops the leading combinator but keeps a real in-between one', () => {
+      // `> .a + .b` -> the leading `>` (its `&` operand was removed) is
+      // dropped, but the genuine in-between `+` must survive rather than be
+      // shifted onto the first gap.
+      expect(stripDanglingCombinators('> .a + .b')).toBe('.a + .b');
+    });
+
+    test('drops the leading combinator and keeps a differing in-between one', () => {
+      expect(stripDanglingCombinators('+ .a > .b')).toBe('.a > .b');
+    });
+
+    test('drops the leading combinator and keeps a following descendant gap', () => {
+      expect(stripDanglingCombinators('> .a .b')).toBe('.a .b');
+    });
   });
 
   describe('should strip a trailing combinator (issue #96)', () => {

@@ -132,9 +132,15 @@ const tokenizeMember = (
       continue;
     }
 
-    // Leaving a separator run: record it, then resume the compound token.
+    // Leaving a separator run: record it only if it sits BETWEEN two
+    // compounds. A run seen before the first token is a leading combinator
+    // (its `&` operand was removed); dropping it here keeps `separators[i-1]`
+    // aligned with the gap before `tokens[i]`, so a real in-between combinator
+    // is not shifted onto the wrong gap (e.g. `> .a + .b` -> `.a + .b`).
     if (separator) {
-      separators.push(separator);
+      if (tokens.length > 0) {
+        separators.push(separator);
+      }
       separator = '';
     }
     token += char;
