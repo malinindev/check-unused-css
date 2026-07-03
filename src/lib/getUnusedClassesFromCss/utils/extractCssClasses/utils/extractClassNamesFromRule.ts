@@ -1,10 +1,6 @@
-import type { AstSelector } from 'css-selector-parser';
 import type { AtRule, Rule } from 'postcss';
 import { clearGlobalSelectors } from './clearGlobalSelectors.js';
-import {
-  findClassNamesInSelector,
-  findLocalRescopedClassNames,
-} from './findClassNamesInSelector.js';
+import { findClassNamesInSelector } from './findClassNamesInSelector.js';
 import {
   getParentClassName,
   resolveAmpersandSelector,
@@ -12,63 +8,44 @@ import {
 import { parseSelector } from './selectorParser.js';
 
 /**
- * Parse a raw selector string (already ampersand-resolved against its parent)
- * and reduce it to class names with `collect`. Returns an empty array if the
- * selector cannot be parsed at all.
+ * Resolve a raw selector string (already ampersand-resolved against its parent)
+ * into the class names it defines. `initialScope` is the scope the selector
+ * starts in, inherited from its ancestors — `true` (global) for a rule inside a
+ * bare `:global {}` block (issue #101). Returns an empty array if the selector
+ * cannot be parsed at all.
  */
-const extractWith = (
+export const extractClassNamesFromSelector = (
   selector: string,
-  collect: (parsed: AstSelector) => string[]
+  initialScope = false
 ): string[] => {
   try {
     const processedSelector = clearGlobalSelectors(selector);
     const parsed = parseSelector(processedSelector);
 
     if (Array.isArray(parsed)) {
-      return parsed.flatMap(collect);
+      return parsed.flatMap((s) => findClassNamesInSelector(s, initialScope));
     }
 
-    return collect(parsed);
+    return findClassNamesInSelector(parsed, initialScope);
   } catch {
     return [];
   }
 };
 
 /**
- * Resolve a raw selector string into the class names it defines. Returns an
- * empty array if the selector cannot be parsed at all.
+ * Resolve a rule into the local class names it defines. `initialScope` is the
+ * scope inherited from the rule's ancestors — `true` when it sits inside a bare
+ * `:global {}` block, so its plain classes are global and only ones a `:local`
+ * switch/`:local(...)` form flips back count (issue #101).
  */
-export const extractClassNamesFromSelector = (selector: string): string[] =>
-  extractWith(selector, findClassNamesInSelector);
-
-/**
- * Resolve a raw selector string into ONLY the classes it re-scopes to local via
- * a `:local(...)` function form. For rules whose inherited scope is global
- * (inside a bare `:global` block): plain classes there are global, but a
- * `:local(.foo)` form flips `.foo` back to local (issue #101).
- */
-export const extractLocalRescopedClassNamesFromSelector = (
-  selector: string
-): string[] => extractWith(selector, findLocalRescopedClassNames);
-
-export const extractClassNamesFromRule = (rule: Rule): string[] => {
-  const parentClassName = getParentClassName(rule);
-  const resolved = resolveAmpersandSelector(rule.selector, parentClassName);
-
-  return extractClassNamesFromSelector(resolved);
-};
-
-/**
- * Like {@link extractClassNamesFromRule} but for a rule whose inherited scope is
- * global: only `:local(...)`-re-scoped classes are returned (issue #101).
- */
-export const extractLocalRescopedClassNamesFromRule = (
-  rule: Rule
+export const extractClassNamesFromRule = (
+  rule: Rule,
+  initialScope = false
 ): string[] => {
   const parentClassName = getParentClassName(rule);
   const resolved = resolveAmpersandSelector(rule.selector, parentClassName);
 
-  return extractLocalRescopedClassNamesFromSelector(resolved);
+  return extractClassNamesFromSelector(resolved, initialScope);
 };
 
 /**

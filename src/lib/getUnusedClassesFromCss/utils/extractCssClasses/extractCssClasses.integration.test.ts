@@ -792,5 +792,22 @@ describe('extractCssClasses (integration, real pipeline)', () => {
         sorted(['bar'])
       );
     });
+
+    test('inside a :global block, a leading plain compound stays global', () => {
+      // `.g` precedes the bare `:local` switch on the rule's own selector, so it
+      // inherits the enclosing `:global` scope and must NOT be extracted; only
+      // `.x` after the switch is local (Copilot review on PR #102).
+      expect(extractSorted(':global { .g :local .x { color: red; } }')).toEqual(
+        sorted(['x'])
+      );
+    });
+
+    test('a bare :local inside a :not() argument re-scopes it', () => {
+      // The rule inherits global scope; the bare `:local` inside `:not(...)`
+      // flips its argument back to local so `.x` is collected.
+      expect(
+        extractSorted(':global .a:not(:local .x) { color: red; }')
+      ).toEqual(sorted(['x']));
+    });
   });
 });

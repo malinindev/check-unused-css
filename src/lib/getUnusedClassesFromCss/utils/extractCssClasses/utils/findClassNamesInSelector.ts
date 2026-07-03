@@ -21,18 +21,25 @@ export const findClassNamesInLocalArgument = (argument: string): string[] => {
 };
 
 /**
- * Collect ONLY the classes explicitly re-scoped to local via a `:local(...)`
- * function form. Used for rules whose inherited scope is global (they sit inside
- * a bare `:global` block): plain classes there are global and must be dropped,
- * but a `:local(.foo)` form flips `.foo` back to local (issue #101).
+ * Collect the local class names a selector defines.
  *
- * A bare `:local` switch is NOT handled here — it flips the whole rule back to
- * local scope, which `isInsideGlobalScope` already reflects, so such rules go
- * through the full `findClassNamesInSelector` path (which itself toggles on both
- * `:global` and `:local` switches within the selector chain) instead.
+ * `initialScope` is the scope the selector starts in, inherited from its
+ * ancestors: `false` (local) at the top level, `true` (global) for a rule nested
+ * inside a bare `:global {}` block (issue #101). Within the selector a bare
+ * `:global`/`:local` switch toggles the scope of every compound to its right —
+ * in this selector AND its nested rules — and the nearest (last) switch wins
+ * (`:global :local .x` is local, `:local :global .x` is global). Plain class
+ * tokens are collected only while in local scope.
+ *
+ * The function forms `:global(.foo)`/`:local(.foo)` are NOT switches: they never
+ * change the running scope. `:local(.foo)` always collects its inner classes as
+ * local regardless of scope (issue #97); `:global(.foo)` never collects its
+ * argument. The scope is threaded through `rule.nestedRule` and into pseudo-class
+ * selector arguments (`:not(...)`) so the whole chain shares one running state.
  */
-export const findLocalRescopedClassNames = (
-  selector: AstSelector
+export const findClassNamesInSelector = (
+  selector: AstSelector,
+  initialScope = false
 ): string[] => {
   if (!selector.rules.length) {
     return [];
@@ -40,51 +47,6 @@ export const findLocalRescopedClassNames = (
 
   const classNames: string[] = [];
 
-  const collectFromRule = (rule: AstRule): void => {
-    for (const item of rule.items) {
-      if (
-        item.type === 'PseudoClass' &&
-        item.name === 'local' &&
-        item.argument &&
-        item.argument.type === 'String'
-      ) {
-        classNames.push(...findClassNamesInLocalArgument(item.argument.value));
-      } else if (
-        item.type === 'PseudoClass' &&
-        item.argument &&
-        item.argument.type === 'Selector'
-      ) {
-        // Recurse into pseudo-class selector arguments (e.g. `:not(:local(.x))`)
-        // so a nested :local form is still found.
-        classNames.push(...findLocalRescopedClassNames(item.argument));
-      }
-    }
-
-    if (rule.nestedRule) {
-      collectFromRule(rule.nestedRule);
-    }
-  };
-
-  for (const rule of selector.rules) {
-    collectFromRule(rule);
-  }
-
-  return classNames;
-};
-
-export const findClassNamesInSelector = (selector: AstSelector): string[] => {
-  if (!selector.rules.length) {
-    return [];
-  }
-
-  const classNames: string[] = [];
-
-  // A bare `:global`/`:local` switch toggles the scope of every compound to its
-  // right — in this selector AND its nested rules — and the nearest (last) one
-  // wins (`:global :local .x` is local). While in global scope plain classes are
-  // dropped; a later bare `:local` resumes collection. The function forms
-  // `:global(.foo)`/`:local(.foo)` are NOT switches and never change `isGlobal`.
-  // `isGlobal` is threaded through `rule.nestedRule` so the chain carries state.
   const extractClassNamesFromRule = (
     rule: AstRule,
     isGlobal: boolean
@@ -125,11 +87,7 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
       ) {
         // Extract class names from pseudo-class arguments like :not(.class),
         // carrying the current switch scope into the argument.
-        classNames.push(
-          ...(global
-            ? findLocalRescopedClassNames(item.argument)
-            : findClassNamesInSelector(item.argument))
-        );
+        classNames.push(...findClassNamesInSelector(item.argument, global));
       }
     }
 
@@ -139,7 +97,7 @@ export const findClassNamesInSelector = (selector: AstSelector): string[] => {
   };
 
   for (const rule of selector.rules) {
-    extractClassNamesFromRule(rule, false);
+    extractClassNamesFromRule(rule, initialScope);
   }
 
   return classNames;

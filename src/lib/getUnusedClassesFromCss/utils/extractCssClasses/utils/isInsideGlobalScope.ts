@@ -109,15 +109,3 @@ export const isInsideGlobalScope = (rule: Rule): boolean => {
 
   return false;
 };
-
-/**
- * Does a rule's OWN selector open a bare `:local` switch that governs its whole
- * body (`:local { … }`, `:local .scoped { … }`)? Such a rule re-scopes back to
- * local even when nested in a `:global` block, so its classes are extracted in
- * full rather than only its `:local(...)` function forms (issue #101).
- *
- * The function form `:local(.foo)` is NOT a switch and returns `false` here —
- * only `.foo` is re-scoped, handled per-class elsewhere.
- */
-export const selectorHasLocalSwitch = (selector: string): boolean =>
-  selectorSwitchScope(selector) === 'local';

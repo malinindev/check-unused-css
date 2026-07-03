@@ -4,12 +4,8 @@ import { parseIgnoreComments } from '../../../../utils/parseIgnoreComments.js';
 import {
   extractClassNamesFromAtRule,
   extractClassNamesFromRule,
-  extractLocalRescopedClassNamesFromRule,
 } from './utils/extractClassNamesFromRule.js';
-import {
-  isInsideGlobalScope,
-  selectorHasLocalSwitch,
-} from './utils/isInsideGlobalScope.js';
+import { isInsideGlobalScope } from './utils/isInsideGlobalScope.js';
 import { isSelectorBearingAtRule } from './utils/isSelectorBearingAtRule.js';
 
 export type CssClassInfo = {
@@ -21,18 +17,14 @@ export type CssClassInfo = {
 /**
  * The local class names a single rule defines, honoring CSS-Modules scope.
  *
- * A rule inside a bare `:global` block is global, so only classes flipped back
- * to local count: either the whole rule via a bare `:local` switch on its own
- * selector (`:local .x`), or an individual `:local(.foo)` function form. A rule
- * in local scope defines every class its selector names, as usual (issue #101).
+ * The rule's inherited scope (global when it sits inside a bare `:global {}`
+ * block) is passed as the extraction's starting scope; bare `:global`/`:local`
+ * switches within the rule's own selector then toggle it per compound, so a
+ * plain class stays global while a `:local` switch or `:local(...)` form flips
+ * back to local (issue #101).
  */
-const resolveRuleClassNames = (rule: Rule): string[] => {
-  if (isInsideGlobalScope(rule) && !selectorHasLocalSwitch(rule.selector)) {
-    return extractLocalRescopedClassNamesFromRule(rule);
-  }
-
-  return extractClassNamesFromRule(rule);
-};
+const resolveRuleClassNames = (rule: Rule): string[] =>
+  extractClassNamesFromRule(rule, isInsideGlobalScope(rule));
 
 export const extractCssClasses = (cssContent: string): string[] => {
   const { isFileIgnored, ignoredLines } = parseIgnoreComments(cssContent);

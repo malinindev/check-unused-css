@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Rule } from 'postcss';
 import postcssScss from 'postcss-scss';
-import {
-  isInsideGlobalScope,
-  selectorHasLocalSwitch,
-} from './isInsideGlobalScope.js';
+import { isInsideGlobalScope } from './isInsideGlobalScope.js';
 
 /** Parse SCSS and return the first rule whose selector matches `selector`. */
 const ruleBySelector = (css: string, selector: string): Rule => {
@@ -106,35 +103,5 @@ describe('isInsideGlobalScope', () => {
       const rule = ruleBySelector(':global { :local(.a) { .b {} } }', '.b');
       expect(isInsideGlobalScope(rule)).toBe(true);
     });
-  });
-});
-
-describe('selectorHasLocalSwitch', () => {
-  test('bare `:local` switch is detected', () => {
-    expect(selectorHasLocalSwitch(':local .scoped')).toBe(true);
-  });
-
-  test('bare `:local {}` block selector is detected', () => {
-    expect(selectorHasLocalSwitch(':local')).toBe(true);
-  });
-
-  test('the `:local(.foo)` function form is NOT a switch', () => {
-    expect(selectorHasLocalSwitch(':local(.foo)')).toBe(false);
-  });
-
-  test('a plain selector has no local switch', () => {
-    expect(selectorHasLocalSwitch('.foo .bar')).toBe(false);
-  });
-
-  test('a bare `:global` switch is not a local switch', () => {
-    expect(selectorHasLocalSwitch(':global .foo')).toBe(false);
-  });
-
-  test('the last switch wins: `:global :local` is a local switch', () => {
-    expect(selectorHasLocalSwitch(':global :local .x')).toBe(true);
-  });
-
-  test('the last switch wins: `:local :global` is not a local switch', () => {
-    expect(selectorHasLocalSwitch(':local :global .x')).toBe(false);
   });
 });

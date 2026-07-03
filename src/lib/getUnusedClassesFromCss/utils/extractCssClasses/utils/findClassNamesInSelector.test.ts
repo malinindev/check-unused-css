@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { AstSelector, Parser } from 'css-selector-parser';
 import { createParser } from 'css-selector-parser';
-import {
-  findClassNamesInSelector,
-  findLocalRescopedClassNames,
-} from './findClassNamesInSelector.js';
+import { findClassNamesInSelector } from './findClassNamesInSelector.js';
 import { parseSelector as globalAwareParser } from './selectorParser.js';
 
 const parseSelector: Parser = createParser();
@@ -404,44 +401,60 @@ describe('findClassNamesInSelector', () => {
   });
 });
 
-describe('findLocalRescopedClassNames', () => {
-  // Used only for rules whose inherited scope is global: plain classes there are
-  // global and must be dropped, but a `:local(...)` function form re-scopes its
-  // inner classes back to local (issue #101).
+describe('with an inherited global initialScope (issue #101)', () => {
+  // A rule inside a bare `:global {}` block starts extraction in global scope:
+  // plain classes are global and dropped, but a `:local(...)` form or a bare
+  // `:local` switch flips (part of) the selector back to local.
 
   test('collects the inner class of a :local(...) function form', () => {
     const selector = globalAwareParser(':local(.small)');
-    expect(findLocalRescopedClassNames(selector)).toEqual(['small']);
+    expect(findClassNamesInSelector(selector, true)).toEqual(['small']);
   });
 
   test('collects every compound inside :local(...)', () => {
     const selector = globalAwareParser(':local(.root.active)');
-    expect(findLocalRescopedClassNames(selector)).toEqual(['root', 'active']);
+    expect(findClassNamesInSelector(selector, true)).toEqual([
+      'root',
+      'active',
+    ]);
   });
 
-  test('drops a plain class that is not wrapped in :local(...)', () => {
+  test('drops a plain class that is not re-scoped to local', () => {
     const selector = globalAwareParser('.plain');
-    expect(findLocalRescopedClassNames(selector)).toEqual([]);
+    expect(findClassNamesInSelector(selector, true)).toEqual([]);
   });
 
   test('keeps only the :local(...) part of a mixed selector', () => {
     // `.plain` is global here; only `.kept` is re-scoped to local.
     const selector = globalAwareParser('.plain :local(.kept)');
-    expect(findLocalRescopedClassNames(selector)).toEqual(['kept']);
+    expect(findClassNamesInSelector(selector, true)).toEqual(['kept']);
   });
 
   test('ignores a :global(...) function form', () => {
     const selector = globalAwareParser(':global(.g) :local(.l)');
-    expect(findLocalRescopedClassNames(selector)).toEqual(['l']);
+    expect(findClassNamesInSelector(selector, true)).toEqual(['l']);
   });
 
   test('finds a :local(...) nested inside a pseudo-class argument', () => {
     const selector = globalAwareParser(':not(:local(.x))');
-    expect(findLocalRescopedClassNames(selector)).toEqual(['x']);
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
   });
 
-  test('returns nothing for a selector with no :local(...) form', () => {
+  test('a bare `:local` switch flips the rest of the selector back to local', () => {
+    // `.g` stays global (dropped); `.x` after the bare `:local` switch is local.
+    const selector = globalAwareParser('.g :local .x');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
+  });
+
+  test('a bare `:local` inside a pseudo-class argument re-scopes it', () => {
+    // The current global scope is carried into `:not(...)`; the bare `:local`
+    // inside flips it, so `.x` is collected (Copilot review on PR #102).
+    const selector = globalAwareParser(':not(:local .x)');
+    expect(findClassNamesInSelector(selector, true)).toEqual(['x']);
+  });
+
+  test('returns nothing for an all-global selector', () => {
     const selector = globalAwareParser('div > .a .b');
-    expect(findLocalRescopedClassNames(selector)).toEqual([]);
+    expect(findClassNamesInSelector(selector, true)).toEqual([]);
   });
 });
