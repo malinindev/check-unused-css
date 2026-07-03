@@ -753,4 +753,44 @@ describe('extractCssClasses (integration, real pipeline)', () => {
       ).toEqual(sorted(['--variant']));
     });
   });
+
+  describe('both bare switches toggle scope within one selector chain', () => {
+    // `findClassNamesInSelector` toggles on `:global` AND `:local`; the last
+    // switch on the chain wins, so a `:local` after a `:global` resumes
+    // collecting (Copilot review on PR #102).
+
+    test('`:global :local .x` collects .x (last switch wins)', () => {
+      expect(extractSorted(':global :local .x { color: red; }')).toEqual(
+        sorted(['x'])
+      );
+    });
+
+    test('`:global .g :local .x` drops .g but keeps .x', () => {
+      expect(extractSorted(':global .g :local .x { color: red; }')).toEqual(
+        sorted(['x'])
+      );
+    });
+
+    test('`:local :global .x` drops .x (global is the last switch)', () => {
+      expect(extractSorted(':local :global .x { color: red; }')).toEqual([]);
+    });
+
+    test('a `:local` switch collects every compound after it', () => {
+      expect(extractSorted(':global :local .a .b { color: red; }')).toEqual(
+        sorted(['a', 'b'])
+      );
+    });
+
+    test('a bare `:local` switch resumes collection in a nested rule chain', () => {
+      expect(
+        extractSorted(':global { .g { :local .x { color: red; } } }')
+      ).toEqual(sorted(['x']));
+    });
+
+    test('no regression: `:global(.foo) .bar` keeps .bar (function form)', () => {
+      expect(extractSorted(':global(.foo) .bar { color: red; }')).toEqual(
+        sorted(['bar'])
+      );
+    });
+  });
 });

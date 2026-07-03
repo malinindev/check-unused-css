@@ -350,6 +350,30 @@ describe('findClassNamesInSelector', () => {
     });
   });
 
+  describe('toggles scope on both bare switches (nearest wins)', () => {
+    // A bare `:local` after a bare `:global` in the same chain resumes
+    // collecting; the last switch wins (Copilot review on PR #102).
+    test('resumes collecting after a `:local` following a `:global`', () => {
+      const selector = globalAwareParser(':global :local .x');
+      expect(findClassNamesInSelector(selector)).toEqual(['x']);
+    });
+
+    test('drops the middle global compound, keeps the trailing local one', () => {
+      const selector = globalAwareParser(':global .g :local .x');
+      expect(findClassNamesInSelector(selector)).toEqual(['x']);
+    });
+
+    test('a `:global` following a `:local` drops the rest', () => {
+      const selector = globalAwareParser(':local :global .x');
+      expect(findClassNamesInSelector(selector)).toEqual([]);
+    });
+
+    test('collects every compound after a `:local` switch', () => {
+      const selector = globalAwareParser(':global :local .a .b');
+      expect(findClassNamesInSelector(selector)).toEqual(['a', 'b']);
+    });
+  });
+
   describe('should collect classes inside the :local(...) function form (issue #97)', () => {
     // The function form `:local(.foo)` parses its argument as a String; those
     // inner classes are explicitly local and must be collected.
