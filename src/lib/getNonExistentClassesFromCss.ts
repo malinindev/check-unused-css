@@ -7,7 +7,10 @@ import { getContentOfFiles } from '../utils/getContentOfFiles.js';
 import { parseIgnoreComments } from '../utils/parseIgnoreComments.js';
 import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
-import { findFilesImportingCssModule } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
+import {
+  type CssImportIndex,
+  findFilesImportingCssModule,
+} from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
 import { collectPartialClasses } from './getUnusedClassesFromCss/utils/scssImports/index.js';
@@ -15,13 +18,19 @@ import { collectPartialClasses } from './getUnusedClassesFromCss/utils/scssImpor
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
   srcDir: string;
+  cssImportIndex: CssImportIndex;
 };
 
 export const getNonExistentClassesFromCss = async ({
   cssFile,
   srcDir,
+  cssImportIndex,
 }: GetNonExistentClassesFromCssParams): Promise<NonExistentClassResult | null> => {
-  const importingFilesData = await findFilesImportingCssModule(cssFile, srcDir);
+  const importingFilesData = await findFilesImportingCssModule(
+    cssFile,
+    srcDir,
+    cssImportIndex
+  );
 
   // If no files import this CSS module, we can't have non-existent classes
   if (importingFilesData.length === 0) {

@@ -31,6 +31,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result).toBeNull();
@@ -58,6 +59,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result?.status).toBe('notImported');
@@ -90,6 +92,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result?.status).toBe('withDynamicImports');
@@ -133,6 +136,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result).toBeNull();
@@ -170,6 +174,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result?.status).toBe('correct');
@@ -224,6 +229,7 @@ describe('getUnusedClassesFromCss', () => {
     const result = await getUnusedClassesFromCss({
       cssFile: 'test.module.css',
       srcDir: '/test',
+      cssImportIndex: new Map(),
     });
 
     expect(result?.status).toBe('correct');

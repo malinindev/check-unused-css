@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { buildCssImportIndex } from './buildCssImportIndex.js';
 import { findFilesImportingCssModule } from './findFilesImportingCssModule.js';
 
 describe('findFilesImportingCssModule', () => {
@@ -40,7 +41,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -61,7 +63,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/shared.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toHaveLength(2);
@@ -85,7 +88,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Header.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -104,7 +108,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -121,7 +126,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -140,11 +146,13 @@ describe('findFilesImportingCssModule', () => {
 
       const buttonResult = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
       const cardResult = await findFilesImportingCssModule(
         'components/Card.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(buttonResult).toEqual([
@@ -166,7 +174,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -183,7 +192,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -198,7 +208,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([]);
@@ -211,7 +222,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([]);
@@ -232,7 +244,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([]);
@@ -252,7 +265,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -266,7 +280,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([]);
@@ -278,7 +293,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([]);
@@ -295,7 +311,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'utils/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -312,7 +329,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -331,7 +349,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -348,7 +367,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'utils/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -365,7 +385,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -394,7 +415,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'shared/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toHaveLength(4);
@@ -429,7 +451,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -449,7 +472,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       // Should only return the first match
@@ -474,7 +498,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/ui/buttons/PrimaryButton.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toHaveLength(2);
@@ -497,7 +522,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -525,11 +551,13 @@ describe('findFilesImportingCssModule', () => {
 
       const docResult = await findFilesImportingCssModule(
         'components/(Documentation)SpecialChars.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
       const bracketsResult = await findFilesImportingCssModule(
         'components/[Brackets]And.Dots.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(docResult).toEqual([
@@ -569,7 +597,8 @@ describe('findFilesImportingCssModule', () => {
       // Test 1: When analyzing the CORRECT CSS file, it should find the importing file
       const correctResult = await findFilesImportingCssModule(
         'components/styles.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(correctResult).toEqual([
@@ -582,7 +611,8 @@ describe('findFilesImportingCssModule', () => {
       // Test 2: When analyzing the WRONG CSS file with same name, it should NOT find the importing file
       const wrongResult = await findFilesImportingCssModule(
         'components/SubscriptionSection/styles.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(wrongResult).toEqual([]);
@@ -600,7 +630,8 @@ describe('findFilesImportingCssModule', () => {
       // Should find the correct file despite multiple levels of nesting
       const result = await findFilesImportingCssModule(
         'shared/styles.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -610,7 +641,8 @@ describe('findFilesImportingCssModule', () => {
       // Should not match the wrong file
       const wrongResult = await findFilesImportingCssModule(
         'components/deep/styles.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(wrongResult).toEqual([]);
@@ -625,7 +657,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'utils/styles.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -646,7 +679,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'theme/base.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual(
@@ -667,7 +701,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'assets/global.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([{ file: 'src/App.tsx', importName: 'styles' }]);
@@ -695,7 +730,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'styles/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -723,7 +759,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'theme/Card.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -754,7 +791,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/ui/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -783,7 +821,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'src/theme.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -811,7 +850,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'utils/theme.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
@@ -828,7 +868,8 @@ describe('findFilesImportingCssModule', () => {
 
       const result = await findFilesImportingCssModule(
         'components/Button.module.css',
-        testDir
+        testDir,
+        await buildCssImportIndex(testDir)
       );
 
       expect(result).toEqual([
