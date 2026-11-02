@@ -12,7 +12,10 @@ describe('Source file scan', () => {
     tmp = null;
   });
 
-  test('skips the source scan when no CSS module is analyzed', () => {
+  test.each([
+    ['there are no CSS modules', false],
+    ['every CSS module is skipped', true],
+  ])('skips the source scan when %s', (_case, withSkippedModule) => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'scuc-source-scan-'));
     // A broken tsconfig warns as soon as an import is resolved, so the warning
     // shows whether the source files were scanned at all.
@@ -22,6 +25,10 @@ describe('Source file scan', () => {
       path.join(tmp, 'src/App.tsx'),
       "import styles from 'styles/App.module.css';\n"
     );
+    if (withSkippedModule) {
+      // A directory matches the module glob but is skipped as "not a file".
+      fs.mkdirSync(path.join(tmp, 'src/Skipped.module.css'));
+    }
 
     const result = runCheckUnusedCss({ cwd: tmp, stdin: 'closed' });
 

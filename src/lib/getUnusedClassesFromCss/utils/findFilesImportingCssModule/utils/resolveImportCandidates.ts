@@ -10,9 +10,10 @@ type ResolveOptions = {
 };
 
 /**
- * Every normalized path an import specifier may point to, in the order they
- * are tried. A CSS module is imported by the specifier when its path is one of
- * them.
+ * Every normalized path an import specifier may point to: relative imports
+ * resolve from the importing file, others through tsconfig aliases, `srcDir`
+ * and the project root. A CSS module is imported by the specifier when its
+ * path is one of them.
  */
 export const resolveImportCandidates = (options: ResolveOptions): string[] => {
   const { importPath, sourceDir, projectRoot, srcDir, isSrcDirProjectRoot } =

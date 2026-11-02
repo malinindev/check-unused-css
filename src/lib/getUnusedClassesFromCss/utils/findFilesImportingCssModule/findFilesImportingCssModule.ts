@@ -1,21 +1,19 @@
 import path from 'node:path';
-import {
-  buildCssImportIndex,
-  type CssImportIndex,
-  type CssModuleImporter,
+import type {
+  CssImportIndex,
+  CssModuleImporter,
 } from './buildCssImportIndex.js';
 
 /**
- * Source files that import `cssFile`. Pass an index built once per run when
- * looking up many modules; without one, the whole source tree is scanned.
+ * Source files that import `cssFile`, looked up in an index built once per
+ * run by `buildCssImportIndex`.
  */
 export const findFilesImportingCssModule = async (
   cssFile: string,
   srcDir: string,
-  cssImportIndex?: CssImportIndex
+  cssImportIndex: CssImportIndex
 ): Promise<CssModuleImporter[]> => {
-  const index = cssImportIndex ?? (await buildCssImportIndex(srcDir));
   const normalizedCssPath = path.normalize(path.join(srcDir, cssFile));
 
-  return [...(index.get(normalizedCssPath) ?? [])];
+  return [...(cssImportIndex.get(normalizedCssPath) ?? [])];
 };
