@@ -14,7 +14,10 @@ import {
 } from './lib/applyChangePlan/index.js';
 import { getNonExistentClassesFromCss } from './lib/getNonExistentClassesFromCss.js';
 import { getUnusedClassesFromCss } from './lib/getUnusedClassesFromCss/index.js';
-import { buildCssImportIndex } from './lib/getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
+import {
+  buildCssImportIndex,
+  type CssImportIndex,
+} from './lib/getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { printChangePlan } from './lib/printChangePlan.js';
 import { printResults } from './lib/printResults.js';
 import { printRunSummary } from './lib/printRunSummary.js';
@@ -68,8 +71,9 @@ const runAnalysis = async (): Promise<AnalysisContext> => {
     .replace(/\\/g, '/');
   const cssFiles = await glob(searchPattern, globOptions);
 
-  // Scan the source files once per run, not once per CSS module (issue #104).
-  const cssImportIndex = await buildCssImportIndex(srcDir);
+  // Scan the source files once per run, not once per CSS module (issue #104),
+  // and only once some module actually needs it.
+  let cssImportIndex: CssImportIndex | undefined;
 
   const results: CssAnalysisResult[] = [];
 
@@ -99,6 +103,8 @@ const runAnalysis = async (): Promise<AnalysisContext> => {
       );
       continue;
     }
+
+    cssImportIndex ??= await buildCssImportIndex(srcDir);
 
     const unusedResult = await getUnusedClassesFromCss({
       cssFile: relativeCssFile,
