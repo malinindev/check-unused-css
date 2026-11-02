@@ -18,7 +18,10 @@ import {
   extractCssClassesWithLocations,
 } from './utils/extractCssClasses/index.js';
 import { extractUsedClasses } from './utils/extractUsedClasses.js';
-import { findFilesImportingCssModule } from './utils/findFilesImportingCssModule/index.js';
+import {
+  type CssImportIndex,
+  findFilesImportingCssModule,
+} from './utils/findFilesImportingCssModule/index.js';
 import { detectModulePassedToFunction } from './utils/passedToFunction/detectModulePassedToFunction.js';
 import { rescueUsedAncestors } from './utils/rescueUsedAncestors.js';
 import { collectPartialClasses } from './utils/scssImports/index.js';
@@ -26,11 +29,13 @@ import { collectPartialClasses } from './utils/scssImports/index.js';
 type GetUnusedClassesFromCssParams = {
   cssFile: string;
   srcDir: string;
+  cssImportIndex: CssImportIndex;
 };
 
 export const getUnusedClassesFromCss = async ({
   cssFile,
   srcDir,
+  cssImportIndex,
 }: GetUnusedClassesFromCssParams): Promise<UnusedClassResult | null> => {
   const cssContent = getContentOfFiles({ files: [cssFile], srcDir });
   const cssClassesWithLocations = extractCssClassesWithLocations(cssContent);
@@ -45,7 +50,11 @@ export const getUnusedClassesFromCss = async ({
   // used — seed it so it isn't reported as unused.
   const composedClasses = extractComposedClassesFromContent(cssContent);
 
-  const importingFilesData = await findFilesImportingCssModule(cssFile, srcDir);
+  const importingFilesData = await findFilesImportingCssModule(
+    cssFile,
+    srcDir,
+    cssImportIndex
+  );
 
   if (importingFilesData.length === 0) {
     return {

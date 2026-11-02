@@ -1,14 +1,24 @@
-import { describe, expect, test } from 'bun:test';
+import { beforeAll, describe, expect, test } from 'bun:test';
 import path from 'node:path';
 import { getNonExistentClassesFromCss } from './getNonExistentClassesFromCss.js';
+import {
+  buildCssImportIndex,
+  type CssImportIndex,
+} from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 
 describe('getNonExistentClassesFromCss', () => {
   const srcDir = path.join(process.cwd(), 'src/__tests__');
+  let cssImportIndex: CssImportIndex;
+
+  beforeAll(async () => {
+    cssImportIndex = await buildCssImportIndex(srcDir);
+  });
 
   test('returns null when CSS file is not imported', async () => {
     const result = await getNonExistentClassesFromCss({
       cssFile: 'withError/NotImportedModule/NotImported.module.css',
       srcDir,
+      cssImportIndex,
     });
 
     expect(result).toBeNull();
@@ -18,6 +28,7 @@ describe('getNonExistentClassesFromCss', () => {
     const result = await getNonExistentClassesFromCss({
       cssFile: 'withError/NonExistentClasses/NonExistentClasses.module.css',
       srcDir,
+      cssImportIndex,
     });
 
     expect(result).not.toBeNull();
@@ -48,6 +59,7 @@ describe('getNonExistentClassesFromCss', () => {
     const result = await getNonExistentClassesFromCss({
       cssFile: 'noError/AllClassesExist/AllClassesExist.module.css',
       srcDir,
+      cssImportIndex,
     });
 
     expect(result).toBeNull();
@@ -57,6 +69,7 @@ describe('getNonExistentClassesFromCss', () => {
     const result = await getNonExistentClassesFromCss({
       cssFile: 'noDynamic/WithDynamic/WithDynamic.module.css',
       srcDir,
+      cssImportIndex,
     });
 
     expect(result).toBeNull();
@@ -67,6 +80,7 @@ describe('getNonExistentClassesFromCss', () => {
       cssFile:
         'withError/NonExistentClassesScss/NonExistentClassesScss.module.scss',
       srcDir,
+      cssImportIndex,
     });
 
     expect(result).not.toBeNull();
