@@ -89,8 +89,9 @@ export const getUnusedClassesFromCss = async ({
       continue;
     }
 
-    // The whole module passed to a function → we can't tell which classes it
-    // uses, so ignore the module (one hand-off in any file is enough).
+    // The whole module handed on (to a function, a prop, a variable) → we
+    // can't tell which classes it uses, so ignore the module (one hand-off in
+    // any file is enough).
     const passedSite = detectModulePassedToFunction(
       sourceContent,
       importingFileData.importName,

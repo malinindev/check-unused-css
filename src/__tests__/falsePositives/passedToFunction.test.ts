@@ -59,6 +59,16 @@ describe('false positives — whole CSS module passed to a function (Problem 2)'
       expect(result.exitCode).toBe(0);
     });
 
+    test('PassedAsPropValue: transitionProps={{ classNames: styles }} ignores the module (#108)', () => {
+      const result = run('PassedAsPropValue');
+
+      expect(result.stdout).not.toMatch(reportedLine('appear'));
+      expect(result.stdout).not.toMatch(reportedLine('exitDone'));
+      expect(result.stderr).toMatch(/Warning:.*passed to a function/i);
+      expect(result.stdout).toMatch(/PassedAsPropValue\.tsx:11:/);
+      expect(result.exitCode).toBe(0);
+    });
+
     test('PropertyToFunction: passing s.root (a property) does not ignore the module', () => {
       const result = run('PropertyToFunction');
 

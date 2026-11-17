@@ -1,0 +1,19 @@
+.modal {
+  display: block;
+}
+
+.appear,
+.enter {
+  opacity: 0;
+}
+
+.appearActive,
+.enterActive {
+  opacity: 1;
+}
+
+.exit,
+.exitActive,
+.exitDone {
+  opacity: 0;
+}
