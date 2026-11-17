@@ -87,6 +87,9 @@ describe('detectModulePassedToFunction', () => {
       ['a destructuring source', `const { root } = s;`],
       ['a type assertion', `const a = (s as Record<string, string>)[k];`],
       ['a re-export', `export { s };`],
+      ['a pattern default value', `function f({ a = s }) {}`],
+      ['a parameter default value', `function f(a = s) {}`],
+      ['an enum initializer', `enum E { A = s.x.length, B = fn(s) }`],
     ])('%s triggers', (_label, source) => {
       expect(detect(source)).not.toBeNull();
     });
@@ -112,6 +115,24 @@ describe('detectModulePassedToFunction', () => {
       ['an optional member read', `const a = s?.foo;`],
       ['a typeof check', `if (typeof s === 'object') {}`],
       ['a void expression', `void s;`],
+      ['a destructured parameter', `function C({ s }) { return 1; }`],
+      ['a renamed destructuring target', `const { a: s } = x;`],
+      ['an array pattern element', `const [s] = arr;`],
+      ['a parameter with a default', `function f(s = 1) {}`],
+      ['a rest parameter', `function f(...s) {}`],
+      ['a function overload', `function f(s: string): void;`],
+      ['a method overload', `class A { m(s: string): void; m(s: unknown) {} }`],
+      ['a parameter property', `class A { constructor(private s: string) {} }`],
+      ['an abstract member', `abstract class A { abstract s: string; }`],
+      ['an enum member', `enum E { s }`],
+      ['an enum name', `enum s { A }`],
+      ['a namespace name', `namespace s { export const a = 1; }`],
+      ['an import-equals name', `import s = require('./other');`],
+      ['an index signature', `class A { [s: string]: unknown; }`],
+      ['a namespace re-export', `export * as s from './other';`],
+      ['a re-export from another module', `export { s } from './other';`],
+      ['a type-only export', `export type { s };`],
+      ['a type-only export specifier', `export { type s };`],
     ])('%s does not trigger', (_label, source) => {
       expect(detect(source)).toBeNull();
     });

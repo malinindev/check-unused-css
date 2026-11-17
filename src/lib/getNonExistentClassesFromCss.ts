@@ -49,8 +49,9 @@ export const getNonExistentClassesFromCss = async ({
     ...partialClasses,
   ]);
 
-  // If any importer passes the whole module to a function, ignore the module
-  // entirely (matching the unused path), not just that one file.
+  // If any importer hands the whole module on (to a function, a prop, a
+  // variable), ignore the module entirely (matching the unused path), not just
+  // that one file.
   for (const importingFileData of importingFilesData) {
     const sourceContent = getContentOfFiles({
       files: [importingFileData.file],

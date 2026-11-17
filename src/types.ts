@@ -31,7 +31,7 @@ export type DynamicClassResult = {
 export type ModuleIgnoredResult = {
   file: string;
   status: 'ignoredPassedToFunction';
-  /** The importing source file that passed the whole module to a function. */
+  /** The importing source file that handed the whole module on. */
   sourceFile: string;
   /** The import binding that was passed (e.g. `s`). */
   importName: string;
