@@ -32,45 +32,37 @@ const TYPE_ONLY_NODES = new Set([
 
 /**
  * Whether an identifier at `parent[key]` does not hand a value on: a property
- * key, a declared name (variables, parameters, destructuring targets), a
- * label, an export alias, or `typeof s` / `void s`. `patternProperties` holds
- * the `Property` nodes of object destructuring patterns.
+ * read (`s.foo`, `s[key]`), a declared name (variables, parameters,
+ * destructuring targets, enums, namespaces), a non-computed key, a label, an
+ * export alias, or `typeof s` / `void s`. `patternProperties` holds the
+ * `Property` nodes of object destructuring patterns.
  */
 const isNotHandOff = (
   parent: TSESTree.Node,
   key: string,
   patternProperties: WeakSet<TSESTree.Node>
 ): boolean => {
+  // In ESTree an `id`, `label` or `params` child always declares or names
+  // something, and so does a non-computed `key`.
+  if (key === 'id' || key === 'label' || key === 'params') {
+    return true;
+  }
+  if (key === 'key' && !('computed' in parent && parent.computed)) {
+    return true;
+  }
+
   switch (parent.type) {
+    case 'MemberExpression':
+      // `s.foo` / `s[key]` reads a property; `x.s` is not `s` at all. In
+      // `lookup[s]` the object itself is used as a value.
+      return key === 'object' || !parent.computed;
     case 'UnaryExpression':
       return parent.operator === 'typeof' || parent.operator === 'void';
     case 'Property':
       // In `{ a: s } = x` the value is a target; in `{ a: s }` it is a value.
-      return (
-        (key === 'key' && !parent.computed) ||
-        (key === 'value' && patternProperties.has(parent))
-      );
-    case 'PropertyDefinition':
-    case 'MethodDefinition':
-    case 'AccessorProperty':
-    case 'TSAbstractPropertyDefinition':
-    case 'TSAbstractMethodDefinition':
-    case 'TSAbstractAccessorProperty':
-      return key === 'key' && !parent.computed;
+      return key === 'value' && patternProperties.has(parent);
     case 'ExportSpecifier':
       return key === 'exported';
-    case 'VariableDeclarator':
-    case 'ClassDeclaration':
-    case 'ClassExpression':
-    case 'TSEnumMember':
-    case 'TSEnumDeclaration':
-    case 'TSModuleDeclaration':
-    case 'TSImportEqualsDeclaration':
-      return key === 'id';
-    case 'FunctionDeclaration':
-    case 'FunctionExpression':
-    case 'ArrowFunctionExpression':
-      return key === 'id' || key === 'params';
     case 'AssignmentPattern':
       return key === 'left';
     // `namespace A.s {}` or `import x = s.a`: a dotted name or a property
@@ -80,9 +72,6 @@ const isNotHandOff = (
     case 'RestElement':
     case 'TSParameterProperty':
     case 'CatchClause':
-    case 'LabeledStatement':
-    case 'BreakStatement':
-    case 'ContinueStatement':
       return true;
     default:
       return false;
@@ -172,11 +161,6 @@ export const detectModulePassedToFunction = (
         !parentNode ||
         typeof key !== 'string'
       ) {
-        return;
-      }
-
-      if (parentNode.type === 'MemberExpression') {
-        // `s.foo` / `s[key]` is a property read; `x.s` is not `s` at all.
         return;
       }
 
