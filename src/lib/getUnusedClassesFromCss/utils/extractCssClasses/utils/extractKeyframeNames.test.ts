@@ -15,6 +15,31 @@ describe('extractKeyframeNames', () => {
     ]);
   });
 
+  test('accepts any CSS identifier, including -- and non-ASCII names', () => {
+    const css = `
+      @keyframes --pulse {}
+      @keyframes -webkit-thing {}
+      @keyframes _private {}
+      @keyframes entrée {}
+    `;
+    expect(extractKeyframeNames(css).sort()).toEqual([
+      '--pulse',
+      '-webkit-thing',
+      '_private',
+      'entrée',
+    ]);
+  });
+
+  test('skips names that are not identifiers', () => {
+    expect(extractKeyframeNames('@keyframes "quoted" {}')).toEqual([]);
+    expect(extractKeyframeNames('@keyframes 1st {}')).toEqual([]);
+  });
+
+  test('returns nothing for a disabled file without parsing it', () => {
+    const css = '/* check-unused-css-disable */\n@keyframes spin {\n.broken {';
+    expect(extractKeyframeNames(css)).toEqual([]);
+  });
+
   test('unwraps :local(name)', () => {
     expect(extractKeyframeNames('@keyframes :local(pulse) {}')).toEqual([
       'pulse',

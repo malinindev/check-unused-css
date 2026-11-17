@@ -12,8 +12,7 @@ import { resolveScssImport } from './resolveScssImport.js';
  * `@forward` and the legacy `@import`, following the chain transitively. These
  * classes are emitted into the module's compiled CSS, so for the module they
  * are real classes — used here to stop reporting them as "non-existent" and to
- * avoid flagging them as unused (issue #90). Keyframe names declared in a
- * partial are collected too: they are exported the same way (issue #107).
+ * avoid flagging them as unused (issue #90).
  *
  * The walk is breadth-first over resolved absolute paths and guards against
  * cycles (legal with `@import`) and diamonds via a visited set. The module's
@@ -27,15 +26,24 @@ import { resolveScssImport } from './resolveScssImport.js';
  */
 const SASS_EXTENSIONS = new Set(['.scss', '.sass']);
 
-export const collectPartialClasses = (cssFilePath: string): Set<string> => {
+export type PartialNames = {
+  classNames: Set<string>;
+  // Keyframe names are exported like classes (issue #107), so they count as
+  // existing, but they are not classes and must not mark anything as used.
+  keyframeNames: Set<string>;
+};
+
+export const collectPartialNames = (cssFilePath: string): PartialNames => {
   const classNames = new Set<string>();
+  const keyframeNames = new Set<string>();
+  const result = { classNames, keyframeNames };
 
   // Skip when the ENTRY module is a plain `.css` file: it cannot carry
   // `@use`/`@forward`, and a Sass `@import` does not inline inside plain CSS,
   // so there is nothing to pull in. (This guards the entry only — `.css`
   // partials reached from a Sass module are still collected during the walk.)
   if (!SASS_EXTENSIONS.has(path.extname(cssFilePath).toLowerCase())) {
-    return classNames;
+    return result;
   }
 
   const visited = new Set<string>([path.resolve(cssFilePath)]);
@@ -45,7 +53,7 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
   try {
     cssContent = fs.readFileSync(cssFilePath, 'utf-8');
   } catch {
-    return classNames;
+    return result;
   }
 
   const queue: string[] = [];
@@ -83,24 +91,30 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
     // the selector parser does elsewhere) so the anomaly is visible, then move
     // on rather than aborting the whole analysis.
     let partialClassNames: string[];
+    let partialKeyframeNames: string[];
     try {
-      partialClassNames = [
-        ...extractCssClasses(partialContent),
-        ...extractKeyframeNames(partialContent),
-      ];
+      partialClassNames = extractCssClasses(partialContent);
+      partialKeyframeNames = extractKeyframeNames(partialContent);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(
         `check-unused-css: failed to parse imported partial "${partialPath}" (${message}) — skipping it.`
       );
       partialClassNames = [];
+      partialKeyframeNames = [];
     }
     for (const className of partialClassNames) {
       classNames.add(className);
+    }
+    for (const keyframeName of partialKeyframeNames) {
+      keyframeNames.add(keyframeName);
     }
 
     enqueueImportsFrom(partialContent, path.dirname(partialPath));
   }
 
-  return classNames;
+  return result;
 };
+
+export const collectPartialClasses = (cssFilePath: string): Set<string> =>
+  collectPartialNames(cssFilePath).classNames;

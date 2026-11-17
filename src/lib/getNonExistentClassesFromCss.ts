@@ -16,7 +16,7 @@ import {
 } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
-import { collectPartialClasses } from './getUnusedClassesFromCss/utils/scssImports/index.js';
+import { collectPartialNames } from './getUnusedClassesFromCss/utils/scssImports/index.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -47,11 +47,12 @@ export const getNonExistentClassesFromCss = async ({
   // module's compiled CSS), so both sets count as existing (issue #90).
   // Local `@keyframes` names are exported too, so `styles.spin` is valid
   // (issue #107). A Set keeps the per-usage lookup below O(1).
-  const partialClasses = collectPartialClasses(path.join(srcDir, cssFile));
+  const partialNames = collectPartialNames(path.join(srcDir, cssFile));
   const cssClasses = new Set<string>([
     ...extractCssClasses(cssContent),
     ...extractKeyframeNames(cssContent),
-    ...partialClasses,
+    ...partialNames.classNames,
+    ...partialNames.keyframeNames,
   ]);
 
   // If any importer passes the whole module to a function, ignore the module

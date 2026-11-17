@@ -115,6 +115,18 @@ describe('Non-existent CSS classes detection', () => {
     );
   });
 
+  test('keyframes from a Sass partial exist but do not hide an unused class (issue #107)', () => {
+    const result = runCheckUnusedCss(
+      'src/__tests__/withError/ScssPartialKeyframes'
+    );
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).not.toMatch(/ - \.fadeIn$/m);
+    expect(result.stdout).toMatch(
+      /ScssPartialKeyframes\.module\.scss:\d+:\d+ - \.spin$/m
+    );
+  });
+
   test('skips non-existent class detection when dynamic usage is present', () => {
     const result = runCheckUnusedCss('src/__tests__/noDynamic/WithDynamic');
 
