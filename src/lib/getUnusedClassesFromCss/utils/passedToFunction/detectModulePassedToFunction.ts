@@ -73,6 +73,9 @@ const isNotHandOff = (
       return key === 'id' || key === 'params';
     case 'AssignmentPattern':
       return key === 'left';
+    // `namespace A.s {}` or `import x = s.a`: a dotted name or a property
+    // read, never the object itself.
+    case 'TSQualifiedName':
     case 'ArrayPattern':
     case 'RestElement':
     case 'TSParameterProperty':

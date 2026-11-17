@@ -127,6 +127,8 @@ describe('detectModulePassedToFunction', () => {
       ['an enum member', `enum E { s }`],
       ['an enum name', `enum s { A }`],
       ['a namespace name', `namespace s { export const a = 1; }`],
+      ['a dotted namespace name', `namespace Other.s { export const a = 1; }`],
+      ['a dotted import-equals alias', `import a = s.root;`],
       ['an import-equals name', `import s = require('./other');`],
       ['an index signature', `class A { [s: string]: unknown; }`],
       ['a namespace re-export', `export * as s from './other';`],
