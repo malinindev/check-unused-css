@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractCssClasses } from '../extractCssClasses/index.js';
+import {
+  extractCssClasses,
+  extractKeyframeNames,
+} from '../extractCssClasses/index.js';
 import { extractScssImportPaths } from './extractScssImportPaths.js';
 import { resolveScssImport } from './resolveScssImport.js';
 
@@ -9,7 +12,8 @@ import { resolveScssImport } from './resolveScssImport.js';
  * `@forward` and the legacy `@import`, following the chain transitively. These
  * classes are emitted into the module's compiled CSS, so for the module they
  * are real classes — used here to stop reporting them as "non-existent" and to
- * avoid flagging them as unused (issue #90).
+ * avoid flagging them as unused (issue #90). Keyframe names declared in a
+ * partial are collected too: they are exported the same way (issue #107).
  *
  * The walk is breadth-first over resolved absolute paths and guards against
  * cycles (legal with `@import`) and diamonds via a visited set. The module's
@@ -80,7 +84,10 @@ export const collectPartialClasses = (cssFilePath: string): Set<string> => {
     // on rather than aborting the whole analysis.
     let partialClassNames: string[];
     try {
-      partialClassNames = extractCssClasses(partialContent);
+      partialClassNames = [
+        ...extractCssClasses(partialContent),
+        ...extractKeyframeNames(partialContent),
+      ];
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(

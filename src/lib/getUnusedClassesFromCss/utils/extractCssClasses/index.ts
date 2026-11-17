@@ -8,3 +8,4 @@ export {
   extractCssClassesWithLocations,
 } from './extractCssClasses.js';
 export { extractComposedClassesFromContent } from './utils/extractComposedClasses.js';
+export { extractKeyframeNames } from './utils/extractKeyframeNames.js';

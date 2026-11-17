@@ -30,6 +30,13 @@ describe('collectPartialClasses', () => {
     expect([...classes].sort()).toEqual(['box', 'panel']);
   });
 
+  test('collects keyframe names from a @use partial (issue #107)', () => {
+    write('_animations.scss', '@keyframes fadeIn { to { opacity: 1; } }');
+    const module = write('M.module.scss', `@use 'animations';\n.local {}`);
+
+    expect(collectPartialClasses(module).has('fadeIn')).toBe(true);
+  });
+
   test("does not include the module's own classes", () => {
     write('_shared.scss', '.box {}');
     const module = write('M.module.scss', `@use 'shared';\n.local {}`);

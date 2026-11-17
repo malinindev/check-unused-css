@@ -101,6 +101,20 @@ describe('Non-existent CSS classes detection', () => {
     expect(result.stdout).toMatch(/No unused CSS classes found/);
   });
 
+  test('treats local @keyframes names as existing (issue #107)', () => {
+    const result = runCheckUnusedCss('src/__tests__/withError/KeyframeNames');
+
+    // css-loader exports local keyframe names next to classes.
+    expect(result.stdout).not.toMatch(/ - \.ghostCardSlideIn$/m);
+    expect(result.stdout).not.toMatch(/ - \.spin$/m);
+    expect(result.stdout).not.toMatch(/ - \.pulse$/m);
+    // A :global keyframe name is not exported, so reading it is still an error.
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toMatch(
+      /KeyframeNames\.tsx:\d+:\d+ - \.globalFade$/m
+    );
+  });
+
   test('skips non-existent class detection when dynamic usage is present', () => {
     const result = runCheckUnusedCss('src/__tests__/noDynamic/WithDynamic');
 
