@@ -1,5 +1,12 @@
 # check-unused-css
 
+## 0.5.7
+
+### Patch Changes
+
+- 65327bb: Stop reporting `styles.<name>` as a non-existent class when `<name>` is a local `@keyframes` name (#107). css-loader exports keyframe names next to class names, so these reads are valid. Keyframes declared in a `@use`d or `@import`ed Sass partial count too. Names declared with `:global(...)` are not exported and are still reported.
+- 33cc59f: Ignore a CSS module, with a warning, when the whole module object is handed on in any way, not only as a function argument (#108). This covers object property values like `transitionProps={{ classNames: styles }}`, JSX props, spreads, arrays, assignments, returns, `new` arguments and type assertions. Before, every class not read as `styles.foo` in that file was reported as unused. Reading a property (`styles.foo`, `styles[key]`), `typeof styles` and `void styles` still do not count.
+
 ## 0.5.6
 
 ### Patch Changes
