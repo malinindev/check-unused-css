@@ -70,33 +70,76 @@ describe('detectModulePassedToFunction', () => {
     });
   });
 
-  describe('does NOT trigger for non-call positions (documented boundary)', () => {
-    test('fn([s]) does not trigger (s is inside an array literal)', () => {
-      expect(detect(`fn([s]);`)).toBeNull();
+  describe('triggers when the whole module escapes in any other way (issue #108)', () => {
+    test.each([
+      ['an object property value', `fn({ styles: s });`],
+      ['a shorthand property', `fn({ s });`],
+      ['a JSX prop', `const e = <Comp prop={s} />;`],
+      [
+        'a nested object in a JSX prop',
+        `const e = <Modal transitionProps={{ classNames: s }} />;`,
+      ],
+      ['a spread', `const x = { ...s };`],
+      ['an array element', `fn([s]);`],
+      ['a variable assignment', `const x = s;`],
+      ['a return value', `function f() { return s; }`],
+      ['a constructor argument', `const w = new Wrapper(s);`],
+      ['a destructuring source', `const { root } = s;`],
+      ['a type assertion', `const a = (s as Record<string, string>)[k];`],
+      ['a re-export', `export { s };`],
+      ['a computed key on another object', `const v = lookup[s];`],
+      ['a pattern default value', `function f({ a = s }) {}`],
+      ['a parameter default value', `function f(a = s) {}`],
+      ['an enum initializer', `enum E { A = s.x.length, B = fn(s) }`],
+    ])('%s triggers', (_label, source) => {
+      expect(detect(source)).not.toBeNull();
     });
 
-    test('fn({ styles: s }) does not trigger (s is a property value)', () => {
-      expect(detect(`fn({ styles: s });`)).toBeNull();
+    test('reports the location of the escaping reference', () => {
+      const result = detect(
+        `import s from './x.module.css';\nconst e = <Modal className={s.modal} transitionProps={{ classNames: s }} />;`
+      );
+      expect(result).toEqual({ line: 2, column: 69 });
     });
+  });
 
-    test('spread {...s} does not trigger', () => {
-      expect(detect(`const x = { ...s };`)).toBeNull();
-    });
-
-    test('assignment const x = s does not trigger', () => {
-      expect(detect(`const x = s;`)).toBeNull();
-    });
-
-    test('return s does not trigger', () => {
-      expect(detect(`function f() { return s; }`)).toBeNull();
-    });
-
-    test('JSX prop prop={s} does not trigger', () => {
-      expect(detect(`const e = <Comp prop={s} />;`)).toBeNull();
-    });
-
-    test('new Wrapper(s) does not trigger (NewExpression, not CallExpression)', () => {
-      expect(detect(`const w = new Wrapper(s);`)).toBeNull();
+  describe('does NOT trigger on names that are not a value reference', () => {
+    test.each([
+      ['the import itself', `import s from './x.module.css';`],
+      ['a namespace import', `import * as s from './x.module.css';`],
+      ['a type query', `type K = keyof typeof s;`],
+      ['a type query in an annotation', `let k: keyof typeof s;`],
+      ['a type query in an assertion', `const k = v as keyof typeof s;`],
+      ['an object key', `const o = { s: 1 };`],
+      ['a member property', `const a = other.s;`],
+      ['a JSX attribute name', `const e = <Comp s={1} />;`],
+      ['an optional member read', `const a = s?.foo;`],
+      ['a typeof check', `if (typeof s === 'object') {}`],
+      ['a void expression', `void s;`],
+      ['a destructured parameter', `function C({ s }) { return 1; }`],
+      ['a renamed destructuring target', `const { a: s } = x;`],
+      ['an array pattern element', `const [s] = arr;`],
+      ['a parameter with a default', `function f(s = 1) {}`],
+      ['a rest parameter', `function f(...s) {}`],
+      ['a function overload', `function f(s: string): void;`],
+      ['a method overload', `class A { m(s: string): void; m(s: unknown) {} }`],
+      ['a parameter property', `class A { constructor(private s: string) {} }`],
+      ['an abstract member', `abstract class A { abstract s: string; }`],
+      ['an enum member', `enum E { s }`],
+      ['an enum name', `enum s { A }`],
+      ['a namespace name', `namespace s { export const a = 1; }`],
+      ['a dotted namespace name', `namespace Other.s { export const a = 1; }`],
+      ['a dotted import-equals alias', `import a = s.root;`],
+      ['a UMD namespace export', `export as namespace s;`],
+      ['a computed member read', `const a = s[key];`],
+      ['an import-equals name', `import s = require('./other');`],
+      ['an index signature', `class A { [s: string]: unknown; }`],
+      ['a namespace re-export', `export * as s from './other';`],
+      ['a re-export from another module', `export { s } from './other';`],
+      ['a type-only export', `export type { s };`],
+      ['a type-only export specifier', `export { type s };`],
+    ])('%s does not trigger', (_label, source) => {
+      expect(detect(source)).toBeNull();
     });
   });
 
