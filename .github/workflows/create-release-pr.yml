@@ -11,9 +11,13 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     steps:
+      # A release PR opened with GITHUB_TOKEN gets CI runs that wait for manual
+      # approval and fail when the PR is merged first. With RELEASE_PR_TOKEN
+      # (a fine-grained PAT with Contents and Pull requests write access) the
+      # Quality Checks run on the release PR like on any other PR.
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Bun and dependencies
         uses: ./.github/actions/setup
@@ -49,5 +53,4 @@ jobs:
           title: "Release v${{ steps.version.outputs.next_version }}"
           commit: "chore: release v${{ steps.version.outputs.next_version }}"
           createGithubReleases: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
