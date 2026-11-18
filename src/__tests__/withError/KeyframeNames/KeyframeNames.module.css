@@ -1,0 +1,21 @@
+@keyframes ghostCardSlideIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@-webkit-keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes :local(pulse) {
+  50% { opacity: 0.5; }
+}
+
+/* A global keyframe name is not exported, so `styles.globalFade` is missing. */
+@keyframes :global(globalFade) {
+  to { opacity: 0; }
+}
+
+.card {
+  animation: ghostCardSlideIn 0.3s ease-out;
+}

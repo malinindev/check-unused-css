@@ -2,7 +2,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { collectPartialClasses } from './collectPartialClasses.js';
+import {
+  collectPartialClasses,
+  collectPartialNames,
+} from './collectPartialClasses.js';
 
 let root: string;
 
@@ -28,6 +31,16 @@ describe('collectPartialClasses', () => {
 
     const classes = collectPartialClasses(module);
     expect([...classes].sort()).toEqual(['box', 'panel']);
+  });
+
+  test('collects keyframe names from a @use partial apart from classes (issue #107)', () => {
+    write('_animations.scss', '@keyframes fadeIn { to { opacity: 1; } }');
+    const module = write('M.module.scss', `@use 'animations';\n.local {}`);
+
+    const names = collectPartialNames(module);
+    expect([...names.keyframeNames]).toEqual(['fadeIn']);
+    expect(names.classNames.has('fadeIn')).toBe(false);
+    expect(collectPartialClasses(module).has('fadeIn')).toBe(false);
   });
 
   test("does not include the module's own classes", () => {

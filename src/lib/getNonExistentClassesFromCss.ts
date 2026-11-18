@@ -5,7 +5,10 @@ import type {
 } from '../types.js';
 import { getContentOfFiles } from '../utils/getContentOfFiles.js';
 import { parseIgnoreComments } from '../utils/parseIgnoreComments.js';
-import { extractCssClasses } from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
+import {
+  extractCssClasses,
+  extractKeyframeNames,
+} from './getUnusedClassesFromCss/utils/extractCssClasses/index.js';
 import { extractUsedClassesWithLocations } from './getUnusedClassesFromCss/utils/extractUsedClasses.js';
 import {
   type CssImportIndex,
@@ -13,7 +16,7 @@ import {
 } from './getUnusedClassesFromCss/utils/findFilesImportingCssModule/index.js';
 import { extractDynamicClassUsages } from './getUnusedClassesFromCss/utils/findUnusedClasses/utils/extractDynamicClassUsages.js';
 import { detectModulePassedToFunction } from './getUnusedClassesFromCss/utils/passedToFunction/detectModulePassedToFunction.js';
-import { collectPartialClasses } from './getUnusedClassesFromCss/utils/scssImports/index.js';
+import { collectPartialNames } from './getUnusedClassesFromCss/utils/scssImports/index.js';
 
 type GetNonExistentClassesFromCssParams = {
   cssFile: string;
@@ -41,12 +44,15 @@ export const getNonExistentClassesFromCss = async ({
 
   // Classes are real if they are defined in this file OR pulled into it via
   // `@use`/`@forward`/`@import` (those emit the partial's rules into the
-  // module's compiled CSS), so both sets count as existing (issue #90). A Set
-  // keeps the per-usage lookup below O(1).
-  const partialClasses = collectPartialClasses(path.join(srcDir, cssFile));
+  // module's compiled CSS), so both sets count as existing (issue #90).
+  // Local `@keyframes` names are exported too, so `styles.spin` is valid
+  // (issue #107). A Set keeps the per-usage lookup below O(1).
+  const partialNames = collectPartialNames(path.join(srcDir, cssFile));
   const cssClasses = new Set<string>([
     ...extractCssClasses(cssContent),
-    ...partialClasses,
+    ...extractKeyframeNames(cssContent),
+    ...partialNames.classNames,
+    ...partialNames.keyframeNames,
   ]);
 
   // If any importer passes the whole module to a function, ignore the module

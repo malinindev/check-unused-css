@@ -1,0 +1,10 @@
+@use 'animations';
+
+.card {
+  animation: fadeIn 0.3s;
+}
+
+// Named like the partial's keyframes but never read, so it is unused.
+.spin {
+  animation: spin 1s linear infinite;
+}
